@@ -5,6 +5,7 @@ import { Terminal, Smartphone, Cloud, Layers, ArrowRight } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import ProjectsList from '../components/ProjectsList';
+import CertificatesCarousel from '../components/CertificatesCarousel';
 import ThemeToggle from '../components/ThemeToggle';
 import MagneticButton from '../components/MagneticButton';
 import InteractiveBackground from '../components/InteractiveBackground';
@@ -192,7 +193,7 @@ export default function PortfolioHome({ isAdmin = false, onLogout }) {
                             </motion.div>
 
                             {/* Mobile Block */}
-                            <motion.div className="bento-item bento-tall" variants={item}>
+                            <motion.div className="bento-item" variants={item}>
                                 <Smartphone size={32} className="bento-icon" />
                                 <h3 className="bento-title" style={{ fontSize: '1.5rem' }}>Mobile</h3>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>Cross-platform application development.</p>
@@ -216,7 +217,7 @@ export default function PortfolioHome({ isAdmin = false, onLogout }) {
                             </motion.div>
 
                             {/* Design Block */}
-                            <motion.div className="bento-item bento-wide" variants={item}>
+                            <motion.div className="bento-item" variants={item}>
                                 <Layers size={32} className="bento-icon" />
                                 <h3 className="bento-title" style={{ fontSize: '1.5rem' }}>Design & Workflow</h3>
                                 <div className="tag-list" style={{ marginTop: '1rem' }}>
@@ -227,6 +228,9 @@ export default function PortfolioHome({ isAdmin = false, onLogout }) {
                             </motion.div>
                         </motion.div>
                     </section>
+
+                    {/* Certificates Carousel Section */}
+                    <CertificatesCarousel />
 
                     {/* Dynamic Projects */}
                     <ProjectsList isAdmin={isAdmin} />

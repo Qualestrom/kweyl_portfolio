@@ -1,0 +1,61 @@
+/* ============================================================
+   KeyboardHints — Arrow key navigation indicators
+   ============================================================ */
+
+.keyboard-hints {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px 24px;
+}
+
+.keyboard-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.keyboard-hint.visible {
+  opacity: 0.4;
+}
+
+.keyboard-hint.visible:hover {
+  opacity: 0.7;
+}
+
+.keyboard-hint-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
+  border-radius: 6px;
+  font-size: 0.75rem;
+  background: var(--cryo-glass-bg, rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(4px);
+  animation: hint-glow 3s ease-in-out infinite;
+}
+
+@keyframes hint-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 transparent;
+    border-color: var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(103, 232, 249, 0.15);
+    border-color: rgba(103, 232, 249, 0.2);
+  }
+}

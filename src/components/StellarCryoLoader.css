@@ -1,0 +1,101 @@
+/* ============================================================
+   StellarCryoLoader — Full-screen antigravity loading overlay
+   Theme-aware: adapts to [data-theme='dark'] / [data-theme='light']
+   ============================================================ */
+
+.stellar-cryo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  visibility: visible;
+}
+
+.stellar-cryo-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Canvas fills the entire overlay */
+.stellar-cryo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Genshin-inspired loading element container */
+.loading-ui-container {
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 10;
+  opacity: 0;
+  animation: stellar-cryo-text-in 1.2s ease-out 0.3s forwards;
+}
+
+.element-row {
+  display: flex;
+  gap: 16px;
+}
+
+/* Diamond elements that light up */
+.element-diamond {
+  width: 10px;
+  height: 10px;
+  background-color: transparent;
+  border: 1px solid var(--text-muted);
+  transform: rotate(45deg);
+  opacity: 0.2;
+  animation: genshin-light-up 2.8s infinite;
+  box-shadow: 0 0 0 transparent;
+}
+
+@keyframes genshin-light-up {
+  0%, 100% {
+    opacity: 0.2;
+    background-color: transparent;
+    border-color: var(--text-muted);
+    box-shadow: 0 0 0 transparent;
+  }
+  20%, 50% {
+    opacity: 1;
+    background-color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 8px var(--accent-secondary), 0 0 16px var(--accent-secondary);
+  }
+}
+
+.stellar-cryo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 0.85rem;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes stellar-cryo-text-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

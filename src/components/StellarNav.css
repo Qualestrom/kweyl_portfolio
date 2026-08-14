@@ -1,0 +1,138 @@
+/* ============================================================
+   StellarNav — Left-side peek navigation
+   ============================================================ */
+
+.stellar-nav {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  overflow: hidden;
+  /* Frosted glass */
+  background: var(--cryo-glass-bg, rgba(255, 255, 255, 0.04));
+  border-right: 1px solid var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
+  backdrop-filter: blur(var(--cryo-glass-blur, 10px));
+  -webkit-backdrop-filter: blur(var(--cryo-glass-blur, 10px));
+}
+
+/* Logo at top */
+.stellar-nav-logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 40px;
+  padding: 0 16px;
+  letter-spacing: -0.02em;
+  cursor: default;
+  user-select: none;
+}
+
+/* Nav items container */
+.stellar-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  width: 100%;
+  padding: 0 8px;
+}
+
+/* Individual nav item */
+.stellar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: color 0.25s ease, background 0.25s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.stellar-nav-item:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stellar-nav-item.active {
+  color: var(--cryo-accent, #67E8F9);
+  background: rgba(103, 232, 249, 0.06);
+}
+
+/* Icon wrapper */
+.stellar-nav-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Label text */
+.stellar-nav-label {
+  opacity: 0;
+  transition: opacity 0.2s ease 0.05s;
+  overflow: hidden;
+}
+
+.stellar-nav.expanded .stellar-nav-label {
+  opacity: 1;
+}
+
+/* Active indicator dot */
+.stellar-nav-item.active .stellar-nav-icon {
+  filter: drop-shadow(0 0 6px var(--cryo-accent, #67E8F9));
+}
+
+/* Divider */
+.stellar-nav-divider {
+  width: calc(100% - 24px);
+  height: 1px;
+  background: var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
+  margin: 8px 12px;
+}
+
+/* Bottom area (theme toggle) */
+.stellar-nav-bottom {
+  padding: 0 8px;
+  width: 100%;
+}
+
+.stellar-nav-bottom .theme-toggle {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* Section counter */
+.stellar-nav-counter {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 12px;
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+}

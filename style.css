@@ -3,8 +3,8 @@
   --bg-secondary: #111827;
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
-  --accent: #FF3366; /* Vibrant Neon Pink/Red */
-  --accent-glow: rgba(255, 51, 102, 0.4);
+  --accent: #67E8F9; /* Stellar Cyan */
+  --accent-glow: rgba(103, 232, 249, 0.35);
   --accent-secondary: #38BDF8;
   
   --glass-bg: rgba(17, 24, 39, 0.6);
@@ -14,28 +14,28 @@
   --nav-bg: rgba(10, 15, 28, 0.8);
   
   --card-bg: rgba(255, 255, 255, 0.03);
-  --card-hover: rgba(255, 255, 255, 0.05);
+  --card-hover: rgba(255, 255, 255, 0.06);
 
   /* Stellar-Cryo tokens */
   --cryo-glass-bg: rgba(255, 255, 255, 0.04);
   --cryo-glass-border: rgba(255, 255, 255, 0.10);
-  --cryo-glass-blur: 10px;
+  --cryo-glass-blur: 12px;
   --cryo-accent: #67E8F9;
-  --cryo-accent-glow: rgba(103, 232, 249, 0.3);
+  --cryo-accent-glow: rgba(103, 232, 249, 0.35);
   --cryo-pearl: #E2E8F0;
 }
 
 [data-theme='light'] {
-  --bg-primary: #F4F4F5;
+  --bg-primary: #F4F8FA;
   --bg-secondary: #FFFFFF;
   --text-main: #09090B;
-  --text-muted: #71717A;
-  --accent: #E11D48;
-  --accent-glow: rgba(225, 29, 72, 0.2);
+  --text-muted: #64748B;
+  --accent: #0891B2;
+  --accent-glow: rgba(8, 145, 178, 0.25);
   --accent-secondary: #0284C7;
   
   --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-border: rgba(0, 0, 0, 0.06);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
   
   --nav-bg: rgba(244, 244, 245, 0.85);
@@ -46,7 +46,7 @@
   /* Stellar-Cryo tokens (light) */
   --cryo-glass-bg: rgba(0, 0, 0, 0.03);
   --cryo-glass-border: rgba(0, 0, 0, 0.08);
-  --cryo-glass-blur: 10px;
+  --cryo-glass-blur: 12px;
   --cryo-accent: #0891B2;
   --cryo-accent-glow: rgba(8, 145, 178, 0.2);
   --cryo-pearl: #334155;
@@ -107,19 +107,23 @@ a { text-decoration: none; color: inherit; }
 }
 
 .bento-item {
-  background: var(--card-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--cryo-glass-bg);
+  border: 1px solid var(--cryo-glass-border);
+  backdrop-filter: blur(var(--cryo-glass-blur));
+  -webkit-backdrop-filter: blur(var(--cryo-glass-blur));
   border-radius: 24px;
   padding: 32px;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .bento-item:hover {
-  border-color: var(--accent);
+  border-color: var(--cryo-accent);
+  box-shadow: 0 0 24px var(--cryo-accent-glow);
+  transform: translateY(-2px);
 }
 
 .bento-large { grid-column: span 2; grid-row: span 2; }
@@ -128,7 +132,7 @@ a { text-decoration: none; color: inherit; }
 
 /* Bento specific content */
 .bento-title { font-size: 2rem; margin-bottom: 1rem; }
-.bento-icon { color: var(--accent); margin-bottom: auto; }
+.bento-icon { color: var(--cryo-accent); margin-bottom: auto; }
 
 /* Projects Staggered Layout */
 .projects-container {
@@ -140,22 +144,56 @@ a { text-decoration: none; color: inherit; }
 .project-row:nth-child(even) { flex-direction: row-reverse; }
 .project-info { flex: 1; }
 .project-image-placeholder {
-  flex: 1.2; height: 500px; background: var(--card-bg); border-radius: 24px; border: 1px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-muted);
+  flex: 1.2; height: 500px; background: var(--cryo-glass-bg); border-radius: 24px; border: 1px solid var(--cryo-glass-border);
+  backdrop-filter: blur(var(--cryo-glass-blur));
+  display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-family: 'Outfit', sans-serif; color: var(--cryo-accent);
+  letter-spacing: 2px;
+  box-shadow: inset 0 0 40px rgba(103, 232, 249, 0.03);
 }
 .project-title { font-size: 3rem; margin-bottom: 1rem; }
-.project-tag { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; font-size: 0.9rem; margin-bottom: 1rem; display: block; }
+.project-tag { color: var(--cryo-accent); text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600; font-size: 0.85rem; margin-bottom: 1rem; display: block; }
 .project-desc { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; }
 
 /* Buttons */
 .btn-primary {
-  padding: 16px 32px; background: var(--text-main); color: var(--bg-primary);
-  border-radius: 40px; font-weight: 600; font-size: 1rem; border: none;
+  padding: 16px 36px;
+  background: var(--cryo-accent);
+  color: var(--bg-primary);
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px var(--cryo-accent-glow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px var(--cryo-accent-glow);
+  filter: brightness(1.1);
 }
 
 /* Utilities */
 .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
-.tag { padding: 8px 16px; background: var(--bg-primary); border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--glass-border); }
+.tag {
+  padding: 6px 14px;
+  background: var(--cryo-glass-bg);
+  color: var(--text-muted);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--cryo-glass-border);
+  backdrop-filter: blur(8px);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.tag:hover {
+  color: var(--cryo-accent);
+  border-color: var(--cryo-accent);
+}
 
 /* Theme Toggle */
 .theme-toggle { background: none; border: none; color: inherit; display: flex; padding: 8px; border-radius: 50%; border: 1px solid transparent; }
@@ -177,20 +215,17 @@ a { text-decoration: none; color: inherit; }
    SPA Layout System — No-scroll, state-based sections
    ============================================================ */
 
-/* Main SPA shell */
-.stellar-layout {
+/* Main content area — fills the full viewport */
+.stellar-main {
   position: fixed;
   inset: 0;
-  display: flex;
-  overflow: hidden;
-}
-
-/* Main content area (right of nav) */
-.stellar-main {
-  flex: 1;
-  position: relative;
   overflow: hidden;
   height: 100vh;
+}
+
+/* Full-width variant (no sidebar offset) */
+.stellar-main--full {
+  margin-left: 0;
 }
 
 /* Each section fills the viewport */

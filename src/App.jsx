@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { ThemeProvider } from './context/ThemeContext';
 import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
-import StellarNav from './components/StellarNav';
+import InteractiveBackground from './components/InteractiveBackground';
+import SectionLabels from './components/SectionLabels';
 import KeyboardHints from './components/KeyboardHints';
 
 // Sections
@@ -16,7 +17,7 @@ import ProjectsSection from './sections/ProjectsSection';
 import CertificationsSection from './sections/CertificationsSection';
 import ContactSection from './sections/ContactSection';
 
-// Admin (kept as a route)
+// Admin
 import AdminDashboard from './pages/AdminDashboard.jsx';
 
 // ─── Section transition variants ─────────────────────────────────────────────────
@@ -54,10 +55,13 @@ const DEFAULT_CONFIG = {
 };
 
 // ─── Portfolio SPA (state-based navigation) ──────────────────────────────────────
-function PortfolioSPA() {
+export function PortfolioSPA({ isAdmin = false, onLogout }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [direction, setDirection] = useState(0);
   const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const konamiIndexRef = useRef(0);
+  const navigate = useNavigate();
 
   // Fetch config from Firebase
   useEffect(() => {
@@ -93,25 +97,31 @@ function PortfolioSPA() {
     setCurrentSection(index);
   }, [currentSection]);
 
-  // ── Keyboard navigation ──────────────────────────────────────────────────────
+  // ── Keyboard navigation & Konami code ──────────────────────────────────────────
   useEffect(() => {
-    // Konami code
-    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a', 'Enter'];
-    let konamiIndex = 0;
+    const konamiCode = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a', 'enter'];
 
     const handleKeyDown = (e) => {
-      // Konami code check (takes priority)
-      if (e.key === konamiCode[konamiIndex]) {
-        konamiIndex++;
-        if (konamiIndex === konamiCode.length) {
-          window.location.href = '/admin';
-          konamiIndex = 0;
-          return;
-        }
-      } else {
-        konamiIndex = 0;
-        if (e.key === konamiCode[0]) {
-          konamiIndex = 1;
+      // Check Konami Code
+      if (!isAdmin) {
+        const pressedKey = e.key.toLowerCase();
+        const expectedKey = konamiCode[konamiIndexRef.current];
+
+        if (pressedKey === expectedKey) {
+          konamiIndexRef.current++;
+          if (konamiIndexRef.current === konamiCode.length) {
+            setIsRedirecting(true);
+            setTimeout(() => {
+              navigate('/admin');
+            }, 1200);
+            konamiIndexRef.current = 0;
+            return;
+          }
+        } else {
+          konamiIndexRef.current = 0;
+          if (pressedKey === konamiCode[0]) {
+            konamiIndexRef.current = 1;
+          }
         }
       }
 
@@ -129,15 +139,15 @@ function PortfolioSPA() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSection, navigateTo]);
+  }, [currentSection, navigateTo, isAdmin, navigate]);
 
   // ── Render current section ───────────────────────────────────────────────────
   const renderSection = () => {
-    const props = { config, isAdmin: false, onUpdateConfig: handleUpdateConfig };
+    const props = { config, isAdmin, onUpdateConfig: handleUpdateConfig };
     switch (currentSection) {
       case 0: return <HeroSection {...props} />;
       case 1: return <AboutSection {...props} onNavigateContact={() => navigateTo(4)} />;
-      case 2: return <ProjectsSection isAdmin={false} />;
+      case 2: return <ProjectsSection isAdmin={isAdmin} />;
       case 3: return <CertificationsSection />;
       case 4: return <ContactSection />;
       default: return <HeroSection {...props} />;
@@ -145,10 +155,54 @@ function PortfolioSPA() {
   };
 
   return (
-    <div className="stellar-layout">
-      <StellarNav activeSection={currentSection} onNavigate={navigateTo} />
+    <>
+      <AnimatePresence>
+        {isRedirecting && (
+          <motion.div 
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            exit={{ scaleY: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'fixed',
+              top: 0, 
+              left: 0, 
+              width: '100vw', 
+              height: '100vh',
+              background: 'var(--cryo-accent, var(--accent))',
+              zIndex: 999999,
+              transformOrigin: 'bottom',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              style={{ 
+                color: '#0A0F1C', 
+                fontFamily: 'Outfit, sans-serif', 
+                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontWeight: 700,
+                letterSpacing: '1px'
+              }}
+            >
+              Accessing Mainframe...
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="stellar-main">
+      <SectionLabels 
+        activeSection={currentSection} 
+        onNavigate={navigateTo} 
+        isAdmin={isAdmin}
+        onLogout={onLogout}
+      />
+
+      <div className="stellar-main stellar-main--full">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentSection}
@@ -166,7 +220,7 @@ function PortfolioSPA() {
 
         <KeyboardHints currentSection={currentSection} />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -193,8 +247,9 @@ function App() {
         />
       )}
 
-      {/* Persistent particle background */}
+      {/* Persistent backgrounds — starfield + circuit constellation grid */}
       <StellarBackground />
+      <InteractiveBackground />
 
       {/* Theme + Router shell */}
       <ThemeProvider>

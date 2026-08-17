@@ -4,7 +4,7 @@ import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
 import { auth, db } from '../firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import PortfolioHome from './PortfolioHome';
+import { PortfolioSPA } from '../App';
 
 const TransitionOverlay = () => (
     <motion.div
@@ -177,7 +177,7 @@ function AdminDashboard() {
                     </div>
                 </div>
             ) : (
-                <PortfolioHome isAdmin={true} onLogout={handleLogout} />
+                <PortfolioSPA isAdmin={true} onLogout={handleLogout} />
             )}
         </>
     );

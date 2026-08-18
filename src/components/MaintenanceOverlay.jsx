@@ -1,11 +1,16 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Wrench, ShieldAlert, Sparkles, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Wrench } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DynamicSocialIcon } from './HomeHero';
+import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import './MaintenanceOverlay.css';
 
 export default function MaintenanceOverlay({ config = {} }) {
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const konamiIndexRef = useRef(0);
+  const navigate = useNavigate();
+
   const socials = Array.isArray(config.heroSocials) && config.heroSocials.length > 0 
     ? config.heroSocials 
     : [
@@ -13,8 +18,78 @@ export default function MaintenanceOverlay({ config = {} }) {
         { id: '2', url: 'https://linkedin.com', label: 'LinkedIn' }
       ];
 
+  // Secret Konami Code Handler (↑ ↑ ↓ ↓ ← → ← → B A Enter)
+  useEffect(() => {
+    const konamiCode = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a', 'enter'];
+
+    const handleKeyDown = (e) => {
+      const pressedKey = e.key.toLowerCase();
+      const expectedKey = konamiCode[konamiIndexRef.current];
+
+      if (pressedKey === expectedKey) {
+        konamiIndexRef.current++;
+        if (konamiIndexRef.current === konamiCode.length) {
+          setIsRedirecting(true);
+          setTimeout(() => {
+            navigate('/admin');
+          }, 1200);
+          konamiIndexRef.current = 0;
+          return;
+        }
+      } else {
+        konamiIndexRef.current = 0;
+        if (pressedKey === konamiCode[0]) {
+          konamiIndexRef.current = 1;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
   return (
     <div className="maintenance-viewport">
+      {/* Secret Mainframe Accessing Overlay */}
+      <AnimatePresence>
+        {isRedirecting && (
+          <motion.div 
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: 1 }}
+            exit={{ scaleY: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'fixed',
+              top: 0, 
+              left: 0, 
+              width: '100vw', 
+              height: '100vh',
+              background: 'var(--cryo-accent, var(--accent))',
+              zIndex: 9999999,
+              transformOrigin: 'bottom',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              style={{ 
+                color: '#0A0F1C', 
+                fontFamily: 'Outfit, sans-serif', 
+                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontWeight: 700,
+                letterSpacing: '1px'
+              }}
+            >
+              Accessing Mainframe...
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background ambient lighting */}
       <div className="maintenance-ambient-glow" />
       <div className="maintenance-ambient-grid" />
@@ -57,7 +132,7 @@ export default function MaintenanceOverlay({ config = {} }) {
             {socials.map((link) => (
               <a
                 key={link.id || link.url}
-                href={link.url}
+                href={ensureAbsoluteUrl(link.url)}
                 target="_blank"
                 rel="noreferrer"
                 className="maintenance-social-btn"
@@ -71,12 +146,9 @@ export default function MaintenanceOverlay({ config = {} }) {
           </div>
         </div>
 
-        {/* Footer info & Admin login link */}
+        {/* Clean Centered Footer */}
         <div className="maintenance-footer">
           <span className="maintenance-footer-credit">&bull; Christopher Lamera &bull;</span>
-          <Link to="/admin" className="maintenance-admin-link">
-            <Lock size={12} /> Admin Access
-          </Link>
         </div>
       </motion.div>
     </div>

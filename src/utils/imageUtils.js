@@ -128,3 +128,19 @@ export function getLinkIconType(rawUrl = '') {
 
   return 'globe';
 }
+
+/**
+ * Ensures a URL has a protocol (https:// or mailto:) so it does not resolve relatively
+ */
+export function ensureAbsoluteUrl(rawUrl = '') {
+  if (!rawUrl) return '#';
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('mailto:') || trimmed.startsWith('tel:')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+

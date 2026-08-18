@@ -16,7 +16,7 @@ import {
 import EditableText from './EditableText';
 import ImageCropperModal, { FRAME_ANIMATIONS } from './ImageCropperModal';
 import HeadlineEditorModal from './HeadlineEditorModal';
-import { getLinkIconType } from '../utils/imageUtils';
+import { getLinkIconType, ensureAbsoluteUrl } from '../utils/imageUtils';
 import './HomeHero.css';
 
 // ─── Crisp Vector Social / Platform Icons ────────────────────────────────────────
@@ -526,7 +526,7 @@ export default function HomeHero({
               {socials.map((link) => (
                 <a 
                   key={link.id || link.url}
-                  href={link.url} 
+                  href={ensureAbsoluteUrl(link.url)} 
                   target="_blank" 
                   rel="noreferrer" 
                   className="home-hero-social-link"

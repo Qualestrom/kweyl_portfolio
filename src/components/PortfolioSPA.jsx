@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import SectionLabels from './SectionLabels';
 import KeyboardHints from './KeyboardHints';
+import MaintenanceOverlay from './MaintenanceOverlay';
 
 // Sections
 import HomeHero from './HomeHero';
@@ -48,6 +50,7 @@ export const DEFAULT_CONFIG = {
   heroBtnPrimaryText: 'View Projects',
   heroBtnSecondaryText: 'Download CV',
   heroCvUrl: '/cv.pdf',
+  isMaintenanceMode: false,
   heroSocials: [
     { id: '1', url: 'https://github.com', label: 'GitHub Profile' },
     { id: '2', url: 'https://linkedin.com', label: 'LinkedIn Profile' }
@@ -184,6 +187,11 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSection, navigateTo, isAdmin, navigate]);
 
+  // ── If Maintenance Mode is Active & Viewer is NOT Admin ───────────────────────
+  if (config.isMaintenanceMode && !isAdmin) {
+    return <MaintenanceOverlay config={config} />;
+  }
+
   // ── Render current section ───────────────────────────────────────────────────
   const renderSection = () => {
     const props = { config, isAdmin, onUpdateConfig: handleUpdateConfig };
@@ -195,6 +203,10 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
       case 4: return <ContactSection />;
       default: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
     }
+  };
+
+  const toggleMaintenanceMode = () => {
+    handleUpdateConfig('isMaintenanceMode', !config.isMaintenanceMode);
   };
 
   return (
@@ -263,7 +275,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
 
         <KeyboardHints currentSection={currentSection} />
 
-        {/* Admin Mode Badge & Real-Time Save Indicator */}
+        {/* ─── Admin Floating Control Toolbar ─────────────────────────────── */}
         {isAdmin && (
           <div style={{
             position: 'fixed',
@@ -272,22 +284,67 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '12px',
             background: 'var(--bg-secondary)',
             border: '1px solid var(--cryo-glass-border)',
-            borderRadius: '30px',
-            padding: '8px 16px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.8rem',
+            borderRadius: '40px',
+            padding: '8px 18px',
+            boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3)',
+            fontFamily: 'Inter',
+            fontSize: '0.82rem',
             color: 'var(--text-main)',
-            backdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(16px)',
           }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
-            <span style={{ fontWeight: 600 }}>Admin Mode</span>
+            {/* Live Mode Indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                background: config.isMaintenanceMode ? '#eab308' : '#22c55e', 
+                boxShadow: config.isMaintenanceMode ? '0 0 8px #eab308' : '0 0 8px #22c55e' 
+              }} />
+              <span style={{ fontWeight: 700 }}>
+                {config.isMaintenanceMode ? 'Maintenance Mode' : 'Live Site'}
+              </span>
+            </div>
+
+            {/* Maintenance Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleMaintenanceMode}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                background: config.isMaintenanceMode ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                border: config.isMaintenanceMode ? '1px solid rgba(234, 179, 8, 0.5)' : '1px solid var(--cryo-glass-border)',
+                color: config.isMaintenanceMode ? '#eab308' : 'var(--text-muted)',
+                fontFamily: 'Inter',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              title={config.isMaintenanceMode ? "Click to disable maintenance mode and show portfolio to visitors" : "Click to activate maintenance overlay for all visitors"}
+            >
+              {config.isMaintenanceMode ? (
+                <>
+                  <Wrench size={13} /> Viewers Blocked (Click to Set Live)
+                </>
+              ) : (
+                <>
+                  <Wrench size={13} /> Activate Maintenance Screen
+                </>
+              )}
+            </button>
+
+            {/* Save Status Toast */}
             {saveStatus && (
-              <span style={{ color: 'var(--cryo-accent)', marginLeft: '6px', fontWeight: 500 }}>
-                &bull; {saveStatus}
+              <span style={{ color: 'var(--cryo-accent)', fontWeight: 500, borderLeft: '1px solid var(--cryo-glass-border)', paddingLeft: '10px' }}>
+                {saveStatus}
               </span>
             )}
           </div>

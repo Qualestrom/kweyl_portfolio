@@ -15,6 +15,12 @@
   gap: 6px;
 }
 
+@media (max-width: 1023px) {
+  .section-labels {
+    display: none;
+  }
+}
+
 .section-label {
   position: relative;
   display: inline-flex;

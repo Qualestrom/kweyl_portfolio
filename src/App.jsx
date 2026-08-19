@@ -6,6 +6,7 @@ import StellarBackground from './components/StellarBackground';
 import InteractiveBackground from './components/InteractiveBackground';
 import PortfolioSPA from './components/PortfolioSPA';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import ThumbnailPreview from './pages/ThumbnailPreview.jsx';
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
@@ -39,6 +40,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<PortfolioSPA />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/thumbnail" element={<ThumbnailPreview />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

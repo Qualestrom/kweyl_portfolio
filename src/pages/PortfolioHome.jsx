@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { Terminal, Smartphone, Cloud, Layers, ArrowRight } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import ProjectsList from '../components/ProjectsList';
+import ProjectsShowcase from '../components/ProjectsShowcase';
 import CertificatesCarousel from '../components/CertificatesCarousel';
 import ThemeToggle from '../components/ThemeToggle';
 import MagneticButton from '../components/MagneticButton';
@@ -233,7 +233,7 @@ export default function PortfolioHome({ isAdmin = false, onLogout }) {
                     <CertificatesCarousel />
 
                     {/* Dynamic Projects */}
-                    <ProjectsList isAdmin={isAdmin} />
+                    <ProjectsShowcase isAdmin={isAdmin} />
 
                     {/* Footer / Contact */}
                     <section id="contact" style={{ padding: '100px 40px', textAlign: 'center' }}>

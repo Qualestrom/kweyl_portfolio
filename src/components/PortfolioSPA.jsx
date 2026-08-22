@@ -55,9 +55,14 @@ export const DEFAULT_CONFIG = {
     { id: '1', url: 'https://github.com', label: 'GitHub Profile' },
     { id: '2', url: 'https://linkedin.com', label: 'LinkedIn Profile' }
   ],
-  aboutTitle: 'The Architect.',
-  aboutText1: 'I am a Computer Engineering graduate specializing in Software Development.',
-  aboutText2: 'My philosophy is simple: complex problems require elegant, scalable software solutions. From architecting robust React front-ends to building cross-platform Flutter applications, I build end-to-end digital systems that perform flawlessly.',
+  aboutTitle: 'Software Developer',
+  aboutText1: 'I am a Computer Engineering graduate specializing in Software Development. I work with React for web front-ends and Flutter for cross-platform mobile applications.',
+  aboutText2: '',
+  aboutStatus: 'Open to Work',
+  aboutSoftwareSkills: ['React', 'TypeScript', 'C#'],
+  aboutMobileSkills: ['Flutter', 'Dart', 'React Native', 'PWA'],
+  aboutCloudSkills: ['Firebase', 'Supabase', 'Vercel'],
+  aboutDesignSkills: ['Figma', 'UI/UX', 'Git / CI/CD'],
 };
 
 // ─── Portfolio SPA (state-based navigation) ──────────────────────────────────────

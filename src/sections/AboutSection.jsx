@@ -5,69 +5,157 @@ import {
   Cloud, 
   Layers, 
   ArrowRight, 
-  Check, 
-  RefreshCw
+  Plus, 
+  X
 } from 'lucide-react';
 import EditableText from '../components/EditableText';
 
-export default function AboutSection({ config, isAdmin, onUpdateConfig, onNavigateContact }) {
-  // Interactive states for each Bento container
-  const [softwareActiveSkill, setSoftwareActiveSkill] = useState('React');
-  const [mobileActiveSkill, setMobileActiveSkill] = useState('Flutter');
-  const [cloudActiveSkill, setCloudActiveSkill] = useState('Firebase');
-  const [isPinging, setIsPinging] = useState(false);
-  const [pingLatency, setPingLatency] = useState(24);
-  const [designActiveSkill, setDesignActiveSkill] = useState('Figma');
-  const [copiedEmail, setCopiedEmail] = useState(false);
+// Predefined statuses the admin can cycle through
+const STATUS_OPTIONS = [
+  { label: 'Open to Work', available: true },
+  { label: 'Open to Freelance', available: true },
+  { label: 'Currently Employed', available: false },
+  { label: 'Not Available', available: false },
+];
 
-  const headline = config?.aboutTitle || "The Architect.";
+export default function AboutSection({ config, isAdmin, onUpdateConfig, onNavigateContact }) {
+  // Admin-only state for inline skill adding
+  const [addingTo, setAddingTo] = useState(null);
+  const [newSkillText, setNewSkillText] = useState('');
+
+  // ── Config-driven content ──────────────────────────────────────────────
+  const headline = config?.aboutTitle || "Software Developer";
   const paragraph = config?.aboutText1 
     ? (config.aboutText2 ? `${config.aboutText1}\n\n${config.aboutText2}` : config.aboutText1)
-    : "I am a Computer Engineering graduate specializing in Software Development. My philosophy is simple: complex problems require elegant, scalable software solutions. From architecting robust React front-ends to building cross-platform Flutter applications, I build end-to-end digital systems that perform flawlessly.";
+    : "I am a Computer Engineering graduate specializing in Software Development. I work with React for web front-ends and Flutter for cross-platform mobile applications.";
 
-  // Software details mapping
-  const softwareDetails = {
-    'React': 'React 19 • Concurrent UI & Virtual DOM',
-    'TypeScript': 'Strict 0-any • Bulletproof Contracts',
-    'C#': '.NET Core • High-Throughput OOP'
+  const status = config?.aboutStatus || 'Open to Work';
+  const statusOption = STATUS_OPTIONS.find(s => s.label === status);
+  const isAvailable = statusOption?.available ?? true;
+
+  // Skill arrays from config (with hardcoded fallbacks for first load)
+  const softwareSkills = config?.aboutSoftwareSkills || ['React', 'TypeScript', 'C#'];
+  const mobileSkills = config?.aboutMobileSkills || ['Flutter', 'Dart', 'React Native', 'PWA'];
+  const cloudSkills = config?.aboutCloudSkills || ['Firebase', 'Supabase', 'Vercel'];
+  const designSkills = config?.aboutDesignSkills || ['Figma', 'UI/UX', 'Git / CI/CD'];
+
+  // ── Status cycling (admin only) ────────────────────────────────────────
+  const cycleStatus = () => {
+    const currentIndex = STATUS_OPTIONS.findIndex(s => s.label === status);
+    const nextIndex = (currentIndex + 1) % STATUS_OPTIONS.length;
+    onUpdateConfig?.('aboutStatus', STATUS_OPTIONS[nextIndex].label);
   };
 
-  // Mobile details mapping
-  const mobileDetails = {
-    'Flutter': 'Compiled Native ARM • 60-120fps Engine',
-    'Dart': 'Sound Null Safety • Reactive Streams',
-    'React Native': 'Native Bridges • Shared JS Logic',
-    'PWA': 'Offline Caching & Service Workers'
+  // ── Skill management (admin only) ──────────────────────────────────────
+  const handleAddSkill = (configKey, currentSkills) => {
+    const trimmed = newSkillText.trim();
+    if (trimmed && !currentSkills.includes(trimmed)) {
+      onUpdateConfig?.(configKey, [...currentSkills, trimmed]);
+    }
+    setNewSkillText('');
+    setAddingTo(null);
   };
 
-  // Cloud details mapping
-  const cloudDetails = {
-    'Firebase': { latency: 18, desc: 'Real-time NoSQL & Auth Streams' },
-    'Supabase': { latency: 24, desc: 'PostgreSQL & Edge Functions' },
-    'Vercel': { latency: 12, desc: 'Global Edge & Automated CI/CD' }
+  const handleRemoveSkill = (configKey, currentSkills, skillToRemove) => {
+    onUpdateConfig?.(configKey, currentSkills.filter(s => s !== skillToRemove));
   };
 
-  // Design details mapping
-  const designDetails = {
-    'Figma': 'Auto-layout & responsive design systems',
-    'UI/UX': 'Human-centered heuristics & fluid flows',
-    'Git / CI/CD': 'Automated testing, linting & deployment'
-  };
+  // ── Reusable skill tags renderer ───────────────────────────────────────
+  const renderSkillTags = (skills, configKey) => (
+    <div className="flex flex-wrap gap-1.5">
+      {skills.map((skill) => (
+        <span
+          key={skill}
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] inline-flex items-center gap-1.5 transition-colors duration-200 ${
+            isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/5' : 'hover:text-slate-100 hover:border-white/20'
+          }`}
+        >
+          {skill}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => handleRemoveSkill(configKey, skills, skill)}
+              className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all duration-150 cursor-pointer flex-shrink-0"
+              title={`Remove ${skill}`}
+            >
+              <X size={8} />
+            </button>
+          )}
+        </span>
+      ))}
 
-  const handlePing = () => {
-    setIsPinging(true);
-    setTimeout(() => {
-      setPingLatency(Math.floor(Math.random() * 15) + 12);
-      setIsPinging(false);
-    }, 400);
-  };
+      {/* Admin: Add skill button */}
+      {isAdmin && addingTo !== configKey && (
+        <button
+          type="button"
+          onClick={() => { setAddingTo(configKey); setNewSkillText(''); }}
+          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-cyan-500/20 transition-colors cursor-pointer"
+        >
+          <Plus size={12} /> Add
+        </button>
+      )}
 
-  const handleCopyEmail = () => {
-    navigator.clipboard?.writeText?.("chrislamera0408@gmail.com");
-    setCopiedEmail(true);
-    setTimeout(() => setCopiedEmail(false), 2000);
-  };
+      {/* Admin: Inline input for new skill */}
+      {isAdmin && addingTo === configKey && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleAddSkill(configKey, skills); }}
+          className="inline-flex items-center gap-1"
+        >
+          <input
+            type="text"
+            value={newSkillText}
+            onChange={(e) => setNewSkillText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') { setAddingTo(null); setNewSkillText(''); } }}
+            autoFocus
+            placeholder="Skill name"
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-950/80 text-white border border-cyan-500/50 outline-none w-28 placeholder:text-slate-500"
+          />
+          <button
+            type="submit"
+            className="px-2 py-1 rounded-lg text-[11px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 cursor-pointer"
+            title="Press Enter to add"
+          >
+            ↵
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAddingTo(null); setNewSkillText(''); }}
+            className="px-1.5 py-1 rounded-lg text-xs bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:text-slate-200 cursor-pointer"
+            title="Cancel"
+          >
+            <X size={10} />
+          </button>
+        </form>
+      )}
+    </div>
+  );
 
+  // ── Reusable skill card renderer ───────────────────────────────────────
+  const renderSkillCard = (icon, title, number, skills, configKey) => (
+    <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.2)]">
+              {icon}
+            </div>
+            <h3 className="font-bold text-base xl:text-lg text-white font-['Outfit']">{title}</h3>
+          </div>
+          <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-md">
+            {number}
+          </span>
+        </div>
+      </div>
+
+      {/* Skill Tags */}
+      <div>
+        {renderSkillTags(skills, configKey)}
+      </div>
+    </div>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <section className="section-viewport overflow-y-auto lg:overflow-hidden py-10 lg:py-0" id="about-section">
       <div className="section-content w-full h-full flex items-center justify-center pl-6 sm:pl-10 lg:pl-32 xl:pl-44 pr-6 sm:pr-10 lg:pr-12 xl:pr-16 max-w-[1480px]">
@@ -82,7 +170,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
             {/* Ambient Glow */}
             <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-cyan-500/15 transition-all duration-500" />
             
-            {/* Top Bar: Eyebrow + Interactive Status Badge */}
+            {/* Top Bar: Eyebrow + Status Badge */}
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 w-fit">
@@ -90,23 +178,33 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                   About Me
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleCopyEmail}
-                  title="Click to copy email address"
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  {copiedEmail ? (
-                    <>
-                      <Check size={11} /> Copied!
-                    </>
-                  ) : (
-                    <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Open to Projects
-                    </>
-                  )}
-                </button>
+                {/* Status Badge — admin clicks to cycle, visitors see static */}
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={cycleStatus}
+                    title={`Click to change status • Current: ${status}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border transition-colors cursor-pointer ${
+                      isAvailable
+                        ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20'
+                        : 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                    {status}
+                  </button>
+                ) : (
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border ${
+                      isAvailable
+                        ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                        : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                    {status}
+                  </span>
+                )}
               </div>
 
               {/* Headline */}
@@ -129,7 +227,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                     text={paragraph}
                     isAdmin={isAdmin}
                     multiline={true}
-                    onSave={(v) => onUpdateConfig?.('aboutText1', v)}
+                    onSave={(v) => onUpdateConfig?.({ aboutText1: v, aboutText2: '' })}
                   />
                 ) : (
                   paragraph
@@ -149,7 +247,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               </button>
 
               <span className="text-[11px] font-mono text-slate-500 hidden sm:inline-block">
-                Comp Engineering // Software Spec
+                Computer Engineering // Software Development
               </span>
             </div>
           </div>
@@ -157,225 +255,22 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           {/* ─────────────────────────────────────────────────────────────
               2. SOFTWARE CARD (Row 1, Col 3 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.2)]">
-                    <Terminal size={17} />
-                  </div>
-                  <h3 className="font-bold text-base xl:text-lg text-white font-['Outfit']">Software</h3>
-                </div>
-                <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-md">
-                  01
-                </span>
-              </div>
-
-              {/* Interactive Live Output Badge */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-white/[0.06] text-xs font-mono text-cyan-200/90 mb-2 flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">{`>`}</span>
-                <span className="text-[11px] leading-snug">
-                  {softwareDetails[softwareActiveSkill]}
-                </span>
-              </div>
-            </div>
-
-            {/* Interactive Clickable Tech Stack Tags */}
-            <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">
-                Click to inspect
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['React', 'TypeScript', 'C#'].map((skill) => {
-                  const isSelected = softwareActiveSkill === skill;
-                  return (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => setSoftwareActiveSkill(skill)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-[0_0_10px_rgba(103,232,249,0.2)]'
-                          : 'bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:text-slate-200 hover:border-white/20'
-                      }`}
-                    >
-                      {skill}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {renderSkillCard(<Terminal size={17} />, 'Software', '01', softwareSkills, 'aboutSoftwareSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
               3. MOBILE CARD (Row 1, Col 4 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.2)]">
-                    <Smartphone size={17} />
-                  </div>
-                  <h3 className="font-bold text-base xl:text-lg text-white font-['Outfit']">Mobile</h3>
-                </div>
-                <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-md">
-                  02
-                </span>
-              </div>
-
-              {/* Interactive Live Engine Output */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-white/[0.06] text-xs font-mono text-cyan-200/90 mb-2 flex items-center justify-between">
-                <span className="text-[11px] leading-snug">
-                  {mobileDetails[mobileActiveSkill]}
-                </span>
-              </div>
-            </div>
-
-            {/* Interactive Clickable Platform Tags */}
-            <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">
-                Click to inspect
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['Flutter', 'Dart', 'React Native', 'PWA'].map((skill) => {
-                  const isSelected = mobileActiveSkill === skill;
-                  return (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => setMobileActiveSkill(skill)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-[0_0_10px_rgba(103,232,249,0.2)]'
-                          : 'bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:text-slate-200 hover:border-white/20'
-                      }`}
-                    >
-                      {skill}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {renderSkillCard(<Smartphone size={17} />, 'Mobile', '02', mobileSkills, 'aboutMobileSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
               4. CLOUD CARD (Row 2, Col 3 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
-            <div>
-              {/* Header with Ping Action */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.2)]">
-                    <Cloud size={17} />
-                  </div>
-                  <h3 className="font-bold text-base xl:text-lg text-white font-['Outfit']">Cloud</h3>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handlePing}
-                  title="Ping cloud edge network"
-                  className="flex items-center gap-1 text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-md hover:bg-cyan-500/20 transition-colors cursor-pointer"
-                >
-                  <RefreshCw size={10} className={isPinging ? 'animate-spin' : ''} />
-                  {isPinging ? 'Pinging...' : `${pingLatency}ms`}
-                </button>
-              </div>
-
-              {/* Interactive Live Region Status */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-white/[0.06] text-xs font-mono text-cyan-200/90 mb-2 flex items-center justify-between">
-                <span className="text-[11px] leading-snug">
-                  {cloudDetails[cloudActiveSkill]?.desc}
-                </span>
-              </div>
-            </div>
-
-            {/* Interactive Clickable Services */}
-            <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">
-                Click to inspect
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['Firebase', 'Supabase', 'Vercel'].map((skill) => {
-                  const isSelected = cloudActiveSkill === skill;
-                  return (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => {
-                        setCloudActiveSkill(skill);
-                        setPingLatency(cloudDetails[skill]?.latency || 20);
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-[0_0_10px_rgba(103,232,249,0.2)]'
-                          : 'bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:text-slate-200 hover:border-white/20'
-                      }`}
-                    >
-                      {skill}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {renderSkillCard(<Cloud size={17} />, 'Cloud', '03', cloudSkills, 'aboutCloudSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
-              5. DESIGN CARD (Row 2, Col 4 on Desktop)
+              5. DESIGN & TOOLS CARD (Row 2, Col 4 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.2)]">
-                    <Layers size={17} />
-                  </div>
-                  <h3 className="font-bold text-base xl:text-lg text-white font-['Outfit']">Design</h3>
-                </div>
-                <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-md">
-                  04
-                </span>
-              </div>
-
-              {/* Interactive Step Preview */}
-              <div className="p-2 rounded-xl bg-slate-950/70 border border-white/[0.06] text-xs font-mono text-cyan-200/90 mb-2 flex items-center justify-between">
-                <span className="text-[11px] leading-snug">
-                  {designDetails[designActiveSkill]}
-                </span>
-              </div>
-            </div>
-
-            {/* Interactive Clickable Workflow Tags */}
-            <div>
-              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">
-                Click to inspect
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['Figma', 'UI/UX', 'Git / CI/CD'].map((skill) => {
-                  const isSelected = designActiveSkill === skill;
-                  return (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => setDesignActiveSkill(skill)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/50 shadow-[0_0_10px_rgba(103,232,249,0.2)]'
-                          : 'bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:text-slate-200 hover:border-white/20'
-                      }`}
-                    >
-                      {skill}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          {renderSkillCard(<Layers size={17} />, 'Design', '04', designSkills, 'aboutDesignSkills')}
 
         </div>
       </div>

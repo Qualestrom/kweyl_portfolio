@@ -13,13 +13,14 @@ import {
   Sparkles,
   Layers,
   Check,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
-import ProjectEditorInline from './ProjectEditorInline';
+import EditableText from './EditableText';
 
 const FALLBACK_PROJECTS = [
   {
@@ -63,10 +64,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const [activeSlide, setActiveSlide] = useState({});
   const [uploading, setUploading] = useState({});
   
-  // Admin edit states
-  const [editingMode, setEditingMode] = useState(null); // 'add' | 'edit' | null
-  const [editProject, setEditProject] = useState(null); // project object when editing
+  // Admin inline-edit states
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [addingSkill, setAddingSkill] = useState(false);
+  const [newSkillText, setNewSkillText] = useState('');
+  const [editingUrl, setEditingUrl] = useState(null); // 'github' | 'demo' | null
+  const [urlDraft, setUrlDraft] = useState('');
 
   // Fetch projects from Firestore
   useEffect(() => {
@@ -114,27 +117,69 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   }, [projects, activeProject]);
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
-  const handleOpenAdd = () => {
-    setEditProject(null);
-    setEditingMode('add');
+  const handleOpenAdd = async () => {
+    const newProject = {
+      title: 'New Project',
+      tag: 'Project',
+      description: 'Click any field to edit.',
+      skills: [],
+      githubUrl: '',
+      demoUrl: '',
+      photos: [],
+      createdAt: new Date().toISOString(),
+    };
+    try {
+      const docRef = await addDoc(collection(db, 'projects'), newProject);
+      const created = { id: docRef.id, ...newProject };
+      setProjects(prev => [...prev, created]);
+      setActiveProjectId(docRef.id);
+    } catch (err) {
+      console.warn('Add project local fallback:', err);
+      const localId = `local-${Date.now()}`;
+      const created = { id: localId, ...newProject };
+      setProjects(prev => [...prev, created]);
+      setActiveProjectId(localId);
+    }
   };
 
-  const handleOpenEdit = (project, e) => {
-    e?.stopPropagation?.();
-    setEditProject(project);
-    setEditingMode('edit');
+  // Update a single field on the active project (in state + Firestore)
+  const handleUpdateField = async (field, value) => {
+    if (!activeProject) return;
+    // Optimistic state update
+    setProjects(prev => prev.map(p =>
+      p.id === activeProject.id ? { ...p, [field]: value } : p
+    ));
+    // Persist to Firestore
+    try {
+      await updateDoc(doc(db, 'projects', activeProject.id), { [field]: value });
+    } catch (err) {
+      console.warn('Field update fallback (local only):', err);
+    }
   };
 
-  const handleSaveProject = (savedProject) => {
-    setProjects(prev => {
-      const exists = prev.some(p => p.id === savedProject.id);
-      if (exists) {
-        return prev.map(p => (p.id === savedProject.id ? { ...p, ...savedProject } : p));
-      }
-      return [...prev, savedProject];
-    });
-    setActiveProjectId(savedProject.id);
-    setEditingMode(null);
+  // Skills management (inline, like AboutSection)
+  const handleAddSkill = () => {
+    const trimmed = newSkillText.trim();
+    if (!trimmed || !activeProject) return;
+    const current = activeProject.skills || [];
+    if (!current.includes(trimmed)) {
+      handleUpdateField('skills', [...current, trimmed]);
+    }
+    setNewSkillText('');
+    setAddingSkill(false);
+  };
+
+  const handleRemoveSkill = (skillToRemove) => {
+    if (!activeProject) return;
+    const updated = (activeProject.skills || []).filter(s => s !== skillToRemove);
+    handleUpdateField('skills', updated);
+  };
+
+  // URL inline editing
+  const handleSaveUrl = (field) => {
+    handleUpdateField(field, urlDraft.trim());
+    setEditingUrl(null);
+    setUrlDraft('');
   };
 
   const handleDeleteProject = async (id, e) => {
@@ -355,26 +400,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </div>
 
         {/* ─────────────────────────────────────────────────────────────
-            RIGHT COLUMN (7 Cols): Project Showcase Preview Panel / Inline Editor
+            RIGHT COLUMN (7 Cols): Project Showcase Preview Panel
            ───────────────────────────────────────────────────────────── */}
-        {editingMode !== null ? (
-          <div className="lg:col-span-7 h-full">
-            <ProjectEditorInline
-              project={editProject}
-              onClose={() => setEditingMode(null)}
-              onSaved={handleSaveProject}
-              onUploadPhoto={handleUploadPhoto}
-              onRemovePhoto={handleRemovePhoto}
-              uploading={editProject ? uploading[editProject.id] : false}
-            />
-          </div>
-        ) : (
-          <div className="lg:col-span-7 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/30 transition-all duration-300">
-            
-            {/* Ambient Glow */}
-            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        <div className="lg:col-span-7 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/30 transition-all duration-300">
+          
+          {/* Ambient Glow */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
 
-            <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
             {activeProject ? (
               <motion.div
                 key={activeProject.id}
@@ -387,13 +420,47 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 {/* Top Row: Tag, Number, and External Links */}
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-2">
-                    <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold">
-                      {activeProject.tag}
-                    </span>
+                    <EditableText
+                      text={activeProject.tag}
+                      isAdmin={isAdmin}
+                      onSave={(v) => handleUpdateField('tag', v)}
+                      className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold"
+                    />
 
                     {/* Quick Link Buttons (GitHub & Demo) */}
                     <div className="flex items-center gap-2">
-                      {activeProject.githubUrl && (
+                      {/* GitHub URL — admin can click to edit inline */}
+                      {isAdmin ? (
+                        editingUrl === 'github' ? (
+                          <form
+                            className="inline-flex items-center gap-1"
+                            onSubmit={(e) => { e.preventDefault(); handleSaveUrl('githubUrl'); }}
+                          >
+                            <input
+                              type="url"
+                              value={urlDraft}
+                              onChange={(e) => setUrlDraft(e.target.value)}
+                              placeholder="https://github.com/..."
+                              className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-cyan-400 text-white text-xs outline-none w-44"
+                              autoFocus
+                              onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
+                            />
+                            <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
+                            <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setEditingUrl('github'); setUrlDraft(activeProject.githubUrl || ''); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] border-dashed hover:text-cyan-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 transition-all cursor-pointer"
+                            title="Click to edit GitHub URL"
+                          >
+                            <FolderGit2 size={13} />
+                            <span>{activeProject.githubUrl ? 'Code' : 'Set Repo'}</span>
+                            <Edit3 size={9} className="text-cyan-400/60" />
+                          </button>
+                        )
+                      ) : activeProject.githubUrl ? (
                         <a
                           href={ensureAbsoluteUrl(activeProject.githubUrl)}
                           target="_blank"
@@ -405,9 +472,40 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                           <span>Code</span>
                           <ExternalLink size={10} className="text-slate-500" />
                         </a>
-                      )}
+                      ) : null}
 
-                      {activeProject.demoUrl && (
+                      {/* Demo URL — admin can click to edit inline */}
+                      {isAdmin ? (
+                        editingUrl === 'demo' ? (
+                          <form
+                            className="inline-flex items-center gap-1"
+                            onSubmit={(e) => { e.preventDefault(); handleSaveUrl('demoUrl'); }}
+                          >
+                            <input
+                              type="url"
+                              value={urlDraft}
+                              onChange={(e) => setUrlDraft(e.target.value)}
+                              placeholder="https://..."
+                              className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-emerald-400 text-white text-xs outline-none w-44"
+                              autoFocus
+                              onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
+                            />
+                            <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
+                            <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setEditingUrl('demo'); setUrlDraft(activeProject.demoUrl || ''); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 border-dashed hover:bg-emerald-500/20 transition-all cursor-pointer"
+                            title="Click to edit Demo URL"
+                          >
+                            <Globe size={13} />
+                            <span>{activeProject.demoUrl ? 'Live Demo' : 'Set Demo'}</span>
+                            <Edit3 size={9} className="text-emerald-400/60" />
+                          </button>
+                        )
+                      ) : activeProject.demoUrl ? (
                         <a
                           href={ensureAbsoluteUrl(activeProject.demoUrl)}
                           target="_blank"
@@ -419,7 +517,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                           <span>Live Demo</span>
                           <ExternalLink size={10} className="text-emerald-400" />
                         </a>
-                      )}
+                      ) : null}
 
                       <span className="text-xs font-mono text-slate-500 px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.06]">
                         {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
@@ -427,15 +525,24 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     </div>
                   </div>
 
-                  {/* Project Title */}
+                  {/* Project Title — Editable in-place */}
                   <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2">
-                    {activeProject.title}
+                    <EditableText
+                      text={activeProject.title}
+                      isAdmin={isAdmin}
+                      onSave={(v) => handleUpdateField('title', v)}
+                    />
                   </h3>
 
-                  {/* Project Description */}
-                  <p className="text-slate-300/90 text-xs sm:text-sm leading-relaxed max-w-2xl line-clamp-3">
-                    {activeProject.description}
-                  </p>
+                  {/* Project Description — Editable in-place */}
+                  <div className="text-slate-300/90 text-xs sm:text-sm leading-relaxed max-w-2xl">
+                    <EditableText
+                      text={activeProject.description}
+                      isAdmin={isAdmin}
+                      multiline={true}
+                      onSave={(v) => handleUpdateField('description', v)}
+                    />
+                  </div>
                 </div>
 
                 {/* Media Preview Area (Screenshot / Carousel / Placeholder) */}
@@ -577,28 +684,60 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   )}
                 </div>
 
-                {/* Skills Tags List */}
-                <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
+                {/* Skills Tags List — Inline editable like AboutSection */}
+                <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center gap-2">
                   <div className="flex flex-wrap gap-1.5">
                     {(activeProject.skills || []).map((skill, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-white/[0.04] text-slate-300 border border-white/[0.08]"
+                        className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-white/[0.04] text-slate-300 border border-white/[0.08] inline-flex items-center gap-1.5 transition-colors ${
+                          isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/5' : ''
+                        }`}
                       >
                         {skill}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all cursor-pointer flex-shrink-0"
+                            title={`Remove ${skill}`}
+                          >
+                            <X size={8} />
+                          </button>
+                        )}
                       </span>
                     ))}
-                  </div>
 
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      onClick={(e) => handleOpenEdit(activeProject, e)}
-                      className="text-xs font-mono text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 size={11} /> Edit Details
-                    </button>
-                  )}
+                    {/* Admin: Add skill button / inline input */}
+                    {isAdmin && !addingSkill && (
+                      <button
+                        type="button"
+                        onClick={() => { setAddingSkill(true); setNewSkillText(''); }}
+                        className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-cyan-500/20 transition-colors cursor-pointer"
+                      >
+                        <Plus size={10} /> Add Skill
+                      </button>
+                    )}
+
+                    {isAdmin && addingSkill && (
+                      <form
+                        className="inline-flex items-center gap-1"
+                        onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }}
+                      >
+                        <input
+                          type="text"
+                          value={newSkillText}
+                          onChange={(e) => setNewSkillText(e.target.value)}
+                          placeholder="Skill name"
+                          className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-cyan-400 text-white text-[11px] font-mono outline-none w-24"
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSkill(false); setNewSkillText(''); } }}
+                        />
+                        <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
+                        <button type="button" onClick={() => { setAddingSkill(false); setNewSkillText(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
+                      </form>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ) : (
@@ -608,7 +747,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
             )}
           </AnimatePresence>
         </div>
-        )}
       </div>
     </div>
   );

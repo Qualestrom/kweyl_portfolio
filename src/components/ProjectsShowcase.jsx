@@ -19,7 +19,7 @@ import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arr
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
-import ProjectEditorModal from './ProjectEditorModal';
+import ProjectEditorInline from './ProjectEditorInline';
 
 const FALLBACK_PROJECTS = [
   {
@@ -63,9 +63,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const [activeSlide, setActiveSlide] = useState({});
   const [uploading, setUploading] = useState({});
   
-  // Admin modal states
-  const [modalProject, setModalProject] = useState(null); // null when closed, {} or project object when open
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Admin edit states
+  const [editingMode, setEditingMode] = useState(null); // 'add' | 'edit' | null
+  const [editProject, setEditProject] = useState(null); // project object when editing
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   // Fetch projects from Firestore
@@ -115,14 +115,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
-    setModalProject(null);
-    setIsModalOpen(true);
+    setEditProject(null);
+    setEditingMode('add');
   };
 
   const handleOpenEdit = (project, e) => {
     e?.stopPropagation?.();
-    setModalProject(project);
-    setIsModalOpen(true);
+    setEditProject(project);
+    setEditingMode('edit');
   };
 
   const handleSaveProject = (savedProject) => {
@@ -134,6 +134,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       return [...prev, savedProject];
     });
     setActiveProjectId(savedProject.id);
+    setEditingMode(null);
   };
 
   const handleDeleteProject = async (id, e) => {
@@ -354,14 +355,26 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </div>
 
         {/* ─────────────────────────────────────────────────────────────
-            RIGHT COLUMN (7 Cols): Project Showcase Preview Panel
+            RIGHT COLUMN (7 Cols): Project Showcase Preview Panel / Inline Editor
            ───────────────────────────────────────────────────────────── */}
-        <div className="lg:col-span-7 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/30 transition-all duration-300">
-          
-          {/* Ambient Glow */}
-          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+        {editingMode !== null ? (
+          <div className="lg:col-span-7 h-full">
+            <ProjectEditorInline
+              project={editProject}
+              onClose={() => setEditingMode(null)}
+              onSaved={handleSaveProject}
+              onUploadPhoto={handleUploadPhoto}
+              onRemovePhoto={handleRemovePhoto}
+              uploading={editProject ? uploading[editProject.id] : false}
+            />
+          </div>
+        ) : (
+          <div className="lg:col-span-7 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/30 transition-all duration-300">
+            
+            {/* Ambient Glow */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
 
-          <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait">
             {activeProject ? (
               <motion.div
                 key={activeProject.id}
@@ -595,19 +608,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
             )}
           </AnimatePresence>
         </div>
-
-      </div>
-
-      {/* ─── Admin Project Editor Modal ─── */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <ProjectEditorModal
-            project={modalProject}
-            onClose={() => setIsModalOpen(false)}
-            onSaved={handleSaveProject}
-          />
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

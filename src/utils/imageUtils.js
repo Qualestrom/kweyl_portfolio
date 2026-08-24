@@ -144,3 +144,18 @@ export function ensureAbsoluteUrl(rawUrl = '') {
   return `https://${trimmed}`;
 }
 
+/**
+ * Detects the orientation of an image from its URL.
+ * Returns 'portrait' if height > width, otherwise 'landscape'.
+ */
+export function detectImageOrientation(imageUrl) {
+  return new Promise((resolve) => {
+    if (!imageUrl) return resolve('landscape');
+    const img = new Image();
+    img.onload = () => {
+      resolve(img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape');
+    };
+    img.onerror = () => resolve('landscape');
+    img.src = imageUrl;
+  });
+}

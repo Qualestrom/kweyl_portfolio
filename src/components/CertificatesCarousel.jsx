@@ -644,9 +644,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
   return (
     <div className="w-full flex flex-col justify-center select-none py-3 sm:py-5">
-      {/* ─── Clean Header Bar ─── */}
-      <div className="flex items-center justify-between gap-3 mb-4 px-1">
-        <div className="flex items-center gap-2.5">
+      {/* ─── Clean Header Bar (Left-Aligned Cluster to avoid Logout/Theme collisions) ─── */}
+      <div className="flex items-center justify-between gap-3 mb-4 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-sm">
             <Award size={13} className="text-cyan-400" />
             <span>Certifications</span>
@@ -654,18 +654,18 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           <span className="text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
             {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
           </span>
-        </div>
 
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
-            title="Add new certificate"
-          >
-            <Plus size={13} /> Add Credential
-          </button>
-        )}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md ml-1"
+              title="Add new certificate"
+            >
+              <Plus size={13} /> Add Credential
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ─── 3D PERSPECTIVE STAGE WITH FLANKING STAGE NAVIGATION ARROWS ─── */}

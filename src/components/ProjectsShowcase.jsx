@@ -361,25 +361,23 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   return (
     <div className="w-full h-full flex flex-col justify-center max-w-6xl mx-auto">
-      {/* ─── Top Header / Controls ─── */}
-      <div className="flex items-center justify-between gap-3 mb-3 px-1">
-        <div className="flex items-center gap-2.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+      {/* ─── Top Header / Controls (Left-Aligned Cluster to avoid Logout/Theme collisions) ─── */}
+      <div className="flex items-center justify-between gap-3 mb-3 px-1 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             Selected Work
           </div>
-          <span className="text-xs font-mono text-slate-400 bg-white/[0.03] border border-white/[0.08] px-2.5 py-0.5 rounded-full">
+          <span className="text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
             {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
           </span>
-        </div>
 
-        <div className="flex items-center gap-2">
           {isAdmin && (
-            <>
+            <div className="flex items-center gap-1.5 ml-1">
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
                 title="Add new project"
               >
                 <Plus size={13} /> Add Project
@@ -389,13 +387,13 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 <button
                   type="button"
                   onClick={(e) => handleDeleteProject(activeProject.id, e)}
-                  className="p-1.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer"
+                  className="p-1 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer shadow-md"
                   title="Delete current project"
                 >
                   <Trash2 size={13} />
                 </button>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -450,24 +448,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none z-10" />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent pointer-events-none z-10" />
 
-                {/* Click to redirect indicator hint (top right) */}
-                {hasLink && !isAdmin && (
-                  <div 
-                    onClick={() => handleSlideClick(project)}
-                    className="absolute top-4 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/70 text-cyan-300 border border-cyan-500/30 backdrop-blur-md text-xs font-mono opacity-80 group-hover:opacity-100 group-hover:bg-cyan-500/20 cursor-pointer transition-all shadow-lg"
-                    title="Click photo to visit project link"
-                  >
-                    <span>Visit Project</span>
-                    <ExternalLink size={12} />
-                  </div>
-                )}
-
-                {/* Admin Photo Management Controls (top right) */}
+                {/* Admin Photo Management Controls (top left inside frame) */}
                 {isAdmin && isCurrent && (
-                  <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                  <div className="absolute top-3.5 left-3.5 z-30 flex items-center gap-2">
                     <label
                       title="Upload new photo for this project"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg"
                     >
                       <Plus size={13} />
                       <span>{uploading[project.id] ? 'Uploading...' : 'Add Photo'}</span>
@@ -486,12 +472,24 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                       <button
                         type="button"
                         onClick={(e) => handleRemovePhoto(project.id, project.photos[0], e)}
-                        className="p-1.5 rounded-xl bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+                        className="p-1.5 rounded-xl bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
                         title="Delete project photo"
                       >
                         <Trash2 size={13} />
                       </button>
                     )}
+                  </div>
+                )}
+
+                {/* Click to redirect indicator hint (top right inside frame) */}
+                {hasLink && !isAdmin && (
+                  <div 
+                    onClick={() => handleSlideClick(project)}
+                    className="absolute top-3.5 right-3.5 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md text-xs font-mono opacity-80 group-hover:opacity-100 group-hover:bg-cyan-500/20 cursor-pointer transition-all shadow-lg"
+                    title="Click photo to visit project link"
+                  >
+                    <span>Visit Project</span>
+                    <ExternalLink size={12} />
                   </div>
                 )}
 

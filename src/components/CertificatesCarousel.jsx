@@ -14,13 +14,14 @@ import {
   Globe, 
   Upload,
   MousePointerClick,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
-import { isPdfFile, renderPdfFirstPageToImage } from '../utils/pdfUtils';
+import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } from '../utils/pdfUtils';
 import EditableText from './EditableText';
 
 const DEFAULT_CERT_IMAGES = [
@@ -152,32 +153,29 @@ const LandscapeCarouselCard = ({
         textRendering: 'optimizeLegibility',
       }}
     >
-      {/* ─── Top Landscape Certificate Image / Thumbnail Banner ─── */}
-      <div className="relative w-full h-[140px] sm:h-[165px] md:h-[185px] lg:h-[195px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.08] group/img shrink-0">
+      {/* ─── Top Landscape Certificate Frame (Seamless Edge-to-Edge Display) ─── */}
+      <div className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.1] group/img shrink-0 flex items-center justify-center">
         <img
           src={certImage}
           alt={cert.title}
-          className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
-            hasCustomImage ? 'object-contain bg-slate-950 p-2 sm:p-2.5' : 'object-cover'
+          className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-102 ${
+            hasCustomImage ? 'object-cover object-top bg-white' : 'object-cover object-center'
           }`}
           draggable={false}
         />
 
-        {/* Gradient shadow for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />
-
-        {/* Top Right Admin Image / PDF Controls */}
+        {/* Top Right Admin Controls */}
         {isAdmin && isActive && (
           <div 
             className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-30"
             onClick={(e) => e.stopPropagation()}
           >
             <label
-              title="Upload PDF certificate or Image"
-              className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-md inline-flex items-center gap-1.5"
+              title="Upload PDF certificate (Auto-scans title, issuer & date)"
+              className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg inline-flex items-center gap-1.5"
             >
               <Upload size={12} />
-              <span>{isUploading ? 'Processing...' : 'Upload PDF/Img'}</span>
+              <span>{isUploading ? 'Scanning...' : 'Upload PDF/Img'}</span>
               <input
                 type="file"
                 accept="image/*, .pdf, application/pdf"
@@ -193,7 +191,7 @@ const LandscapeCarouselCard = ({
               <button
                 type="button"
                 onClick={(e) => handleRemoveDocument(cert.id, e)}
-                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/50 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
                 title="Remove uploaded document/image"
               >
                 <Trash2 size={12} />
@@ -203,15 +201,16 @@ const LandscapeCarouselCard = ({
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono shadow-sm">
+        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[10px] font-mono shadow-md backdrop-blur-md">
           <ShieldCheck size={11} className="text-cyan-400" />
-          <span>{cert.pdfUrl ? 'PDF Credential' : 'Verified'}</span>
+          <span>{cert.pdfUrl ? 'Verified PDF' : 'Verified'}</span>
         </div>
 
-        {/* Uploading / Processing Status Overlay */}
+        {/* Uploading / Scanning Status Overlay */}
         {isUploading && (
-          <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-1 text-cyan-300 text-xs font-mono z-30">
-            <span className="animate-pulse">{uploadStatus}</span>
+          <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-1.5 text-cyan-300 text-xs font-mono z-30">
+            <Sparkles size={18} className="animate-spin text-cyan-400" />
+            <span className="font-semibold animate-pulse">{uploadStatus}</span>
           </div>
         )}
       </div>
@@ -514,14 +513,14 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     setCertificates(prev => prev.filter(c => c.id !== id));
   };
 
-  // Upload either PDF document or Image File
+  // Upload either PDF document or Image File with Smart Metadata Scanning
   const handleUploadDocument = async (certId, file) => {
     if (!file) return;
     const isPdf = isPdfFile(file);
 
     setUploading(prev => ({ 
       ...prev, 
-      [certId]: isPdf ? 'Converting PDF...' : 'Uploading...' 
+      [certId]: isPdf ? 'Scanning PDF text...' : 'Uploading image...' 
     }));
 
     try {
@@ -537,17 +536,22 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       let downloadPdfUrl = '';
 
       if (isPdf) {
-        // 1. Render Page 1 to high-resolution WebP Blob client-side
+        // 1. Scan and extract Title, Issuer, Date from PDF text layer
+        const metadata = await extractPdfCertificateMetadata(file);
+
+        setUploading(prev => ({ ...prev, [certId]: 'Rendering preview...' }));
+
+        // 2. Render Page 1 to high-resolution WebP Blob client-side
         const { blob: imageBlob } = await renderPdfFirstPageToImage(file, 2.0);
 
-        setUploading(prev => ({ ...prev, [certId]: 'Uploading to Storage...' }));
+        setUploading(prev => ({ ...prev, [certId]: 'Saving to Firebase...' }));
 
-        // 2. Upload rendered thumbnail image
+        // 3. Upload rendered thumbnail image
         const imageStorageRef = ref(storage, `certificates/${certId}/thumb-${Date.now()}.webp`);
         await uploadBytes(imageStorageRef, imageBlob);
         downloadImageUrl = await getDownloadURL(imageStorageRef);
 
-        // 3. Upload original authentic PDF document
+        // 4. Upload original authentic PDF document
         const pdfStorageRef = ref(storage, `certificates/${certId}/doc-${Date.now()}-${file.name}`);
         await uploadBytes(pdfStorageRef, file);
         downloadPdfUrl = await getDownloadURL(pdfStorageRef);
@@ -556,6 +560,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         const updatePayload = {
           imageUrl: downloadImageUrl,
           pdfUrl: downloadPdfUrl,
+          ...(metadata.title ? { title: metadata.title } : {}),
+          ...(metadata.issuer ? { issuer: metadata.issuer } : {}),
+          ...(metadata.date ? { date: metadata.date } : {}),
           ...(currentCert && !currentCert.verifyUrl ? { verifyUrl: downloadPdfUrl } : {})
         };
 

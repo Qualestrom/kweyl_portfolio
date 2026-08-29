@@ -13,12 +13,14 @@ import {
   ShieldCheck, 
   Globe, 
   Upload,
-  MousePointerClick
+  MousePointerClick,
+  FileText
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
+import { isPdfFile, renderPdfFirstPageToImage } from '../utils/pdfUtils';
 import EditableText from './EditableText';
 
 const DEFAULT_CERT_IMAGES = [
@@ -37,6 +39,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'Amazon Web Services',
     date: '2023',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://aws.amazon.com/certification/'
   },
   {
@@ -45,6 +48,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'Google Cloud',
     date: '2023',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://cloud.google.com/certification'
   },
   {
@@ -53,6 +57,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'Meta',
     date: '2022',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://www.coursera.org/professional-certificates/meta-front-end-developer'
   },
   {
@@ -61,6 +66,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'CNCF',
     date: '2024',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://www.cncf.io/certification/cka/'
   },
   {
@@ -69,6 +75,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'Frontend Masters',
     date: '2022',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://frontendmasters.com'
   },
   {
@@ -77,6 +84,7 @@ const FALLBACK_CERTIFICATES = [
     issuer: 'University of Helsinki',
     date: '2021',
     imageUrl: '',
+    pdfUrl: '',
     verifyUrl: 'https://fullstackopen.com'
   }
 ];
@@ -98,8 +106,8 @@ const LandscapeCarouselCard = ({
   handleUpdateField,
   handleSaveUrl,
   handleDeleteCert,
-  handleUploadImage,
-  handleRemoveImage,
+  handleUploadDocument,
+  handleRemoveDocument,
   onClickCard,
 }) => {
   const angle = (360 / Math.max(total, 1)) * idx;
@@ -107,6 +115,11 @@ const LandscapeCarouselCard = ({
   const certImage = cert.imageUrl || fallbackImg;
   const hasCustomImage = Boolean(cert.imageUrl);
   const isEditingUrl = editingUrlId === cert.id;
+  const isUploading = Boolean(uploading[cert.id]);
+  const uploadStatus = typeof uploading[cert.id] === 'string' ? uploading[cert.id] : 'Uploading...';
+
+  // Effective destination URL (verify link or PDF URL)
+  const targetLink = cert.verifyUrl || cert.pdfUrl || '';
 
   // Calculate dynamic front-facing angle and opacity
   const opacity = useTransform(rotation, (r) => {
@@ -153,35 +166,35 @@ const LandscapeCarouselCard = ({
         {/* Gradient shadow for contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />
 
-        {/* Top Right Admin Image Controls */}
+        {/* Top Right Admin Image / PDF Controls */}
         {isAdmin && isActive && (
           <div 
             className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-30"
             onClick={(e) => e.stopPropagation()}
           >
             <label
-              title="Upload Certificate PDF screenshot or image"
-              className="px-2 py-1 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-md inline-flex items-center gap-1"
+              title="Upload PDF certificate or Image"
+              className="px-2.5 py-1 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-md inline-flex items-center gap-1.5"
             >
               <Upload size={12} />
-              <span>{uploading[cert.id] ? '...' : 'Upload'}</span>
+              <span>{isUploading ? 'Processing...' : 'Upload PDF/Img'}</span>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*, .pdf, application/pdf"
                 className="hidden"
-                disabled={uploading[cert.id]}
+                disabled={isUploading}
                 onChange={(e) => {
-                  if (e.target.files?.[0]) handleUploadImage(cert.id, e.target.files[0]);
+                  if (e.target.files?.[0]) handleUploadDocument(cert.id, e.target.files[0]);
                 }}
               />
             </label>
 
-            {cert.imageUrl && (
+            {(cert.imageUrl || cert.pdfUrl) && (
               <button
                 type="button"
-                onClick={(e) => handleRemoveImage(cert.id, e)}
+                onClick={(e) => handleRemoveDocument(cert.id, e)}
                 className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
-                title="Remove image"
+                title="Remove uploaded document/image"
               >
                 <Trash2 size={12} />
               </button>
@@ -192,13 +205,13 @@ const LandscapeCarouselCard = ({
         {/* Top Left Verified Badge */}
         <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono shadow-sm">
           <ShieldCheck size={11} className="text-cyan-400" />
-          <span>Verified</span>
+          <span>{cert.pdfUrl ? 'PDF Credential' : 'Verified'}</span>
         </div>
 
-        {/* Uploading Status Overlay */}
-        {uploading[cert.id] && (
-          <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
-            Uploading...
+        {/* Uploading / Processing Status Overlay */}
+        {isUploading && (
+          <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-1 text-cyan-300 text-xs font-mono z-30">
+            <span className="animate-pulse">{uploadStatus}</span>
           </div>
         )}
       </div>
@@ -265,12 +278,12 @@ const LandscapeCarouselCard = ({
               <div className="flex items-center justify-between w-full" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
-                  onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || ''); }}
+                  onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || cert.pdfUrl || ''); }}
                   className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:underline cursor-pointer"
                   title="Edit verification link"
                 >
                   <Globe size={13} />
-                  <span>{cert.verifyUrl ? 'Edit Link' : 'Set Link'}</span>
+                  <span>{cert.verifyUrl ? 'Edit Link' : cert.pdfUrl ? 'PDF Attached' : 'Set Link'}</span>
                   <Edit3 size={10} className="opacity-70" />
                 </button>
 
@@ -284,17 +297,26 @@ const LandscapeCarouselCard = ({
                 </button>
               </div>
             )
-          ) : cert.verifyUrl ? (
+          ) : targetLink ? (
             <a
-              href={ensureAbsoluteUrl(cert.verifyUrl)}
+              href={ensureAbsoluteUrl(targetLink)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
-              title="Verify Certificate Credential Online"
+              title="Open Certificate Document / Credential Verification"
             >
-              <ShieldCheck size={13} className="text-cyan-400" />
-              <span>Verify Credential</span>
+              {cert.pdfUrl && !cert.verifyUrl ? (
+                <>
+                  <FileText size={13} className="text-cyan-400" />
+                  <span>View PDF Certificate</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck size={13} className="text-cyan-400" />
+                  <span>Verify Credential</span>
+                </>
+              )}
               <ExternalLink size={11} />
             </a>
           ) : (
@@ -448,6 +470,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       issuer: 'Issuing Organization',
       date: new Date().getFullYear().toString(),
       imageUrl: '',
+      pdfUrl: '',
       verifyUrl: '',
       createdAt: new Date().toISOString(),
     };
@@ -491,9 +514,16 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     setCertificates(prev => prev.filter(c => c.id !== id));
   };
 
-  const handleUploadImage = async (certId, file) => {
+  // Upload either PDF document or Image File
+  const handleUploadDocument = async (certId, file) => {
     if (!file) return;
-    setUploading(prev => ({ ...prev, [certId]: true }));
+    const isPdf = isPdfFile(file);
+
+    setUploading(prev => ({ 
+      ...prev, 
+      [certId]: isPdf ? 'Converting PDF...' : 'Uploading...' 
+    }));
+
     try {
       if (['1', '2', '3', '4', '5', '6'].includes(certId)) {
         const fc = FALLBACK_CERTIFICATES.find(c => c.id === certId);
@@ -503,37 +533,72 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         }
       }
 
-      const storageRef = ref(storage, `certificates/${certId}/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(storageRef);
+      let downloadImageUrl = '';
+      let downloadPdfUrl = '';
 
-      await updateDoc(doc(db, 'certificates', certId), {
-        imageUrl: downloadUrl
-      });
+      if (isPdf) {
+        // 1. Render Page 1 to high-resolution WebP Blob client-side
+        const { blob: imageBlob } = await renderPdfFirstPageToImage(file, 2.0);
 
-      setCertificates(prev => prev.map(c =>
-        c.id === certId ? { ...c, imageUrl: downloadUrl } : c
-      ));
+        setUploading(prev => ({ ...prev, [certId]: 'Uploading to Storage...' }));
+
+        // 2. Upload rendered thumbnail image
+        const imageStorageRef = ref(storage, `certificates/${certId}/thumb-${Date.now()}.webp`);
+        await uploadBytes(imageStorageRef, imageBlob);
+        downloadImageUrl = await getDownloadURL(imageStorageRef);
+
+        // 3. Upload original authentic PDF document
+        const pdfStorageRef = ref(storage, `certificates/${certId}/doc-${Date.now()}-${file.name}`);
+        await uploadBytes(pdfStorageRef, file);
+        downloadPdfUrl = await getDownloadURL(pdfStorageRef);
+
+        const currentCert = certificates.find(c => c.id === certId);
+        const updatePayload = {
+          imageUrl: downloadImageUrl,
+          pdfUrl: downloadPdfUrl,
+          ...(currentCert && !currentCert.verifyUrl ? { verifyUrl: downloadPdfUrl } : {})
+        };
+
+        await updateDoc(doc(db, 'certificates', certId), updatePayload);
+
+        setCertificates(prev => prev.map(c =>
+          c.id === certId ? { ...c, ...updatePayload } : c
+        ));
+      } else {
+        // Regular image upload
+        const storageRef = ref(storage, `certificates/${certId}/${Date.now()}-${file.name}`);
+        await uploadBytes(storageRef, file);
+        downloadImageUrl = await getDownloadURL(storageRef);
+
+        await updateDoc(doc(db, 'certificates', certId), {
+          imageUrl: downloadImageUrl
+        });
+
+        setCertificates(prev => prev.map(c =>
+          c.id === certId ? { ...c, imageUrl: downloadImageUrl } : c
+        ));
+      }
     } catch (err) {
-      console.error('Error uploading certificate image:', err);
-      alert('Upload failed. Check Firebase storage configuration.');
+      console.error('Error uploading document/image:', err);
+      alert('Upload failed: ' + (err.message || 'Check storage connection.'));
     } finally {
       setUploading(prev => ({ ...prev, [certId]: false }));
     }
   };
 
-  const handleRemoveImage = async (certId, e) => {
+  const handleRemoveDocument = async (certId, e) => {
     e?.stopPropagation?.();
-    if (!window.confirm('Remove image for this certificate?')) return;
+    if (!window.confirm('Remove document / image for this certificate?')) return;
     try {
       await updateDoc(doc(db, 'certificates', certId), {
-        imageUrl: ''
+        imageUrl: '',
+        pdfUrl: ''
       });
       setCertificates(prev => prev.map(c =>
-        c.id === certId ? { ...c, imageUrl: '' } : c
+        c.id === certId ? { ...c, imageUrl: '', pdfUrl: '' } : c
       ));
     } catch (err) {
-      console.error('Error removing certificate image:', err);
+      console.error('Error removing certificate document:', err);
     }
   };
 
@@ -622,8 +687,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               handleUpdateField={handleUpdateField}
               handleSaveUrl={handleSaveUrl}
               handleDeleteCert={handleDeleteCert}
-              handleUploadImage={handleUploadImage}
-              handleRemoveImage={handleRemoveImage}
+              handleUploadDocument={handleUploadDocument}
+              handleRemoveDocument={handleRemoveDocument}
               onClickCard={handleSelectCard}
             />
           ))}

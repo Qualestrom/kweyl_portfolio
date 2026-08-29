@@ -255,6 +255,20 @@
   transform: translateY(-2px);
 }
 
+[data-theme='light'] .home-hero-social-link {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme='light'] .home-hero-social-link:hover {
+  color: #0284C7;
+  border-color: #0284C7;
+  background: #F8FAFC;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+}
+
 .home-hero-social-admin-add {
   display: inline-flex;
   align-items: center;

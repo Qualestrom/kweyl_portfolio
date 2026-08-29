@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, useAnimationFrame, animate, useTransform } from 'framer-motion';
+import { motion, useMotionValue, animate, useTransform } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -12,8 +12,6 @@ import {
   X, 
   ShieldCheck, 
   Globe, 
-  Play, 
-  Pause,
   Upload
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
@@ -23,12 +21,12 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import EditableText from './EditableText';
 
 const DEFAULT_CERT_IMAGES = [
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=90', // Tech / learning
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=90', // Cloud / network
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=90', // Cyber / dev
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=90', // Code / data
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=90', // Modern abstract
-  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=90', // Workspace
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80', // Tech / learning
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', // Cloud / network
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80', // Cyber / dev
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80', // Code / data
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80', // Modern abstract
+  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80', // Workspace
 ];
 
 const FALLBACK_CERTIFICATES = [
@@ -82,13 +80,26 @@ const FALLBACK_CERTIFICATES = [
   }
 ];
 
-const CarouselCard = ({
-  cert, idx, total, rotation, translateZ, isAdmin,
-  editingUrlId, urlDraft, uploading,
-  setEditingUrlId, setUrlDraft,
-  handleUpdateField, handleSaveUrl, handleDeleteCert,
-  handleUploadImage, handleRemoveImage,
-  onHoverStart, onHoverEnd
+// Individual Landscape 3D Certificate Card
+const LandscapeCarouselCard = ({
+  cert,
+  idx,
+  total,
+  rotation,
+  translateZ,
+  isActive,
+  isAdmin,
+  editingUrlId,
+  urlDraft,
+  uploading,
+  setEditingUrlId,
+  setUrlDraft,
+  handleUpdateField,
+  handleSaveUrl,
+  handleDeleteCert,
+  handleUploadImage,
+  handleRemoveImage,
+  onClickCard,
 }) => {
   const angle = (360 / Math.max(total, 1)) * idx;
   const fallbackImg = DEFAULT_CERT_IMAGES[idx % DEFAULT_CERT_IMAGES.length];
@@ -96,61 +107,70 @@ const CarouselCard = ({
   const hasCustomImage = Boolean(cert.imageUrl);
   const isEditingUrl = editingUrlId === cert.id;
 
-  // Calculate if the card is front-facing to dim back cards and disable their pointer events
+  // Calculate dynamic front-facing angle and opacity
   const opacity = useTransform(rotation, (r) => {
     let currentGlobalAngle = (angle + r) % 360;
     if (currentGlobalAngle < 0) currentGlobalAngle += 360;
-    if (currentGlobalAngle < 90 || currentGlobalAngle > 270) {
+    // Front card is centered around 0/360
+    if (currentGlobalAngle < 75 || currentGlobalAngle > 285) {
       return 1;
     }
-    return 0.35;
+    // Flanking cards
+    if (currentGlobalAngle < 120 || currentGlobalAngle > 240) {
+      return 0.55;
+    }
+    // Rear cards
+    return 0.25;
   });
 
   const pointerEvents = useTransform(rotation, (r) => {
     let currentGlobalAngle = (angle + r) % 360;
     if (currentGlobalAngle < 0) currentGlobalAngle += 360;
-    if (currentGlobalAngle < 90 || currentGlobalAngle > 270) {
+    if (currentGlobalAngle < 75 || currentGlobalAngle > 285) {
       return 'auto';
     }
-    return 'none';
+    return 'auto'; // Allow clicking side cards to navigate to them
   });
 
   return (
     <motion.div
-      className="absolute inset-0 rounded-2xl border border-slate-700/80 bg-slate-900/95 shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:border-cyan-400 hover:shadow-[0_0_35px_rgba(34,211,238,0.35)] transition-all duration-300 flex flex-col justify-between group/card overflow-hidden"
+      onClick={() => {
+        if (!isActive) onClickCard(idx);
+      }}
+      className={`absolute inset-0 rounded-2xl border transition-colors duration-300 flex flex-col justify-between cursor-pointer ${
+        isActive
+          ? 'border-cyan-400/80 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(34,211,238,0.25)] z-20'
+          : 'border-white/15 bg-slate-900/95 shadow-[0_12px_32px_rgba(0,0,0,0.5)] hover:border-white/30 z-10'
+      }`}
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
         opacity,
         pointerEvents,
-        WebkitFontSmoothing: 'antialiased',
-        MozOsxFontSmoothing: 'grayscale',
-        transformStyle: 'preserve-3d',
-        willChange: 'transform, opacity',
       }}
-      onMouseEnter={onHoverStart}
-      onMouseLeave={onHoverEnd}
     >
-      {/* Top Image Preview Banner */}
-      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950 overflow-hidden border-b border-white/[0.08] group/img shrink-0">
+      {/* ─── Top Landscape Certificate Image / Thumbnail Banner ─── */}
+      <div className="relative w-full h-[125px] sm:h-[140px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.08] group/img shrink-0">
         <img
           src={certImage}
           alt={cert.title}
           className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
             hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
           }`}
-          style={{ imageRendering: '-webkit-optimize-contrast' }}
           draggable={false}
         />
 
-        {/* Subtle Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent pointer-events-none" />
+        {/* Gradient shadow for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />
 
-        {/* Top Right Admin Controls */}
-        {isAdmin && (
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
+        {/* Top Right Admin Image Controls */}
+        {isAdmin && isActive && (
+          <div 
+            className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-30"
+            onClick={(e) => e.stopPropagation()}
+          >
             <label
-              title="Upload Certificate PDF screenshot / image"
-              className="p-1.5 rounded-lg bg-slate-950/90 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+              title="Upload Certificate PDF screenshot or image"
+              className="p-1.5 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
             >
               <Upload size={12} />
               <input
@@ -168,7 +188,7 @@ const CarouselCard = ({
               <button
                 type="button"
                 onClick={(e) => handleRemoveImage(cert.id, e)}
-                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/50 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
                 title="Remove custom image"
               >
                 <Trash2 size={12} />
@@ -178,7 +198,7 @@ const CarouselCard = ({
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[10px] font-mono shadow-sm">
+        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono shadow-sm">
           <ShieldCheck size={11} className="text-cyan-400" />
           <span>Verified</span>
         </div>
@@ -186,52 +206,56 @@ const CarouselCard = ({
         {/* Uploading Status Overlay */}
         {uploading[cert.id] && (
           <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
-            Uploading Image...
+            Uploading Certificate Image...
           </div>
         )}
       </div>
 
-      {/* Card Content & Details */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between relative">
-        <div className="pt-1">
-          {/* Date and Issuer Line */}
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="text-[12px] font-mono text-cyan-400 font-semibold flex-1 min-w-0">
+      {/* ─── Bottom Details & Text Section (No overflow-hidden so Edit badges float freely) ─── */}
+      <div 
+        className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between relative"
+        onClick={(e) => {
+          if (isActive) e.stopPropagation();
+        }}
+      >
+        <div>
+          {/* Issuer & Date Row */}
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="text-[11px] font-mono text-cyan-400 font-semibold truncate flex-1">
               <EditableText
                 text={cert.issuer}
-                isAdmin={isAdmin}
+                isAdmin={isAdmin && isActive}
                 onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
               />
             </div>
 
-            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.08] border border-white/[0.12] px-2 py-0.5 rounded-full shrink-0">
+            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.06] border border-white/[0.1] px-2 py-0.5 rounded-full shrink-0">
               <EditableText
                 text={cert.date}
-                isAdmin={isAdmin}
+                isAdmin={isAdmin && isActive}
                 onSave={(v) => handleUpdateField(cert.id, 'date', v)}
               />
             </div>
           </div>
 
           {/* Certificate Title */}
-          <div className="mt-1">
-            <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug">
-              <EditableText
-                text={cert.title}
-                isAdmin={isAdmin}
-                onSave={(v) => handleUpdateField(cert.id, 'title', v)}
-              />
-            </h3>
-          </div>
+          <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug">
+            <EditableText
+              text={cert.title}
+              isAdmin={isAdmin && isActive}
+              onSave={(v) => handleUpdateField(cert.id, 'title', v)}
+            />
+          </h3>
         </div>
 
-        {/* Bottom Action Row: Verify Link / Admin Actions */}
-        <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-2">
-          {isAdmin ? (
+        {/* ─── Bottom Actions Row (Verify Link & Admin Actions) ─── */}
+        <div className="pt-2 mt-1 border-t border-white/[0.08] flex items-center justify-between gap-2">
+          {isAdmin && isActive ? (
             isEditingUrl ? (
               <form
                 className="flex-1 flex items-center gap-1"
                 onSubmit={(e) => { e.preventDefault(); handleSaveUrl(cert.id); }}
+                onClick={(e) => e.stopPropagation()}
               >
                 <input
                   type="url"
@@ -246,7 +270,7 @@ const CarouselCard = ({
                 <button type="button" onClick={() => { setEditingUrlId(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
               </form>
             ) : (
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-center justify-between w-full" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || ''); }}
@@ -273,15 +297,16 @@ const CarouselCard = ({
               href={ensureAbsoluteUrl(cert.verifyUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1 rounded-lg text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Verify Certificate Credential Online"
             >
-              <ShieldCheck size={13} className="text-cyan-400" />
+              <ShieldCheck size={12} className="text-cyan-400" />
               <span>Verify Credential</span>
               <ExternalLink size={11} />
             </a>
           ) : (
-            <div className="w-full text-center text-[11px] font-mono text-slate-500 py-1">
+            <div className="w-full text-center text-[11px] font-mono text-slate-500 py-0.5">
               Credential on Record
             </div>
           )}
@@ -289,14 +314,13 @@ const CarouselCard = ({
       </div>
     </motion.div>
   );
-}
+};
 
 export default function CertificatesCarousel({ isAdmin = false }) {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isAutoRotate, setIsAutoRotate] = useState(true);
   const [uploading, setUploading] = useState({});
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
@@ -305,8 +329,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   const [urlDraft, setUrlDraft] = useState('');
 
   const rotation = useMotionValue(0);
-  const direction = useRef(-1);
-  const wrapperRef = useRef(null);
+  const dragStartX = useRef(0);
+  const dragStartRotation = useRef(0);
 
   // Window resize handler
   useEffect(() => {
@@ -339,52 +363,74 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Continuous 3D Auto-Rotation with frame delta
-  useAnimationFrame((t, delta) => {
-    if (!isDragging && !isHovered && isAutoRotate && certificates.length > 1) {
-      const step = direction.current * (delta / 45);
-      rotation.set(rotation.get() + step);
-    }
-  });
+  // Smooth Snap Animation when activeIndex changes
+  useEffect(() => {
+    if (certificates.length === 0 || isDragging) return;
+    const stepAngle = 360 / certificates.length;
+    const targetRotation = -activeIndex * stepAngle;
 
-  // Pan / Drag gesture handlers
-  const handlePanStart = () => {
+    animate(rotation, targetRotation, {
+      type: 'spring',
+      stiffness: 220,
+      damping: 26,
+    });
+  }, [activeIndex, certificates.length, isDragging, rotation]);
+
+  // Step rotation helpers
+  const handlePrev = () => {
+    if (certificates.length === 0) return;
+    setActiveIndex((prev) => (prev - 1 + certificates.length) % certificates.length);
+  };
+
+  const handleNext = () => {
+    if (certificates.length === 0) return;
+    setActiveIndex((prev) => (prev + 1) % certificates.length);
+  };
+
+  const handleSelectCard = (index) => {
+    setActiveIndex(index);
+  };
+
+  // Pan / Drag gesture with smooth snap on release
+  const handlePanStart = (e, info) => {
     setIsDragging(true);
+    dragStartX.current = info.point.x;
+    dragStartRotation.current = rotation.get();
   };
 
   const handlePan = (e, info) => {
-    rotation.set(rotation.get() + info.delta.x * 0.45);
+    const deltaX = info.point.x - dragStartX.current;
+    rotation.set(dragStartRotation.current + deltaX * 0.35);
   };
 
   const handlePanEnd = (e, info) => {
     setIsDragging(false);
-    if (info.velocity.x > 80) {
-      direction.current = 1;
-    } else if (info.velocity.x < -80) {
-      direction.current = -1;
-    }
-  };
-
-  // Step rotation
-  const rotateStep = (dir) => {
     if (certificates.length === 0) return;
+
     const stepAngle = 360 / certificates.length;
-    const current = rotation.get();
-    const target = current + (dir * stepAngle);
-    animate(rotation, target, {
-      type: 'spring',
-      stiffness: 180,
-      damping: 25,
-    });
+    const currentRot = rotation.get();
+    
+    // Determine closest card index
+    let rawIndex = Math.round(-currentRot / stepAngle);
+    let newIndex = ((rawIndex % certificates.length) + certificates.length) % certificates.length;
+    
+    // If fast swipe gesture, advance by 1
+    if (info.velocity.x > 300) {
+      newIndex = (activeIndex - 1 + certificates.length) % certificates.length;
+    } else if (info.velocity.x < -300) {
+      newIndex = (activeIndex + 1) % certificates.length;
+    }
+
+    setActiveIndex(newIndex);
   };
 
-  // Dynamic 3D radius calculation to prevent card overlap
+  // Dynamic 3D radius calculation for landscape cards
   const translateZ = useMemo(() => {
     const total = Math.max(certificates.length, 3);
-    const cardWidth = windowWidth > 1024 ? 330 : windowWidth > 640 ? 290 : 250;
+    const cardWidth = windowWidth > 1024 ? 440 : windowWidth > 640 ? 380 : 320;
     const angleRad = Math.PI / total;
     const computedRadius = Math.round((cardWidth / 2) / Math.tan(angleRad));
-    return Math.max(windowWidth > 768 ? 340 : 270, computedRadius + 40);
+    return Math.max(windowWidth > 768 ? 360 : 280, computedRadius + 30);
   }, [certificates.length, windowWidth]);
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
@@ -400,12 +446,20 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     try {
       const docRef = await addDoc(collection(db, 'certificates'), newCert);
       const created = { id: docRef.id, ...newCert };
-      setCertificates(prev => [...prev, created]);
+      setCertificates(prev => {
+        const updated = [...prev, created];
+        setActiveIndex(updated.length - 1);
+        return updated;
+      });
     } catch (err) {
       console.warn('Add certificate fallback (local only):', err);
       const localId = `local-${Date.now()}`;
       const created = { id: localId, ...newCert };
-      setCertificates(prev => [...prev, created]);
+      setCertificates(prev => {
+        const updated = [...prev, created];
+        setActiveIndex(updated.length - 1);
+        return updated;
+      });
     }
   };
 
@@ -434,7 +488,11 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     } catch (err) {
       console.warn('Delete cert local fallback:', err);
     }
-    setCertificates(prev => prev.filter(c => c.id !== id));
+    setCertificates(prev => {
+      const filtered = prev.filter(c => c.id !== id);
+      setActiveIndex(prevIdx => Math.min(prevIdx, Math.max(0, filtered.length - 1)));
+      return filtered;
+    });
   };
 
   const handleUploadImage = async (certId, file) => {
@@ -498,11 +556,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   };
 
   return (
-    <div 
-      ref={wrapperRef}
-      className="w-full flex flex-col justify-center select-none"
-    >
-      {/* ─── Header & 3D Controls Bar ─── */}
+    <div className="w-full flex flex-col justify-center select-none py-2">
+      {/* ─── Header Bar with Step Navigation & Admin Actions ─── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6 px-1">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
@@ -510,43 +565,33 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               <Award size={13} className="text-cyan-400" />
               <span>Certifications</span>
             </div>
-            <span className="text-xs font-mono text-slate-400 bg-white/[0.03] border border-white/[0.08] px-2.5 py-0.5 rounded-full">
-              {String(certificates.length).padStart(2, '0')} Credentials
+            <span className="text-xs font-mono text-slate-300 bg-white/[0.04] border border-white/[0.08] px-2.5 py-0.5 rounded-full">
+              {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
             </span>
           </div>
           <p className="text-xs text-slate-400 font-mono hidden sm:block">
-            Continuous professional development • Drag horizontally to rotate orbital view
+            Drag or click arrows to explore • Click any certificate to bring to front
           </p>
         </div>
 
-        {/* Orbit Step Controls & Auto-Rotate Toggle */}
+        {/* Orbit Step Navigation Controls */}
         <div className="flex items-center gap-2">
-          <div className="inline-flex p-1 rounded-xl bg-slate-900/80 border border-white/10 backdrop-blur-md">
+          <div className="inline-flex p-1 rounded-xl bg-slate-900/90 border border-white/10 shadow-lg">
             <button
               type="button"
-              onClick={() => rotateStep(1)}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.05] transition-colors cursor-pointer"
-              title="Rotate Left"
+              onClick={handlePrev}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Previous Certificate (Rotate Left)"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={17} />
             </button>
             <button
               type="button"
-              onClick={() => setIsAutoRotate(prev => !prev)}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                isAutoRotate ? 'text-cyan-300 bg-cyan-500/20' : 'text-slate-400 hover:text-white'
-              }`}
-              title={isAutoRotate ? 'Pause 3D Orbit' : 'Resume 3D Orbit'}
+              onClick={handleNext}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Next Certificate (Rotate Right)"
             >
-              {isAutoRotate ? <Pause size={15} /> : <Play size={15} />}
-            </button>
-            <button
-              type="button"
-              onClick={() => rotateStep(-1)}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.05] transition-colors cursor-pointer"
-              title="Rotate Right"
-            >
-              <ChevronRight size={16} />
+              <ChevronRight size={17} />
             </button>
           </div>
 
@@ -554,7 +599,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
               title="Add new certificate"
             >
               <Plus size={13} /> Add Credential
@@ -563,15 +608,13 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Unboxed within actual page) ─── */}
+      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Landscape Cards) ─── */}
       <div 
-        className="w-full relative h-[440px] sm:h-[480px] lg:h-[510px] flex items-center justify-center"
-        style={{ 
-          perspective: '1200px',
-        }}
+        className="w-full relative h-[380px] sm:h-[420px] lg:h-[450px] flex items-center justify-center"
+        style={{ perspective: '1200px' }}
       >
         <motion.div
-          className="relative w-[290px] sm:w-[330px] h-[350px] sm:h-[370px] cursor-grab active:cursor-grabbing"
+          className="relative w-[330px] sm:w-[410px] lg:w-[450px] h-[245px] sm:h-[270px] cursor-grab active:cursor-grabbing"
           style={{
             transformStyle: 'preserve-3d',
             rotateY: rotation,
@@ -581,13 +624,14 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           onPanEnd={handlePanEnd}
         >
           {certificates.map((cert, idx) => (
-            <CarouselCard
+            <LandscapeCarouselCard
               key={cert.id || idx}
               cert={cert}
               idx={idx}
               total={certificates.length}
               rotation={rotation}
               translateZ={translateZ}
+              isActive={idx === activeIndex}
               isAdmin={isAdmin}
               editingUrlId={editingUrlId}
               urlDraft={urlDraft}
@@ -599,8 +643,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               handleDeleteCert={handleDeleteCert}
               handleUploadImage={handleUploadImage}
               handleRemoveImage={handleRemoveImage}
-              onHoverStart={() => setIsHovered(true)}
-              onHoverEnd={() => setIsHovered(false)}
+              onClickCard={handleSelectCard}
             />
           ))}
         </motion.div>

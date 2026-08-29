@@ -104,10 +104,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState({});
 
-  // Admin inline-edit states
-  const [addingSkill, setAddingSkill] = useState(false);
+  // Admin inline-edit states (scoped safely to project ID)
+  const [addingSkillId, setAddingSkillId] = useState(null); // projectId | null
   const [newSkillText, setNewSkillText] = useState('');
-  const [editingUrl, setEditingUrl] = useState(null); // 'github' | 'demo' | null
+  const [editingUrl, setEditingUrl] = useState(null); // { projectId: string, field: 'demo' | 'github' } | null
   const [urlDraft, setUrlDraft] = useState('');
 
   const containerRef = useRef(null);
@@ -197,16 +197,19 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   // Helper to get image for a project
   const getProjectImage = (p, idx) => {
     if (p.photos && p.photos.length > 0) return p.photos[0];
-    return DEFAULT_PROJECT_IMAGES[idx % DEFAULT_PROJECT_IMAGES.length];
+    if (p.id && ['1', '2', '3', '4', '5'].includes(p.id)) {
+      return DEFAULT_PROJECT_IMAGES[idx % DEFAULT_PROJECT_IMAGES.length];
+    }
+    return null;
   };
 
-  // ─── Admin Handlers ────────────────────────────────────────────────────────
+  // ─── Admin Handlers (Scoped by Project ID) ─────────────────────────────────
   const handleOpenAdd = async () => {
     const newProject = {
-      title: 'New Project',
-      tag: 'Project',
-      description: 'Click any field to edit this project.',
-      skills: ['React', 'TypeScript'],
+      title: '',
+      tag: '',
+      description: '',
+      skills: [],
       githubUrl: '',
       demoUrl: '',
       photos: [],
@@ -232,37 +235,39 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
-  const handleUpdateField = async (field, value) => {
-    if (!activeProject) return;
-    setProjects(prev => prev.map((p, i) =>
-      i === index ? { ...p, [field]: value } : p
+  const handleUpdateField = async (projectId, field, value) => {
+    setProjects(prev => prev.map(p =>
+      p.id === projectId ? { ...p, [field]: value } : p
     ));
     try {
-      await updateDoc(doc(db, 'projects', activeProject.id), { [field]: value });
+      await updateDoc(doc(db, 'projects', projectId), { [field]: value });
     } catch (err) {
       console.warn('Field update fallback (local only):', err);
     }
   };
 
-  const handleAddSkill = () => {
+  const handleAddSkill = (projectId) => {
     const trimmed = newSkillText.trim();
-    if (!trimmed || !activeProject) return;
-    const current = activeProject.skills || [];
+    if (!trimmed) return;
+    const targetProject = projects.find(p => p.id === projectId);
+    if (!targetProject) return;
+    const current = targetProject.skills || [];
     if (!current.includes(trimmed)) {
-      handleUpdateField('skills', [...current, trimmed]);
+      handleUpdateField(projectId, 'skills', [...current, trimmed]);
     }
     setNewSkillText('');
-    setAddingSkill(false);
+    setAddingSkillId(null);
   };
 
-  const handleRemoveSkill = (skillToRemove) => {
-    if (!activeProject) return;
-    const updated = (activeProject.skills || []).filter(s => s !== skillToRemove);
-    handleUpdateField('skills', updated);
+  const handleRemoveSkill = (projectId, skillToRemove) => {
+    const targetProject = projects.find(p => p.id === projectId);
+    if (!targetProject) return;
+    const updated = (targetProject.skills || []).filter(s => s !== skillToRemove);
+    handleUpdateField(projectId, 'skills', updated);
   };
 
-  const handleSaveUrl = (field) => {
-    handleUpdateField(field, urlDraft.trim());
+  const handleSaveUrl = (projectId, field) => {
+    handleUpdateField(projectId, field, urlDraft.trim());
     setEditingUrl(null);
     setUrlDraft('');
   };
@@ -434,15 +439,32 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 key={project.id || idx} 
                 className="shrink-0 w-full h-[380px] sm:h-[430px] lg:h-[470px] relative overflow-hidden group select-none"
               >
-                {/* Background Project Image with Stellar Shimmer Placeholder */}
-                <ImageWithPlaceholder
-                  src={imageUrl}
-                  alt={project.title}
-                  className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
-                  containerClassName="absolute inset-0"
-                  showSpinner={true}
-                  draggable={false}
-                />
+                {/* Background Project Image or Sleek Empty Placeholder */}
+                {imageUrl ? (
+                  <ImageWithPlaceholder
+                    src={imageUrl}
+                    alt={project.title || 'Project Preview'}
+                    className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+                    containerClassName="absolute inset-0"
+                    showSpinner={true}
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
+                    <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm">
+                      <div className="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-cyan-500/10 border border-sky-500/30 dark:border-cyan-400/30 flex items-center justify-center text-sky-400 dark:text-cyan-300 shadow-[0_0_24px_rgba(2,132,199,0.2)]">
+                        <ImageIcon size={28} />
+                      </div>
+                      <span className="text-sm font-bold text-white font-['Outfit'] tracking-wide">
+                        {project.title || 'Blank Project'}
+                      </span>
+                      <span className="text-xs font-mono text-slate-400 tracking-wide">
+                        {isAdmin ? 'Upload project screenshot using "Add Photo"' : 'Project preview coming soon'}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Dark Gradient Overlay for optimal legibility */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none z-10" />
@@ -504,8 +526,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   <div className="mb-1.5">
                     <EditableText
                       text={project.tag}
-                      isAdmin={isAdmin}
-                      onSave={(v) => handleUpdateField('tag', v)}
+                      isAdmin={isAdmin && isCurrent}
+                      placeholder="CATEGORY / TAG"
+                      onSave={(v) => handleUpdateField(project.id, 'tag', v)}
                       className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold drop-shadow-sm"
                     />
                   </div>
@@ -521,8 +544,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   >
                     <EditableText
                       text={project.title}
-                      isAdmin={isAdmin}
-                      onSave={(v) => handleUpdateField('title', v)}
+                      isAdmin={isAdmin && isCurrent}
+                      placeholder="Project Title"
+                      onSave={(v) => handleUpdateField(project.id, 'title', v)}
                     />
                     {hasLink && !isAdmin && (
                       <ExternalLink size={18} className="opacity-60 group-hover:opacity-100 text-cyan-400 inline shrink-0" />
@@ -533,9 +557,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   <div className="text-slate-200/90 text-xs sm:text-sm leading-relaxed mb-4 line-clamp-3 sm:line-clamp-4 max-w-xl drop-shadow-sm">
                     <EditableText
                       text={project.description}
-                      isAdmin={isAdmin}
+                      isAdmin={isAdmin && isCurrent}
+                      placeholder="Click to add project description..."
                       multiline={true}
-                      onSave={(v) => handleUpdateField('description', v)}
+                      onSave={(v) => handleUpdateField(project.id, 'description', v)}
                     />
                   </div>
 
@@ -547,10 +572,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                         className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-white/[0.08] text-cyan-200 border border-white/[0.12] backdrop-blur-md inline-flex items-center gap-1.5 shadow-sm"
                       >
                         {skill}
-                        {isAdmin && (
+                        {isAdmin && isCurrent && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveSkill(skill)}
+                            onClick={() => handleRemoveSkill(project.id, skill)}
                             className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all cursor-pointer"
                             title={`Remove ${skill}`}
                           >
@@ -561,20 +586,20 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     ))}
 
                     {/* Admin: Add skill inline */}
-                    {isAdmin && !addingSkill && (
+                    {isAdmin && isCurrent && addingSkillId !== project.id && (
                       <button
                         type="button"
-                        onClick={() => { setAddingSkill(true); setNewSkillText(''); }}
+                        onClick={() => { setAddingSkillId(project.id); setNewSkillText(''); }}
                         className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 border-dashed inline-flex items-center gap-1 hover:bg-cyan-500/30 transition-colors cursor-pointer backdrop-blur-md"
                       >
                         <Plus size={10} /> Add Skill
                       </button>
                     )}
 
-                    {isAdmin && addingSkill && (
+                    {isAdmin && isCurrent && addingSkillId === project.id && (
                       <form
                         className="inline-flex items-center gap-1"
-                        onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }}
+                        onSubmit={(e) => { e.preventDefault(); handleAddSkill(project.id); }}
                       >
                         <input
                           type="text"
@@ -583,10 +608,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                           placeholder="Skill name"
                           className="px-2 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400 text-white text-[11px] font-mono outline-none w-24 backdrop-blur-md"
                           autoFocus
-                          onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSkill(false); setNewSkillText(''); } }}
+                          onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSkillId(null); setNewSkillText(''); } }}
                         />
                         <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
-                        <button type="button" onClick={() => { setAddingSkill(false); setNewSkillText(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
+                        <button type="button" onClick={() => { setAddingSkillId(null); setNewSkillText(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
                       </form>
                     )}
                   </div>
@@ -594,11 +619,11 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   {/* Action Link Pills: Live Demo & GitHub Code */}
                   <div className="flex flex-wrap items-center gap-2.5">
                     {/* Live Demo URL */}
-                    {isAdmin ? (
-                      editingUrl === 'demo' ? (
+                    {isAdmin && isCurrent ? (
+                      editingUrl?.projectId === project.id && editingUrl?.field === 'demo' ? (
                         <form
                           className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-emerald-400"
-                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl('demoUrl'); }}
+                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl(project.id, 'demoUrl'); }}
                         >
                           <input
                             type="url"
@@ -615,7 +640,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => { setEditingUrl('demo'); setUrlDraft(project.demoUrl || ''); }}
+                          onClick={() => { setEditingUrl({ projectId: project.id, field: 'demo' }); setUrlDraft(project.demoUrl || ''); }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 border-dashed hover:bg-emerald-500/30 transition-all cursor-pointer backdrop-blur-md"
                           title="Click to edit Demo URL"
                         >
@@ -639,11 +664,11 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     ) : null}
 
                     {/* GitHub Code URL */}
-                    {isAdmin ? (
-                      editingUrl === 'github' ? (
+                    {isAdmin && isCurrent ? (
+                      editingUrl?.projectId === project.id && editingUrl?.field === 'github' ? (
                         <form
                           className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-cyan-400"
-                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl('githubUrl'); }}
+                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl(project.id, 'githubUrl'); }}
                         >
                           <input
                             type="url"
@@ -660,7 +685,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => { setEditingUrl('github'); setUrlDraft(project.githubUrl || ''); }}
+                          onClick={() => { setEditingUrl({ projectId: project.id, field: 'github' }); setUrlDraft(project.githubUrl || ''); }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-cyan-300 bg-cyan-500/20 border border-cyan-500/40 border-dashed hover:bg-cyan-500/30 transition-all cursor-pointer backdrop-blur-md"
                           title="Click to edit GitHub URL"
                         >
@@ -757,19 +782,27 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     ? 'border-2 border-sky-600 dark:border-cyan-400 shadow-[0_0_16px_rgba(2,132,199,0.4)] opacity-100 ring-2 ring-sky-400/40 dark:ring-cyan-400/50'
                     : 'border-2 border-slate-300 dark:border-white/10 opacity-70 hover:opacity-100 hover:border-sky-400 dark:hover:border-white/30'
                 }`}
-                title={project.title}
+                title={project.title || 'Project Thumbnail'}
               >
-                <ImageWithPlaceholder
-                  src={thumbUrl}
-                  alt={project.title}
-                  className="w-full h-full object-cover pointer-events-none select-none"
-                  containerClassName="w-full h-full"
-                  draggable={false}
-                />
+                {thumbUrl ? (
+                  <ImageWithPlaceholder
+                    src={thumbUrl}
+                    alt={project.title || 'Project Thumbnail'}
+                    className="w-full h-full object-cover pointer-events-none select-none"
+                    containerClassName="w-full h-full"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-900 border border-slate-800 flex items-center justify-center p-1 text-center">
+                    <span className="text-[9px] font-mono text-slate-400 font-semibold truncate px-1">
+                      {project.title || 'Project'}
+                    </span>
+                  </div>
+                )}
                 {isCurrent && (
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-1.5 z-10">
                     <span className="text-[10px] font-semibold text-white font-['Outfit'] truncate">
-                      {project.title}
+                      {project.title || 'Untitled'}
                     </span>
                   </div>
                 )}
@@ -799,7 +832,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           <button
             type="button"
             onClick={handlePushDefaults}
-            className="text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
+            className="text-sky-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
           >
             Push to Firestore DB
           </button>

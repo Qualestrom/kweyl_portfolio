@@ -7,6 +7,7 @@ export default function EditableText({
   isAdmin, 
   onSave, 
   multiline = false, 
+  placeholder = "Click to edit...",
   className = "", 
   style = {},
   as: Component = "span" 
@@ -92,6 +93,7 @@ export default function EditableText({
               value={value}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              placeholder={placeholder}
               className={`editable-textarea-field ${className}`}
               rows={1}
               style={{ overflow: 'hidden' }}
@@ -103,6 +105,7 @@ export default function EditableText({
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={handleKeyDown}
+              placeholder={placeholder}
               className={`editable-input-field ${className}`}
             />
           )}
@@ -146,6 +149,10 @@ export default function EditableText({
       ))
     : value;
 
+  const displayContent = value 
+    ? content 
+    : <span className="opacity-50 italic font-normal">{placeholder}</span>;
+
   return (
     <Component 
       className={`editable-hover-container ${className}`} 
@@ -153,7 +160,7 @@ export default function EditableText({
       onClick={() => setIsEditing(true)}
       title="Click to edit text"
     >
-      {content}
+      {displayContent}
       <span className="editable-hover-badge">
         <Edit2 size={10} /> Edit
       </span>

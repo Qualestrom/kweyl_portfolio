@@ -1,0 +1,88 @@
+/* ============================================================
+   Stellar Image Placeholder & Skeleton Shimmer
+   ============================================================ */
+
+.stellar-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95), rgba(7, 11, 20, 0.98));
+}
+
+/* Stellar Shimmer Scanning Laser Beam */
+.stellar-shimmer-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.03) 25%,
+    rgba(34, 211, 238, 0.12) 50%,
+    rgba(34, 211, 238, 0.03) 75%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: stellar-laser-scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes stellar-laser-scan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Cosmic Orbit Center Ring Indicator */
+.stellar-loader-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0.8;
+}
+
+.stellar-orbital-ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(34, 211, 238, 0.15);
+  border-top-color: #22d3ee;
+  animation: stellar-spin 1.2s linear infinite;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+}
+
+@keyframes stellar-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth Image Fade-In Transition */
+.stellar-image-asset {
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.stellar-image-loading {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.stellar-image-loaded {
+  opacity: 1;
+  filter: blur(0px);
+}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles } from 'lucide-react';
 import './ImageWithPlaceholder.css';
 
 export default function ImageWithPlaceholder({
@@ -11,22 +11,38 @@ export default function ImageWithPlaceholder({
   showSpinner = false,
   draggable = false,
   style = {},
+  onClick,
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const imgRef = useRef(null);
 
-  // Reset loading state if src changes
+  // Synchronous cache detection on src update or mount
   useEffect(() => {
-    setLoaded(false);
     setError(false);
+
+    if (!src) {
+      setLoaded(true);
+      return;
+    }
+
+    // Check if the image is already cached in browser memory
+    if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true);
+    } else {
+      setLoaded(false);
+    }
   }, [src]);
 
-  const activeSrc = error ? fallbackSrc || src : src;
+  const activeSrc = error ? (fallbackSrc || '') : src;
 
   return (
-    <div className={`stellar-image-wrapper ${containerClassName}`}>
+    <div 
+      className={`stellar-image-wrapper ${containerClassName}`}
+      onClick={onClick}
+    >
       {/* ─── Stellar Cosmic Shimmer Effect (Visible while image loads) ─── */}
-      {!loaded && (
+      {!loaded && activeSrc && (
         <>
           <div className="stellar-shimmer-sweep" />
           {showSpinner && (
@@ -39,8 +55,15 @@ export default function ImageWithPlaceholder({
       )}
 
       {/* ─── Actual Image Asset with Progressive Fade-In ─── */}
-      {activeSrc && (
+      {activeSrc ? (
         <img
+          ref={(el) => {
+            imgRef.current = el;
+            // Immediate check when DOM element attaches (e.g. from memory cache)
+            if (el && el.complete && el.naturalWidth > 0 && !loaded) {
+              setLoaded(true);
+            }
+          }}
           src={activeSrc}
           alt={alt}
           style={style}
@@ -56,11 +79,9 @@ export default function ImageWithPlaceholder({
           }}
           className={`stellar-image-asset ${loaded ? 'stellar-image-loaded' : 'stellar-image-loading'} ${className}`}
         />
-      )}
-
-      {/* ─── Fallback on error if no image available ─── */}
-      {error && !fallbackSrc && (
-        <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center text-slate-500 text-xs font-mono gap-1">
+      ) : (
+        /* Fallback if no image source is provided */
+        <div className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-slate-500 text-xs font-mono gap-1">
           <Sparkles size={16} className="text-cyan-400/60" />
           <span>Asset on record</span>
         </div>

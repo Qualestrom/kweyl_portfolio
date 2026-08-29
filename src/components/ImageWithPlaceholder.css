@@ -23,7 +23,7 @@
     transparent 100%
   );
   transform: translateX(-100%);
-  animation: stellar-laser-scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: stellar-laser-scan 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
   z-index: 5;
 }
@@ -48,17 +48,17 @@
   gap: 8px;
   pointer-events: none;
   z-index: 6;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .stellar-orbital-ring {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1.5px solid rgba(34, 211, 238, 0.15);
+  border: 1.5px solid rgba(34, 211, 238, 0.2);
   border-top-color: #22d3ee;
-  animation: stellar-spin 1.2s linear infinite;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+  animation: stellar-spin 1s linear infinite;
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.3);
 }
 
 @keyframes stellar-spin {
@@ -70,19 +70,22 @@
   }
 }
 
-/* Smooth Image Fade-In Transition */
+/* Smooth, Silky Stellar Scale & Fade Image Reveal */
 .stellar-image-asset {
   width: 100%;
   height: 100%;
-  transition: opacity 0.5s ease, filter 0.5s ease;
+  transform-origin: center center;
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 
 .stellar-image-loading {
   opacity: 0;
-  filter: blur(8px);
+  transform: scale(0.97);
+  pointer-events: none;
 }
 
 .stellar-image-loaded {
   opacity: 1;
-  filter: blur(0px);
+  transform: scale(1);
 }

@@ -25,15 +25,6 @@ import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } f
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 
-const DEFAULT_CERT_IMAGES = [
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1000&q=80',
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1000&q=80',
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80',
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1000&q=80',
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80',
-  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1000&q=80',
-];
-
 const FALLBACK_CERTIFICATES = [
   {
     id: '1',
@@ -113,9 +104,6 @@ const LandscapeCarouselCard = ({
   onClickCard,
 }) => {
   const angle = (360 / Math.max(total, 1)) * idx;
-  const fallbackImg = DEFAULT_CERT_IMAGES[idx % DEFAULT_CERT_IMAGES.length];
-  const certImage = cert.imageUrl || fallbackImg;
-  const hasCustomImage = Boolean(cert.imageUrl);
   const isEditingUrl = editingUrlId === cert.id;
   const isUploading = Boolean(uploading[cert.id]);
   const uploadStatus = typeof uploading[cert.id] === 'string' ? uploading[cert.id] : 'Uploading...';
@@ -156,16 +144,32 @@ const LandscapeCarouselCard = ({
     >
       {/* ─── Top Landscape Certificate Frame (Seamless Edge-to-Edge Display) ─── */}
       <div className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.1] group/img shrink-0 flex items-center justify-center">
-        <ImageWithPlaceholder
-          src={certImage}
-          alt={cert.title}
-          className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-102 ${
-            hasCustomImage ? 'object-cover object-top bg-white' : 'object-cover object-center'
-          }`}
-          containerClassName="w-full h-full"
-          showSpinner={true}
-          draggable={false}
-        />
+        {cert.imageUrl ? (
+          <ImageWithPlaceholder
+            src={cert.imageUrl}
+            alt={cert.title}
+            className="w-full h-full object-cover object-top select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-102 bg-white"
+            containerClassName="w-full h-full"
+            showSpinner={true}
+            draggable={false}
+          />
+        ) : (
+          /* Stellar Credential Emblem Plate (No flashing stock photos!) */
+          <div className="w-full h-full bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden group/plate select-none">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
+            <div className="relative z-10 flex flex-col items-center gap-2 max-w-[85%]">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-transform duration-300 group-hover/plate:scale-110">
+                <Award size={24} className="text-cyan-400" />
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-white font-['Outfit'] line-clamp-1 tracking-tight">
+                {cert.title || 'Verified Credential'}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-mono text-cyan-400/90 tracking-wide uppercase truncate max-w-full">
+                {cert.issuer || 'Official Accreditation'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Top Right Admin Controls */}
         {isAdmin && isActive && (

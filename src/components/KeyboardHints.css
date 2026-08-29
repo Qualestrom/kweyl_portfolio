@@ -1,5 +1,5 @@
 /* ============================================================
-   KeyboardHints — Minimal Arrow Key Navigation Indicators
+   KeyboardHints — Minimal Arrow Key Navigation Indicators (Theme-Adaptive)
    ============================================================ */
 
 .keyboard-hints {
@@ -50,6 +50,12 @@
   animation: hint-glow 3s ease-in-out infinite;
 }
 
+[data-theme='light'] .keyboard-hint-key {
+  border-color: rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
 @keyframes hint-glow {
   0%, 100% {
     box-shadow: 0 0 0 transparent;
@@ -58,5 +64,16 @@
   50% {
     box-shadow: 0 0 8px rgba(103, 232, 249, 0.15);
     border-color: rgba(103, 232, 249, 0.2);
+  }
+}
+
+[data-theme='light'] @keyframes hint-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 transparent;
+    border-color: rgba(0, 0, 0, 0.10);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(8, 145, 178, 0.12);
+    border-color: rgba(8, 145, 178, 0.25);
   }
 }

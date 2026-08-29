@@ -1,5 +1,5 @@
 /* ============================================================
-   Stellar Image Placeholder & Skeleton Shimmer
+   Stellar Image Placeholder & Skeleton Shimmer (Theme-Adaptive)
    ============================================================ */
 
 .stellar-image-wrapper {
@@ -8,6 +8,10 @@
   height: 100%;
   overflow: hidden;
   background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95), rgba(7, 11, 20, 0.98));
+}
+
+[data-theme='light'] .stellar-image-wrapper {
+  background: radial-gradient(circle at 50% 50%, #f8fafc, #e2e8f0);
 }
 
 /* Stellar Shimmer Scanning Laser Beam */
@@ -26,6 +30,17 @@
   animation: stellar-laser-scan 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
   z-index: 5;
+}
+
+[data-theme='light'] .stellar-shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(8, 145, 178, 0.04) 25%,
+    rgba(8, 145, 178, 0.14) 50%,
+    rgba(8, 145, 178, 0.04) 75%,
+    transparent 100%
+  );
 }
 
 @keyframes stellar-laser-scan {
@@ -59,6 +74,12 @@
   border-top-color: #22d3ee;
   animation: stellar-spin 1s linear infinite;
   box-shadow: 0 0 14px rgba(34, 211, 238, 0.3);
+}
+
+[data-theme='light'] .stellar-orbital-ring {
+  border: 1.5px solid rgba(8, 145, 178, 0.25);
+  border-top-color: #0891b2;
+  box-shadow: 0 0 14px rgba(8, 145, 178, 0.25);
 }
 
 @keyframes stellar-spin {

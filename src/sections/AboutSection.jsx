@@ -66,8 +66,8 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
       {skills.map((skill) => (
         <span
           key={skill}
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-white/[0.04] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] inline-flex items-center gap-1.5 transition-colors duration-200 ${
-            isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/10' : 'hover:text-cyan-700 dark:hover:text-slate-100 hover:border-cyan-500/30 dark:hover:border-white/20'
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1.5 transition-colors duration-200 ${
+            isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/10' : 'hover:text-sky-700 dark:hover:text-slate-100 hover:border-sky-400 dark:hover:border-white/20'
           }`}
         >
           {skill}
@@ -89,7 +89,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
         <button
           type="button"
           onClick={() => { setAddingTo(configKey); setNewSkillText(''); }}
-          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 transition-colors cursor-pointer"
+          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-sky-200 dark:hover:bg-cyan-500/20 transition-colors cursor-pointer"
         >
           <Plus size={12} /> Add
         </button>
@@ -108,11 +108,11 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingTo(null); setNewSkillText(''); } }}
             autoFocus
             placeholder="Skill name"
-            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-950/80 text-slate-900 dark:text-white border border-cyan-500 outline-none w-28 placeholder:text-slate-400 shadow-sm"
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-950/80 text-slate-900 dark:text-white border border-sky-500 outline-none w-28 placeholder:text-slate-400 shadow-sm"
           />
           <button
             type="submit"
-            className="px-2 py-1 rounded-lg text-[11px] bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 cursor-pointer font-bold"
+            className="px-2 py-1 rounded-lg text-[11px] bg-sky-600 dark:bg-cyan-500/20 text-white dark:text-cyan-300 border border-sky-600 dark:border-cyan-500/40 hover:bg-sky-700 cursor-pointer font-bold"
             title="Press Enter to add"
           >
             ↵
@@ -120,7 +120,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           <button
             type="button"
             onClick={() => { setAddingTo(null); setNewSkillText(''); }}
-            className="px-1.5 py-1 rounded-lg text-xs bg-slate-100 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.06] hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+            className="px-1.5 py-1 rounded-lg text-xs bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-white/[0.06] hover:text-slate-900 cursor-pointer"
             title="Cancel"
           >
             <X size={10} />
@@ -132,17 +132,17 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Reusable skill card renderer ───────────────────────────────────────
   const renderSkillCard = (icon, title, number, skills, configKey) => (
-    <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200/90 dark:border-white/[0.08] bg-white/95 dark:bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between shadow-[0_10px_30px_-5px_rgba(0,0,0,0.06)] dark:shadow-none hover:border-cyan-500/50 dark:hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(8,145,178,0.15)] dark:hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
+    <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-none hover:border-sky-400 dark:hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(2,132,199,0.15)] dark:hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-400/30 flex items-center justify-center text-cyan-600 dark:text-cyan-300 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm">
               {icon}
             </div>
             <h3 className="font-bold text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit']">{title}</h3>
           </div>
-          <span className="text-[10px] font-mono text-cyan-800 dark:text-cyan-400/80 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 px-2 py-0.5 rounded-md font-semibold">
+          <span className="text-[10px] font-mono text-sky-800 dark:text-cyan-400/80 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/20 px-2 py-0.5 rounded-md font-bold">
             {number}
           </span>
         </div>
@@ -166,15 +166,15 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           {/* ─────────────────────────────────────────────────────────────
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200/90 dark:border-white/[0.08] bg-white/95 dark:bg-slate-900/60 backdrop-blur-xl p-6 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_10px_30px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-500/50 dark:hover:border-cyan-400/40 transition-all duration-300 group">
+          <div className="md:col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-6 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
             {/* Ambient Glow */}
-            <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-cyan-500/15 transition-all duration-500" />
+            <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />
             
             {/* Top Bar: Eyebrow + Status Badge */}
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-50 dark:bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/20 w-fit">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 w-fit shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-cyan-400 animate-pulse" />
                   About Me
                 </div>
 
@@ -184,24 +184,24 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                     type="button"
                     onClick={cycleStatus}
                     title={`Click to change status • Current: ${status}`}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold border transition-colors cursor-pointer ${
                       isAvailable
-                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
-                        : 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20'
+                        ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20 hover:bg-emerald-200'
+                        : 'text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20 hover:bg-amber-200'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-600 dark:bg-emerald-400 animate-pulse' : 'bg-amber-600 dark:bg-amber-400'}`} />
                     {status}
                   </button>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold border ${
                       isAvailable
-                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20'
-                        : 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20'
+                        ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20'
+                        : 'text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-600 dark:bg-emerald-400 animate-pulse' : 'bg-amber-600 dark:bg-amber-400'}`} />
                     {status}
                   </span>
                 )}
@@ -221,7 +221,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               </h2>
 
               {/* Bio Paragraph */}
-              <div className="text-slate-700 dark:text-slate-300/90 text-xs sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl">
+              <div className="text-slate-700 dark:text-slate-300/90 text-xs sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl font-normal">
                 {isAdmin ? (
                   <EditableText
                     text={paragraph}
@@ -236,17 +236,17 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
             </div>
 
             {/* Bottom Actions Row */}
-            <div className="pt-4 mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-slate-200/80 dark:border-white/[0.06]">
+            <div className="pt-4 mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-white/[0.06]">
               <button
                 type="button"
                 onClick={onNavigateContact}
-                className="btn-primary group cursor-pointer text-xs sm:text-sm py-2.5 px-6"
+                className="btn-primary group cursor-pointer text-xs sm:text-sm py-2.5 px-6 font-semibold"
               >
                 Let's Connect
                 <ArrowRight size={15} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
 
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 hidden sm:inline-block">
+              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 hidden sm:inline-block font-medium">
                 Computer Engineering // Software Development
               </span>
             </div>

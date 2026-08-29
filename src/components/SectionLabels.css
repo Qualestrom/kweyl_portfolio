@@ -85,48 +85,6 @@
   line-height: 1;
 }
 
-/* ── Section counter — bottom-left ── */
-.section-counter {
-  position: fixed;
-  left: 32px;
-  bottom: 28px;
-  z-index: 500;
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  font-family: 'Outfit', sans-serif;
-  pointer-events: none;
-  user-select: none;
-}
-
-.section-counter-current {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--cryo-accent, #67E8F9);
-  letter-spacing: 1px;
-  font-variant-numeric: tabular-nums;
-}
-
-[data-theme='light'] .section-counter-current {
-  color: var(--cryo-accent, #0891B2);
-}
-
-.section-counter-separator {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  opacity: 0.3;
-  margin: 0 2px;
-}
-
-.section-counter-total {
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  opacity: 0.3;
-  letter-spacing: 1px;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── Top right: Theme toggle & Admin actions ── */
 .section-top-actions {
   position: fixed;

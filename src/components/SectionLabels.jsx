@@ -45,17 +45,6 @@ export default function SectionLabels({ activeSection, onNavigate, isAdmin = fal
         })}
       </div>
 
-      {/* Section counter — bottom-left */}
-      <div className="section-counter">
-        <span className="section-counter-current">
-          {String(activeSection + 1).padStart(2, '0')}
-        </span>
-        <span className="section-counter-separator">/</span>
-        <span className="section-counter-total">
-          {String(SECTIONS.length).padStart(2, '0')}
-        </span>
-      </div>
-
       {/* Top right: Admin status & Theme toggle */}
       <div className="section-top-actions">
         {isAdmin && (

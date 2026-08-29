@@ -1,5 +1,5 @@
 /* ============================================================
-   KeyboardHints — Arrow key navigation indicators
+   KeyboardHints — Minimal Arrow Key Navigation Indicators
    ============================================================ */
 
 .keyboard-hints {
@@ -11,33 +11,24 @@
   pointer-events: none;
   display: flex;
   justify-content: space-between;
-  padding: 0 24px 24px;
+  padding: 0 18px 18px;
+}
+
+@media (min-width: 640px) {
+  .keyboard-hints {
+    padding: 0 28px 24px;
+  }
 }
 
 .keyboard-hint {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
 
-.keyboard-hint-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-}
-
 .keyboard-hint.visible {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .keyboard-hint.visible:hover {
@@ -53,6 +44,7 @@
   border: 1px solid var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
   border-radius: 6px;
   font-size: 0.75rem;
+  color: var(--text-muted);
   background: var(--cryo-glass-bg, rgba(255, 255, 255, 0.04));
   backdrop-filter: blur(4px);
   animation: hint-glow 3s ease-in-out infinite;

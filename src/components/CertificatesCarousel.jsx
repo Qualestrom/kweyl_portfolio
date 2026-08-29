@@ -131,8 +131,8 @@ const LandscapeCarouselCard = ({
       }}
       className={`absolute inset-0 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
         isActive
-          ? 'border-cyan-500 dark:border-cyan-400/90 bg-white dark:bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.12),0_0_30px_rgba(8,145,178,0.2)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(34,211,238,0.25)] z-20 ring-1 ring-cyan-500/30 dark:ring-cyan-400/40'
-          : 'border-slate-200/90 dark:border-white/12 bg-white/95 dark:bg-slate-900/95 shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] hover:border-slate-300 dark:hover:border-white/25 z-10'
+          ? 'border-2 border-sky-500 dark:border-cyan-400/90 bg-white dark:bg-slate-900 shadow-[0_20px_50px_-10px_rgba(2,132,199,0.25),0_0_24px_rgba(2,132,199,0.15)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(34,211,238,0.25)] z-20 ring-2 ring-sky-400/40 dark:ring-cyan-400/40'
+          : 'border border-slate-200 dark:border-white/12 bg-white/95 dark:bg-slate-900/95 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] hover:border-slate-300 dark:hover:border-white/25 z-10'
       }`}
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
@@ -156,15 +156,15 @@ const LandscapeCarouselCard = ({
         ) : (
           /* Stellar Credential Emblem Plate (Theme-Adaptive) */
           <div className="w-full h-full bg-gradient-to-b from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden group/plate select-none">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(8,145,178,0.1),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.12),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
             <div className="relative z-10 flex flex-col items-center gap-2 max-w-[85%]">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 dark:border-cyan-400/30 flex items-center justify-center text-cyan-600 dark:text-cyan-300 shadow-[0_0_20px_rgba(8,145,178,0.15)] dark:shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-transform duration-300 group-hover/plate:scale-110">
-                <Award size={24} className="text-cyan-600 dark:text-cyan-400" />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm transition-transform duration-300 group-hover/plate:scale-110">
+                <Award size={24} className="text-sky-700 dark:text-cyan-400" />
               </div>
               <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-['Outfit'] line-clamp-1 tracking-tight">
                 {cert.title || 'Verified Credential'}
               </span>
-              <span className="text-[10px] sm:text-[11px] font-mono text-cyan-700 dark:text-cyan-400/90 tracking-wide uppercase truncate max-w-full font-medium">
+              <span className="text-[10px] sm:text-[11px] font-mono text-sky-800 dark:text-cyan-400/90 tracking-wide uppercase truncate max-w-full font-bold">
                 {cert.issuer || 'Official Accreditation'}
               </span>
             </div>
@@ -208,8 +208,8 @@ const LandscapeCarouselCard = ({
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white/90 dark:bg-slate-950/90 border border-cyan-500/30 dark:border-cyan-400/50 text-cyan-700 dark:text-cyan-300 text-[10px] font-mono shadow-sm backdrop-blur-md font-medium">
-          <ShieldCheck size={11} className="text-cyan-600 dark:text-cyan-400" />
+        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-sky-100 dark:bg-slate-950/90 border border-sky-300 dark:border-cyan-400/50 text-sky-800 dark:text-cyan-300 text-[10px] font-mono shadow-xs backdrop-blur-md font-bold">
+          <ShieldCheck size={11} className="text-sky-700 dark:text-cyan-400" />
           <span>{cert.pdfUrl ? 'Verified PDF' : 'Verified'}</span>
         </div>
 
@@ -232,7 +232,7 @@ const LandscapeCarouselCard = ({
         <div>
           {/* Issuer & Date Row */}
           <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="text-[11px] sm:text-xs font-mono text-cyan-700 dark:text-cyan-400 font-semibold truncate flex-1 tracking-wide">
+            <div className="text-[11px] sm:text-xs font-mono text-sky-700 dark:text-cyan-400 font-bold truncate flex-1 tracking-wide">
               <EditableText
                 text={cert.issuer}
                 isAdmin={isAdmin && isActive}
@@ -240,7 +240,7 @@ const LandscapeCarouselCard = ({
               />
             </div>
 
-            <div className="text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-semibold">
+            <div className="text-[10px] sm:text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-300 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-bold">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin && isActive}
@@ -260,7 +260,7 @@ const LandscapeCarouselCard = ({
         </div>
 
         {/* ─── Bottom Actions Row (Verify Link & Admin Actions) ─── */}
-        <div className="pt-2 mt-1 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between gap-2">
+        <div className="pt-2 mt-1 border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between gap-2">
           {isAdmin && isActive ? (
             isEditingUrl ? (
               <form
@@ -273,7 +273,7 @@ const LandscapeCarouselCard = ({
                   value={urlDraft}
                   onChange={(e) => setUrlDraft(e.target.value)}
                   placeholder="https://credential-link..."
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-950 border border-cyan-500 text-slate-900 dark:text-white text-xs font-mono outline-none w-full"
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-950 border border-sky-500 text-slate-900 dark:text-white text-xs font-mono outline-none w-full"
                   autoFocus
                   onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrlId(null); setUrlDraft(''); } }}
                 />
@@ -285,7 +285,7 @@ const LandscapeCarouselCard = ({
                 <button
                   type="button"
                   onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || cert.pdfUrl || ''); }}
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-medium"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
                   title="Edit verification link"
                 >
                   <Globe size={13} />
@@ -296,7 +296,7 @@ const LandscapeCarouselCard = ({
                 <button
                   type="button"
                   onClick={(e) => handleDeleteCert(cert.id, e)}
-                  className="p-1 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                  className="p-1 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
                   title="Delete certificate"
                 >
                   <Trash2 size={13} />
@@ -309,24 +309,24 @@ const LandscapeCarouselCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-semibold font-mono text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/60 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 hover:border-sky-400 transition-all cursor-pointer shadow-xs active:scale-95"
               title="Open Certificate Document / Credential Verification"
             >
               {cert.pdfUrl && !cert.verifyUrl ? (
                 <>
-                  <FileText size={13} className="text-cyan-600 dark:text-cyan-400" />
+                  <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
                   <span>View PDF Certificate</span>
                 </>
               ) : (
                 <>
-                  <ShieldCheck size={13} className="text-cyan-600 dark:text-cyan-400" />
+                  <ShieldCheck size={13} className="text-sky-700 dark:text-cyan-400" />
                   <span>Verify Credential</span>
                 </>
               )}
               <ExternalLink size={11} />
             </a>
           ) : (
-            <div className="w-full text-center text-xs font-mono text-slate-500 dark:text-slate-400 py-0.5">
+            <div className="w-full text-center text-xs font-mono text-slate-500 dark:text-slate-400 py-0.5 font-medium">
               Credential on Record
             </div>
           )}
@@ -647,11 +647,11 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       {/* ─── Clean Header Bar (Theme-Adaptive) ─── */}
       <div className="flex items-center justify-between gap-3 mb-4 px-1 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 shadow-sm">
-            <Award size={13} className="text-cyan-600 dark:text-cyan-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 shadow-xs">
+            <Award size={13} className="text-sky-700 dark:text-cyan-400" />
             <span>Certifications</span>
           </div>
-          <span className="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
+          <span className="text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
             {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
           </span>
 
@@ -659,7 +659,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md ml-1"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-sky-100 dark:bg-cyan-500/20 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/40 hover:bg-sky-200 dark:hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-sm ml-1"
               title="Add new certificate"
             >
               <Plus size={13} /> Add Credential
@@ -677,7 +677,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         <button
           type="button"
           onClick={handlePrev}
-          className="absolute left-1 sm:left-3 md:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-800 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute left-1 sm:left-3 md:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-cyan-300 hover:border-sky-400 dark:hover:border-cyan-400/50 hover:bg-sky-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
           title="Previous Certificate"
         >
           <ChevronLeft size={22} />
@@ -724,7 +724,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         <button
           type="button"
           onClick={handleNext}
-          className="absolute right-1 sm:right-3 md:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-800 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute right-1 sm:right-3 md:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-cyan-300 hover:border-sky-400 dark:hover:border-cyan-400/50 hover:bg-sky-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
           title="Next Certificate"
         >
           <ChevronRight size={22} />
@@ -742,7 +742,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               onClick={() => handleSelectCard(i)}
               className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                 isCurrent 
-                  ? 'w-7 bg-cyan-600 dark:bg-cyan-400 shadow-[0_0_10px_rgba(8,145,178,0.4)] dark:shadow-[0_0_10px_rgba(34,211,238,0.5)]' 
+                  ? 'w-7 bg-sky-600 dark:bg-cyan-400 shadow-[0_0_12px_rgba(2,132,199,0.5)]' 
                   : 'w-2 bg-slate-300 dark:bg-white/20 hover:bg-slate-400 dark:hover:bg-white/40'
               }`}
               title={`Jump to certificate ${i + 1}`}
@@ -752,15 +752,15 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       </div>
 
       {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-mono text-slate-600 dark:text-slate-400/90 text-center flex-wrap px-2">
+      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-mono text-slate-700 dark:text-slate-400/90 text-center flex-wrap px-2 font-medium">
         <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">►</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
           <span>Drag or arrows to rotate</span>
         </span>
         <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
         <span className="inline-flex items-center gap-1">
-          <MousePointerClick size={12} className="text-cyan-700 dark:text-cyan-400" />
+          <MousePointerClick size={12} className="text-sky-700 dark:text-cyan-400" />
           <span>Click card to bring to front</span>
         </span>
       </div>
@@ -772,7 +772,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           <button
             type="button"
             onClick={handlePushDefaults}
-            className="text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
+            className="text-sky-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
           >
             Push to Firestore DB
           </button>

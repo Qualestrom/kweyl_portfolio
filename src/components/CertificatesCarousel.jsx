@@ -14,8 +14,7 @@ import {
   Globe, 
   Play, 
   Pause,
-  Upload,
-  Sparkles
+  Upload
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -92,12 +91,13 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   const [uploading, setUploading] = useState({});
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
-  // Admin inline URL edit state: { [certId]: urlString }
+  // Admin inline URL edit state
   const [editingUrlId, setEditingUrlId] = useState(null);
   const [urlDraft, setUrlDraft] = useState('');
 
   const rotation = useMotionValue(0);
   const direction = useRef(-1);
+  const wrapperRef = useRef(null);
 
   // Window resize handler
   useEffect(() => {
@@ -130,13 +130,32 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Continuous 3D Auto-Rotation with frame time delta
+  // Continuous 3D Auto-Rotation with frame delta
   useAnimationFrame((t, delta) => {
     if (!isDragging && !isHovered && isAutoRotate && certificates.length > 1) {
-      const step = direction.current * (delta / 45); // Smooth speed
+      const step = direction.current * (delta / 45);
       rotation.set(rotation.get() + step);
     }
   });
+
+  // Proximity Hover Detection across page
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (!wrapperRef.current) return;
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const padding = 80; // Detect hover 80px around the carousel
+      const isNearby = (
+        e.clientX >= rect.left - padding &&
+        e.clientX <= rect.right + padding &&
+        e.clientY >= rect.top - padding &&
+        e.clientY <= rect.bottom + padding
+      );
+      setIsHovered(isNearby);
+    };
+
+    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, []);
 
   // Pan / Drag gesture handlers
   const handlePanStart = () => {
@@ -156,7 +175,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     }
   };
 
-  // Step rotation by one card
+  // Step rotation
   const rotateStep = (dir) => {
     if (certificates.length === 0) return;
     const stepAngle = 360 / certificates.length;
@@ -169,15 +188,13 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     });
   };
 
-  // Dynamic 3D radius calculation
+  // Dynamic 3D radius calculation to prevent card overlap
   const translateZ = useMemo(() => {
     const total = Math.max(certificates.length, 3);
-    const cardWidth = windowWidth > 1024 ? 320 : windowWidth > 640 ? 280 : 250;
-    // Calculate radius to form a polygon: r = w / (2 * tan(pi/N))
+    const cardWidth = windowWidth > 1024 ? 330 : windowWidth > 640 ? 290 : 250;
     const angleRad = Math.PI / total;
     const computedRadius = Math.round((cardWidth / 2) / Math.tan(angleRad));
-    // Provide comfortable minimum depth
-    return Math.max(windowWidth > 768 ? 320 : 260, computedRadius + 30);
+    return Math.max(windowWidth > 768 ? 340 : 270, computedRadius + 40);
   }, [certificates.length, windowWidth]);
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
@@ -291,11 +308,14 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center max-w-7xl mx-auto py-2">
+    <div 
+      ref={wrapperRef}
+      className="w-full flex flex-col justify-center select-none"
+    >
       {/* ─── Header & 3D Controls Bar ─── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 px-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 px-1">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
               <Award size={13} className="text-cyan-400" />
               <span>Certifications</span>
@@ -305,7 +325,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             </span>
           </div>
           <p className="text-xs text-slate-400 font-mono hidden sm:block">
-            Continuous learning • Drag horizontally to rotate 3D orbital carousel
+            Continuous professional development • Drag horizontally to rotate orbital view
           </p>
         </div>
 
@@ -353,15 +373,15 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE ─── */}
+      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Unboxed within actual page) ─── */}
       <div 
-        className="w-full relative h-[420px] sm:h-[460px] lg:h-[490px] flex items-center justify-center overflow-hidden select-none"
-        style={{ perspective: '1200px' }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        className="w-full relative h-[440px] sm:h-[480px] lg:h-[510px] flex items-center justify-center"
+        style={{ 
+          perspective: '1200px',
+        }}
       >
         <motion.div
-          className="relative w-[280px] sm:w-[320px] h-[340px] sm:h-[360px] cursor-grab active:cursor-grabbing"
+          className="relative w-[290px] sm:w-[330px] h-[350px] sm:h-[370px] cursor-grab active:cursor-grabbing"
           style={{
             transformStyle: 'preserve-3d',
             rotateY: rotation,
@@ -380,7 +400,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             return (
               <div
                 key={cert.id || idx}
-                className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900/90 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] transition-shadow duration-300 overflow-hidden flex flex-col justify-between"
+                className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between overflow-hidden group/card"
                 style={{
                   transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
                   backfaceVisibility: 'hidden',
@@ -388,25 +408,25 @@ export default function CertificatesCarousel({ isAdmin = false }) {
                 }}
               >
                 {/* Top Image Preview Banner */}
-                <div className="relative w-full h-[140px] sm:h-[155px] bg-slate-950/80 overflow-hidden border-b border-white/[0.08] group/img">
+                <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950/90 overflow-hidden border-b border-white/[0.08] group/img">
                   <img
                     src={certImage}
                     alt={cert.title}
                     className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
-                      hasCustomImage ? 'object-contain bg-slate-950 p-1.5' : 'object-cover'
+                      hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
                     }`}
                     draggable={false}
                   />
 
-                  {/* Gradient Overlay for image */}
+                  {/* Subtle Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent pointer-events-none" />
 
-                  {/* Top Right Admin Image Upload Controls */}
+                  {/* Top Right Admin Controls */}
                   {isAdmin && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 z-20">
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
                       <label
-                        title="Upload Certificate PDF screenshot/image"
-                        className="p-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors"
+                        title="Upload Certificate PDF screenshot / image"
+                        className="p-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
                       >
                         <Upload size={12} />
                         <input
@@ -424,7 +444,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
                         <button
                           type="button"
                           onClick={(e) => handleRemoveImage(cert.id, e)}
-                          className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors"
+                          className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
                           title="Remove custom image"
                         >
                           <Trash2 size={12} />
@@ -434,14 +454,14 @@ export default function CertificatesCarousel({ isAdmin = false }) {
                   )}
 
                   {/* Top Left Verified Badge */}
-                  <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono backdrop-blur-md">
+                  <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono backdrop-blur-md shadow-sm">
                     <ShieldCheck size={11} className="text-cyan-400" />
                     <span>Verified</span>
                   </div>
 
                   {/* Uploading Status Overlay */}
                   {uploading[cert.id] && (
-                    <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
+                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
                       Uploading Image...
                     </div>
                   )}
@@ -549,7 +569,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
       {/* Admin Template Helper */}
       {isAdmin && certificates.length > 0 && certificates[0].id === '1' && (
-        <div className="pt-1 flex items-center justify-between text-[11px] font-mono text-slate-400 px-2">
+        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-400 px-2">
           <span className="text-amber-400/80">Using fallback certificate templates</span>
           <button
             type="button"

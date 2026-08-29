@@ -747,6 +747,19 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </div>
       </div>
 
+      {/* ─── Navigation Legend Bar ─── */}
+      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-400/90 text-center flex-wrap px-2">
+        <span className="inline-flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/10 text-[10px] text-slate-300">◄</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/10 text-[10px] text-slate-300">►</kbd>
+          <span>Drag or arrows to explore projects</span>
+        </span>
+        <span className="text-slate-600 hidden sm:inline">•</span>
+        <span className="inline-flex items-center gap-1">
+          <span>Click thumbnail to view details</span>
+        </span>
+      </div>
+
       {/* Admin Seed Helper if only fallback projects */}
       {isAdmin && projects.length > 0 && projects[0].id === '1' && (
         <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-400">

@@ -27,12 +27,21 @@
   transition: opacity 0.4s ease;
 }
 
+.keyboard-hint-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .keyboard-hint.visible {
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 .keyboard-hint.visible:hover {
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .keyboard-hint-key {

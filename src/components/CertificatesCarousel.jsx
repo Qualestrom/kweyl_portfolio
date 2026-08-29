@@ -240,7 +240,7 @@ const LandscapeCarouselCard = ({
               />
             </div>
 
-            <div className="text-[10px] sm:text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-medium">
+            <div className="text-[10px] sm:text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-semibold">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin && isActive}
@@ -677,7 +677,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         <button
           type="button"
           onClick={handlePrev}
-          className="absolute left-1 sm:left-3 md:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/90 dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-500/10 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute left-1 sm:left-3 md:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-800 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
           title="Previous Certificate"
         >
           <ChevronLeft size={22} />
@@ -724,7 +724,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         <button
           type="button"
           onClick={handleNext}
-          className="absolute right-1 sm:right-3 md:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/90 dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-500/10 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute right-1 sm:right-3 md:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border border-slate-200/90 dark:border-white/15 text-slate-800 dark:text-slate-200 hover:text-cyan-700 dark:hover:text-cyan-300 hover:border-cyan-500/50 dark:hover:border-cyan-400/50 hover:bg-cyan-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
           title="Next Certificate"
         >
           <ChevronRight size={22} />
@@ -752,27 +752,27 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       </div>
 
       {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-mono text-slate-500 dark:text-slate-400/90 text-center flex-wrap px-2">
+      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-mono text-slate-600 dark:text-slate-400/90 text-center flex-wrap px-2">
         <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">►</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">◄</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">►</kbd>
           <span>Drag or arrows to rotate</span>
         </span>
         <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
         <span className="inline-flex items-center gap-1">
-          <MousePointerClick size={12} className="text-cyan-600 dark:text-cyan-400" />
+          <MousePointerClick size={12} className="text-cyan-700 dark:text-cyan-400" />
           <span>Click card to bring to front</span>
         </span>
       </div>
 
       {/* Admin Template Helper */}
       {isAdmin && certificates.length > 0 && certificates[0].id === '1' && (
-        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 px-2">
-          <span className="text-amber-600 dark:text-amber-400/80 font-medium">Using fallback certificate templates</span>
+        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-slate-400 px-2">
+          <span className="text-amber-700 dark:text-amber-400/80 font-bold">Using fallback certificate templates</span>
           <button
             type="button"
             onClick={handlePushDefaults}
-            className="text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-medium"
+            className="text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
           >
             Push to Firestore DB
           </button>

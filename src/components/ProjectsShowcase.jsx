@@ -780,10 +780,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       </div>
 
       {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
-      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-500 dark:text-slate-400/90 text-center flex-wrap px-2">
+      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-600 dark:text-slate-400/90 text-center flex-wrap px-2">
         <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">►</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">◄</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-300 font-bold">►</kbd>
           <span>Drag or arrows to explore projects</span>
         </span>
         <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
@@ -794,12 +794,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
       {/* Admin Seed Helper if only fallback projects */}
       {isAdmin && projects.length > 0 && projects[0].id === '1' && (
-        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-400">
-          <span className="text-amber-400/80">Using fallback templates</span>
+        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-600 dark:text-slate-400 px-2">
+          <span className="text-amber-700 dark:text-amber-400/80 font-bold">Using fallback templates</span>
           <button
             type="button"
             onClick={handlePushDefaults}
-            className="text-cyan-300 hover:underline cursor-pointer"
+            className="text-cyan-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
           >
             Push to Firestore DB
           </button>

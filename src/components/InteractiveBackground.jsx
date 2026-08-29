@@ -116,10 +116,10 @@ export default function InteractiveBackground() {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
       // Color tokens
-      const dotColor = isDark ? 'rgba(255, 255, 255, 0.13)' : 'rgba(0, 0, 0, 0.08)';
-      const constellationDotColor = isDark ? 'rgba(103, 232, 249, 0.35)' : 'rgba(8, 145, 178, 0.30)';
-      const circuitLineColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)';
-      const constellationLineColor = isDark ? 'rgba(103, 232, 249, 0.10)' : 'rgba(8, 145, 178, 0.08)';
+      const dotColor = isDark ? 'rgba(255, 255, 255, 0.13)' : 'rgba(15, 23, 42, 0.14)';
+      const constellationDotColor = isDark ? 'rgba(103, 232, 249, 0.35)' : 'rgba(2, 132, 199, 0.65)';
+      const circuitLineColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.08)';
+      const constellationLineColor = isDark ? 'rgba(103, 232, 249, 0.10)' : 'rgba(2, 132, 199, 0.28)';
 
       // Global subtle pulse for lines
       const linePulse = 0.7 + 0.3 * Math.sin(frame * 0.015);

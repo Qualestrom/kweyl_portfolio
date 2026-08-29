@@ -21,34 +21,35 @@
   border-radius: 6px;
   transition: all 0.2s ease;
   display: inline-block;
-  width: 100%;
+  max-width: 100%;
 }
 
 .editable-hover-container:hover {
   outline: 1.5px dashed var(--cryo-accent);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .editable-hover-badge {
   position: absolute;
-  top: -12px;
-  right: -6px;
+  top: -11px;
+  right: 2px;
   background: var(--cryo-accent);
   color: var(--bg-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   box-shadow: 0 0 10px var(--cryo-accent-glow);
   opacity: 0;
-  transform: translateY(4px);
+  transform: translateY(2px);
   transition: opacity 0.2s ease, transform 0.2s ease;
   pointer-events: none;
-  z-index: 20;
+  z-index: 50;
+  white-space: nowrap;
 }
 
 .editable-hover-container:hover .editable-hover-badge {

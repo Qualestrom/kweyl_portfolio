@@ -23,12 +23,12 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import EditableText from './EditableText';
 
 const DEFAULT_CERT_IMAGES = [
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80', // Tech / learning
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80', // Cloud / network
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80', // Cyber / dev
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80', // Code / data
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80', // Modern abstract
-  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80', // Workspace
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=90', // Tech / learning
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=90', // Cloud / network
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=90', // Cyber / dev
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=90', // Code / data
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=90', // Modern abstract
+  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=90', // Workspace
 ];
 
 const FALLBACK_CERTIFICATES = [
@@ -117,23 +117,28 @@ const CarouselCard = ({
 
   return (
     <motion.div
-      className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between group/card"
+      className="absolute inset-0 rounded-2xl border border-slate-700/80 bg-slate-900/95 shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:border-cyan-400 hover:shadow-[0_0_35px_rgba(34,211,238,0.35)] transition-all duration-300 flex flex-col justify-between group/card overflow-hidden"
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
         opacity,
-        pointerEvents
+        pointerEvents,
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        transformStyle: 'preserve-3d',
+        willChange: 'transform, opacity',
       }}
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
     >
       {/* Top Image Preview Banner */}
-      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950 overflow-hidden rounded-t-2xl border-b border-white/[0.08] group/img">
+      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950 overflow-hidden border-b border-white/[0.08] group/img shrink-0">
         <img
           src={certImage}
           alt={cert.title}
           className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
             hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
           }`}
+          style={{ imageRendering: '-webkit-optimize-contrast' }}
           draggable={false}
         />
 
@@ -145,7 +150,7 @@ const CarouselCard = ({
           <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
             <label
               title="Upload Certificate PDF screenshot / image"
-              className="p-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+              className="p-1.5 rounded-lg bg-slate-950/90 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
             >
               <Upload size={12} />
               <input
@@ -163,7 +168,7 @@ const CarouselCard = ({
               <button
                 type="button"
                 onClick={(e) => handleRemoveImage(cert.id, e)}
-                className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/50 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
                 title="Remove custom image"
               >
                 <Trash2 size={12} />
@@ -173,49 +178,51 @@ const CarouselCard = ({
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono backdrop-blur-md shadow-sm">
+        <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/50 text-cyan-300 text-[10px] font-mono shadow-sm">
           <ShieldCheck size={11} className="text-cyan-400" />
           <span>Verified</span>
         </div>
 
         {/* Uploading Status Overlay */}
         {uploading[cert.id] && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
+          <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
             Uploading Image...
           </div>
         )}
       </div>
 
       {/* Card Content & Details */}
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-        <div>
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between relative">
+        <div className="pt-1">
           {/* Date and Issuer Line */}
-          <div className="flex items-center justify-between gap-2 mb-1.5">
-            <span className="text-[11px] font-mono text-cyan-400 font-semibold truncate">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="text-[12px] font-mono text-cyan-400 font-semibold flex-1 min-w-0">
               <EditableText
                 text={cert.issuer}
                 isAdmin={isAdmin}
                 onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
               />
-            </span>
+            </div>
 
-            <span className="text-[10px] font-mono text-slate-400 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-full shrink-0">
+            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.08] border border-white/[0.12] px-2 py-0.5 rounded-full shrink-0">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin}
                 onSave={(v) => handleUpdateField(cert.id, 'date', v)}
               />
-            </span>
+            </div>
           </div>
 
           {/* Certificate Title */}
-          <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug line-clamp-2 mt-1">
-            <EditableText
-              text={cert.title}
-              isAdmin={isAdmin}
-              onSave={(v) => handleUpdateField(cert.id, 'title', v)}
-            />
-          </h3>
+          <div className="mt-1">
+            <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug">
+              <EditableText
+                text={cert.title}
+                isAdmin={isAdmin}
+                onSave={(v) => handleUpdateField(cert.id, 'title', v)}
+              />
+            </h3>
+          </div>
         </div>
 
         {/* Bottom Action Row: Verify Link / Admin Actions */}

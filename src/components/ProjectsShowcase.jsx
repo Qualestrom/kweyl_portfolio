@@ -361,14 +361,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   return (
     <div className="w-full h-full flex flex-col justify-center max-w-6xl mx-auto">
-      {/* ─── Top Header / Controls (Left-Aligned Cluster to avoid Logout/Theme collisions) ─── */}
+      {/* ─── Top Header / Controls (Theme-Adaptive) ─── */}
       <div className="flex items-center justify-between gap-3 mb-3 px-1 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
             Selected Work
           </div>
-          <span className="text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
+          <span className="text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
             {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
           </span>
 
@@ -377,7 +377,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
               <button
                 type="button"
                 onClick={handleOpenAdd}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
                 title="Add new project"
               >
                 <Plus size={13} /> Add Project
@@ -387,7 +387,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 <button
                   type="button"
                   onClick={(e) => handleDeleteProject(activeProject.id, e)}
-                  className="p-1 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer shadow-md"
+                  className="p-1 rounded-xl bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer shadow-md"
                   title="Delete current project"
                 >
                   <Trash2 size={13} />
@@ -689,14 +689,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           })}
         </motion.div>
 
-        {/* ─── Navigation Arrow Buttons ─── */}
+        {/* ─── Navigation Arrow Buttons (Theme-Adaptive) ─── */}
         <motion.button
           disabled={index === 0}
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
           className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
             index === 0
               ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
-              : 'bg-slate-950/70 text-white border border-white/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 shadow-lg hover:scale-105 active:scale-95'
+              : 'bg-white/90 dark:bg-slate-950/70 text-slate-800 dark:text-white border border-slate-200/90 dark:border-white/20 hover:bg-cyan-500/20 hover:border-cyan-500/50 shadow-lg hover:scale-105 active:scale-95'
           }`}
           title="Previous Project"
         >
@@ -709,7 +709,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
             index === projects.length - 1
               ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
-              : 'bg-slate-950/70 text-white border border-white/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 shadow-lg hover:scale-105 active:scale-95'
+              : 'bg-white/90 dark:bg-slate-950/70 text-slate-800 dark:text-white border border-slate-200/90 dark:border-white/20 hover:bg-cyan-500/20 hover:border-cyan-500/50 shadow-lg hover:scale-105 active:scale-95'
           }`}
           title="Next Project"
         >
@@ -717,7 +717,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </motion.button>
       </div>
 
-      {/* ─── Bottom Thumbnail Strip ─── */}
+      {/* ─── Bottom Thumbnail Strip (Theme-Adaptive) ─── */}
       <div
         ref={thumbnailsRef}
         className="overflow-x-auto mt-3 py-1 px-1"
@@ -754,8 +754,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 className={`relative shrink-0 h-full overflow-hidden rounded-xl border transition-all cursor-pointer ${
                   isCurrent
-                    ? 'border-cyan-400 shadow-[0_0_16px_rgba(34,211,238,0.4)] opacity-100 ring-1 ring-cyan-400/50'
-                    : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/30'
+                    ? 'border-cyan-500 dark:border-cyan-400 shadow-[0_0_16px_rgba(8,145,178,0.3)] dark:shadow-[0_0_16px_rgba(34,211,238,0.4)] opacity-100 ring-1 ring-cyan-500/30 dark:ring-cyan-400/50'
+                    : 'border-slate-300 dark:border-white/10 opacity-60 dark:opacity-50 hover:opacity-90 hover:border-slate-400 dark:hover:border-white/30'
                 }`}
                 title={project.title}
               >
@@ -779,14 +779,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* ─── Navigation Legend Bar ─── */}
-      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-400/90 text-center flex-wrap px-2">
+      {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
+      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-500 dark:text-slate-400/90 text-center flex-wrap px-2">
         <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/10 text-[10px] text-slate-300">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/10 text-[10px] text-slate-300">►</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">◄</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">►</kbd>
           <span>Drag or arrows to explore projects</span>
         </span>
-        <span className="text-slate-600 hidden sm:inline">•</span>
+        <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
         <span className="inline-flex items-center gap-1">
           <span>Click thumbnail to view details</span>
         </span>

@@ -34,43 +34,70 @@ const DEFAULT_PROJECT_IMAGES = [
 const FALLBACK_PROJECTS = [
   {
     id: '1',
-    tag: 'Software / Simulation',
-    title: 'CREOsim-MECHA',
-    description: 'A dynamic mechatronics simulation tool designed to test mechanical workflows and digital integrations prior to physical hardware construction. Engineered a custom Dijkstra pathfinding algorithm to intelligently route simulated cables through physical board gutters.',
-    skills: ['Konva.js', 'TypeScript', 'Algorithms'],
-    githubUrl: 'https://github.com',
-    demoUrl: '',
+    title: 'E-Commerce Platform',
+    category: 'Full Stack Web App',
+    description: 'Modern full-stack online shopping experience built with Next.js, Stripe checkout integration, and real-time inventory management.',
+    skills: ['Next.js', 'TypeScript', 'Tailwind', 'Stripe', 'PostgreSQL'],
+    demoUrl: 'https://demo-ecommerce.example.com',
+    githubUrl: 'https://github.com/example/ecommerce',
     photos: []
   },
   {
     id: '2',
-    tag: 'Mobile Development',
-    title: 'CRADLE App',
-    description: 'A cross-platform mobile application dormitory finder built to connect students with accommodations. Engineered robust state management and seamless UI across iOS and Android.',
-    skills: ['Flutter', 'Dart', 'Firebase'],
-    githubUrl: 'https://github.com',
-    demoUrl: '',
+    title: 'AI Analytics Dashboard',
+    category: 'Data & Visualization',
+    description: 'Interactive analytics cockpit with predictive metrics, dynamic data charts, real-time telemetry, and exportable business reports.',
+    skills: ['React', 'D3.js', 'Python', 'FastAPI', 'Tailwind'],
+    demoUrl: 'https://demo-analytics.example.com',
+    githubUrl: 'https://github.com/example/ai-dashboard',
     photos: []
   },
   {
     id: '3',
-    tag: 'Web Application',
-    title: 'PING System',
-    description: 'Architected a robust OOP backend system and responsive frontend for real-time monitoring. Resolved deep architectural challenges in state management, repository patterns, and concurrent data synchronization.',
-    skills: ['React', 'Node.js', 'WebSockets', 'Supabase'],
-    githubUrl: 'https://github.com',
+    title: 'Health & Fitness Tracker',
+    category: 'Cross-Platform Mobile',
+    description: 'Comprehensive cross-platform wellness application featuring real-time biometric synchronization, workout planner, and nutritional logging.',
+    skills: ['Flutter', 'Dart', 'Firebase', 'HealthKit', 'Bloc'],
+    demoUrl: 'https://demo-fitness.example.com',
+    githubUrl: 'https://github.com/example/fitness-tracker',
+    photos: []
+  },
+  {
+    id: '4',
+    title: 'Task & Workspace Flow',
+    category: 'Productivity Tool',
+    description: 'Collaborative task and sprint tracking board with real-time websocket synchronization, rich markdown editing, and workflow automation.',
+    skills: ['React', 'Node.js', 'Socket.io', 'MongoDB', 'Redis'],
+    demoUrl: 'https://demo-taskflow.example.com',
+    githubUrl: 'https://github.com/example/taskflow',
+    photos: []
+  },
+  {
+    id: '5',
+    title: 'Cloud DevOps Pipeline',
+    category: 'Cloud & Infrastructure',
+    description: 'Automated multi-environment continuous integration and deployment pipeline configured with infrastructure-as-code and container orchestration.',
+    skills: ['Docker', 'Kubernetes', 'Terraform', 'AWS', 'GitHub Actions'],
     demoUrl: '',
+    githubUrl: 'https://github.com/example/devops-pipeline',
     photos: []
   }
 ];
 
-const FULL_WIDTH_PX = 130;
-const COLLAPSED_WIDTH_PX = 42;
+const COLLAPSED_WIDTH_PX = 48;
+const FULL_WIDTH_PX = 160;
 const GAP_PX = 6;
 const MARGIN_PX = 2;
 
 export default function ProjectsShowcase({ isAdmin = false }) {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(() => {
+    try {
+      const cached = localStorage.getItem('portfolio_projects');
+      return cached ? JSON.parse(cached) : FALLBACK_PROJECTS;
+    } catch (_) {
+      return FALLBACK_PROJECTS;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -96,6 +123,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           if (isMounted) {
             setProjects(list);
+            try {
+              localStorage.setItem('portfolio_projects', JSON.stringify(list));
+            } catch (_) {}
             setIndex(0);
           }
         } else {
@@ -405,17 +435,19 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 key={project.id || idx} 
                 className="shrink-0 w-full h-[380px] sm:h-[430px] lg:h-[470px] relative overflow-hidden group select-none"
               >
-                {/* Background Project Image */}
-                <img
+                {/* Background Project Image with Stellar Shimmer Placeholder */}
+                <ImageWithPlaceholder
                   src={imageUrl}
                   alt={project.title}
                   className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+                  containerClassName="absolute inset-0"
+                  showSpinner={true}
                   draggable={false}
                 />
 
                 {/* Dark Gradient Overlay for optimal legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent pointer-events-none z-10" />
 
                 {/* Click to redirect indicator hint (top right) */}
                 {hasLink && !isAdmin && (
@@ -728,14 +760,15 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 }`}
                 title={project.title}
               >
-                <img
+                <ImageWithPlaceholder
                   src={thumbUrl}
                   alt={project.title}
                   className="w-full h-full object-cover pointer-events-none select-none"
+                  containerClassName="w-full h-full"
                   draggable={false}
                 />
                 {isCurrent && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-1.5">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-1.5 z-10">
                     <span className="text-[10px] font-semibold text-white font-['Outfit'] truncate">
                       {project.title}
                     </span>

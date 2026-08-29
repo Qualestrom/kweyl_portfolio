@@ -16,6 +16,7 @@ import {
 import EditableText from './EditableText';
 import ImageCropperModal, { FRAME_ANIMATIONS } from './ImageCropperModal';
 import HeadlineEditorModal from './HeadlineEditorModal';
+import ImageWithPlaceholder from './ImageWithPlaceholder';
 import { getLinkIconType, ensureAbsoluteUrl } from '../utils/imageUtils';
 import './HomeHero.css';
 
@@ -583,11 +584,11 @@ export default function HomeHero({
             {/* Inner Masked Avatar Container */}
             <div className="home-hero-avatar-inner">
               {profileImage && !imageError ? (
-                <img 
+                <ImageWithPlaceholder 
                   src={profileImage} 
                   alt="Christopher Lamera" 
                   className="home-hero-avatar-img"
-                  onError={() => setImageError(true)}
+                  containerClassName="w-full h-full"
                 />
               ) : (
                 <CosmicAvatarGraphic />

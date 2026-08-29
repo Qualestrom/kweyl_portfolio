@@ -23,6 +23,7 @@ import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } from '../utils/pdfUtils';
 import EditableText from './EditableText';
+import ImageWithPlaceholder from './ImageWithPlaceholder';
 
 const DEFAULT_CERT_IMAGES = [
   'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1000&q=80',
@@ -155,12 +156,14 @@ const LandscapeCarouselCard = ({
     >
       {/* ─── Top Landscape Certificate Frame (Seamless Edge-to-Edge Display) ─── */}
       <div className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.1] group/img shrink-0 flex items-center justify-center">
-        <img
+        <ImageWithPlaceholder
           src={certImage}
           alt={cert.title}
           className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-102 ${
             hasCustomImage ? 'object-cover object-top bg-white' : 'object-cover object-center'
           }`}
+          containerClassName="w-full h-full"
+          showSpinner={true}
           draggable={false}
         />
 
@@ -330,7 +333,14 @@ const LandscapeCarouselCard = ({
 };
 
 export default function CertificatesCarousel({ isAdmin = false }) {
-  const [certificates, setCertificates] = useState([]);
+  const [certificates, setCertificates] = useState(() => {
+    try {
+      const cached = localStorage.getItem('portfolio_certificates');
+      return cached ? JSON.parse(cached) : FALLBACK_CERTIFICATES;
+    } catch (_) {
+      return FALLBACK_CERTIFICATES;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [targetAngle, setTargetAngle] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -360,7 +370,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         const snapshot = await getDocs(collection(db, 'certificates'));
         if (!snapshot.empty) {
           const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          if (isMounted) setCertificates(list);
+          if (isMounted) {
+            setCertificates(list);
+            try {
+              localStorage.setItem('portfolio_certificates', JSON.stringify(list));
+            } catch (_) {}
+          }
         } else {
           if (isMounted) setCertificates(FALLBACK_CERTIFICATES);
         }

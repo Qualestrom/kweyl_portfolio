@@ -80,7 +80,7 @@ const FALLBACK_CERTIFICATES = [
   }
 ];
 
-// Individual Landscape 3D Certificate Card
+// Individual High-Resolution Landscape 3D Certificate Card
 const LandscapeCarouselCard = ({
   cert,
   idx,
@@ -111,25 +111,13 @@ const LandscapeCarouselCard = ({
   const opacity = useTransform(rotation, (r) => {
     let currentGlobalAngle = (angle + r) % 360;
     if (currentGlobalAngle < 0) currentGlobalAngle += 360;
-    // Front card is centered around 0/360
     if (currentGlobalAngle < 75 || currentGlobalAngle > 285) {
       return 1;
     }
-    // Flanking cards
     if (currentGlobalAngle < 120 || currentGlobalAngle > 240) {
-      return 0.55;
+      return 0.5;
     }
-    // Rear cards
-    return 0.25;
-  });
-
-  const pointerEvents = useTransform(rotation, (r) => {
-    let currentGlobalAngle = (angle + r) % 360;
-    if (currentGlobalAngle < 0) currentGlobalAngle += 360;
-    if (currentGlobalAngle < 75 || currentGlobalAngle > 285) {
-      return 'auto';
-    }
-    return 'auto'; // Allow clicking side cards to navigate to them
+    return 0.2;
   });
 
   return (
@@ -139,13 +127,15 @@ const LandscapeCarouselCard = ({
       }}
       className={`absolute inset-0 rounded-2xl border transition-colors duration-300 flex flex-col justify-between cursor-pointer ${
         isActive
-          ? 'border-cyan-400/80 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(34,211,238,0.25)] z-20'
-          : 'border-white/15 bg-slate-900/95 shadow-[0_12px_32px_rgba(0,0,0,0.5)] hover:border-white/30 z-10'
+          ? 'border-cyan-400/90 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_32px_rgba(34,211,238,0.3)] z-20 ring-1 ring-cyan-400/40'
+          : 'border-white/15 bg-slate-900 shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-white/30 z-10'
       }`}
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
         opacity,
-        pointerEvents,
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        textRendering: 'optimizeLegibility',
       }}
     >
       {/* ─── Top Landscape Certificate Image / Thumbnail Banner ─── */}
@@ -221,7 +211,7 @@ const LandscapeCarouselCard = ({
         <div>
           {/* Issuer & Date Row */}
           <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="text-[11px] font-mono text-cyan-400 font-semibold truncate flex-1">
+            <div className="text-[11px] font-mono text-cyan-400 font-semibold truncate flex-1 tracking-wide">
               <EditableText
                 text={cert.issuer}
                 isAdmin={isAdmin && isActive}
@@ -229,7 +219,7 @@ const LandscapeCarouselCard = ({
               />
             </div>
 
-            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.06] border border-white/[0.1] px-2 py-0.5 rounded-full shrink-0">
+            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.08] border border-white/[0.12] px-2 py-0.5 rounded-full shrink-0 font-medium">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin && isActive}
@@ -306,7 +296,7 @@ const LandscapeCarouselCard = ({
               <ExternalLink size={11} />
             </a>
           ) : (
-            <div className="w-full text-center text-[11px] font-mono text-slate-500 py-0.5">
+            <div className="w-full text-center text-[11px] font-mono text-slate-400 py-0.5">
               Credential on Record
             </div>
           )}
@@ -319,7 +309,7 @@ const LandscapeCarouselCard = ({
 export default function CertificatesCarousel({ isAdmin = false }) {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [targetAngle, setTargetAngle] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState({});
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -363,35 +353,58 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Smooth Snap Animation when activeIndex changes
+  // Dynamic continuous active index calculation (never wraps/reverses rotation)
+  const activeIndex = useMemo(() => {
+    if (certificates.length === 0) return 0;
+    const stepAngle = 360 / certificates.length;
+    const rawIdx = Math.round(-targetAngle / stepAngle);
+    return ((rawIdx % certificates.length) + certificates.length) % certificates.length;
+  }, [targetAngle, certificates.length]);
+
+  // Smooth continuous spring animation to targetAngle
   useEffect(() => {
     if (certificates.length === 0 || isDragging) return;
-    const stepAngle = 360 / certificates.length;
-    const targetRotation = -activeIndex * stepAngle;
 
-    animate(rotation, targetRotation, {
+    animate(rotation, targetAngle, {
       type: 'spring',
-      stiffness: 220,
-      damping: 26,
+      stiffness: 240,
+      damping: 28,
     });
-  }, [activeIndex, certificates.length, isDragging, rotation]);
+  }, [targetAngle, certificates.length, isDragging, rotation]);
 
-  // Step rotation helpers
+  // Continuous 1-Way Infinite Step Navigation
   const handlePrev = () => {
     if (certificates.length === 0) return;
-    setActiveIndex((prev) => (prev - 1 + certificates.length) % certificates.length);
+    const stepAngle = 360 / certificates.length;
+    // Step forward in angle (rotates left seamlessly)
+    setTargetAngle(prev => prev + stepAngle);
   };
 
   const handleNext = () => {
     if (certificates.length === 0) return;
-    setActiveIndex((prev) => (prev + 1) % certificates.length);
+    const stepAngle = 360 / certificates.length;
+    // Step backward in angle (rotates right seamlessly in a continuous infinite loop)
+    setTargetAngle(prev => prev - stepAngle);
   };
 
-  const handleSelectCard = (index) => {
-    setActiveIndex(index);
+  // Click adjacent card to rotate via shortest angular path
+  const handleSelectCard = (clickedIdx) => {
+    if (certificates.length === 0) return;
+    const total = certificates.length;
+    const stepAngle = 360 / total;
+    
+    // Compute current card index under front
+    const currentFrontIdx = (((Math.round(-targetAngle / stepAngle) % total) + total) % total);
+    
+    // Find shortest angular difference in steps
+    let diff = clickedIdx - currentFrontIdx;
+    if (diff > total / 2) diff -= total;
+    if (diff < -total / 2) diff += total;
+
+    setTargetAngle(prev => prev - diff * stepAngle);
   };
 
-  // Pan / Drag gesture with smooth snap on release
+  // Continuous Pan / Drag with momentum snap
   const handlePanStart = (e, info) => {
     setIsDragging(true);
     dragStartX.current = info.point.x;
@@ -410,18 +423,17 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     const stepAngle = 360 / certificates.length;
     const currentRot = rotation.get();
     
-    // Determine closest card index
-    let rawIndex = Math.round(-currentRot / stepAngle);
-    let newIndex = ((rawIndex % certificates.length) + certificates.length) % certificates.length;
+    // Snap to nearest multiple of stepAngle
+    let targetSteps = Math.round(currentRot / stepAngle);
     
-    // If fast swipe gesture, advance by 1
-    if (info.velocity.x > 300) {
-      newIndex = (activeIndex - 1 + certificates.length) % certificates.length;
-    } else if (info.velocity.x < -300) {
-      newIndex = (activeIndex + 1) % certificates.length;
+    // Advance step if fast velocity swipe
+    if (info.velocity.x > 250) {
+      targetSteps = Math.ceil(currentRot / stepAngle);
+    } else if (info.velocity.x < -250) {
+      targetSteps = Math.floor(currentRot / stepAngle);
     }
 
-    setActiveIndex(newIndex);
+    setTargetAngle(targetSteps * stepAngle);
   };
 
   // Dynamic 3D radius calculation for landscape cards
@@ -446,20 +458,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     try {
       const docRef = await addDoc(collection(db, 'certificates'), newCert);
       const created = { id: docRef.id, ...newCert };
-      setCertificates(prev => {
-        const updated = [...prev, created];
-        setActiveIndex(updated.length - 1);
-        return updated;
-      });
+      setCertificates(prev => [...prev, created]);
     } catch (err) {
       console.warn('Add certificate fallback (local only):', err);
       const localId = `local-${Date.now()}`;
       const created = { id: localId, ...newCert };
-      setCertificates(prev => {
-        const updated = [...prev, created];
-        setActiveIndex(updated.length - 1);
-        return updated;
-      });
+      setCertificates(prev => [...prev, created]);
     }
   };
 
@@ -488,11 +492,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     } catch (err) {
       console.warn('Delete cert local fallback:', err);
     }
-    setCertificates(prev => {
-      const filtered = prev.filter(c => c.id !== id);
-      setActiveIndex(prevIdx => Math.min(prevIdx, Math.max(0, filtered.length - 1)));
-      return filtered;
-    });
+    setCertificates(prev => prev.filter(c => c.id !== id));
   };
 
   const handleUploadImage = async (certId, file) => {
@@ -565,12 +565,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               <Award size={13} className="text-cyan-400" />
               <span>Certifications</span>
             </div>
-            <span className="text-xs font-mono text-slate-300 bg-white/[0.04] border border-white/[0.08] px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] px-2.5 py-0.5 rounded-full font-medium">
               {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
             </span>
           </div>
           <p className="text-xs text-slate-400 font-mono hidden sm:block">
-            Drag or click arrows to explore • Click any certificate to bring to front
+            Continuous orbital gallery • Drag or click arrows to explore
           </p>
         </div>
 
@@ -608,7 +608,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Landscape Cards) ─── */}
+      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Zero-Magnification Z=0 Alignment) ─── */}
       <div 
         className="w-full relative h-[380px] sm:h-[420px] lg:h-[450px] flex items-center justify-center"
         style={{ perspective: '1200px' }}
@@ -618,6 +618,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           style={{
             transformStyle: 'preserve-3d',
             rotateY: rotation,
+            z: -translateZ,
           }}
           onPanStart={handlePanStart}
           onPan={handlePan}

@@ -204,7 +204,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
       case 0: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
       case 1: return <AboutSection {...props} onNavigateContact={() => navigateTo(4)} />;
       case 2: return <ProjectsSection isAdmin={isAdmin} />;
-      case 3: return <CertificationsSection />;
+      case 3: return <CertificationsSection isAdmin={isAdmin} />;
       case 4: return <ContactSection />;
       default: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
     }

@@ -117,7 +117,7 @@ const CarouselCard = ({
 
   return (
     <motion.div
-      className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between overflow-hidden group/card"
+      className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between group/card"
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
         opacity,
@@ -127,7 +127,7 @@ const CarouselCard = ({
       onMouseLeave={onHoverEnd}
     >
       {/* Top Image Preview Banner */}
-      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950/90 overflow-hidden border-b border-white/[0.08] group/img">
+      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950 overflow-hidden rounded-t-2xl border-b border-white/[0.08] group/img">
         <img
           src={certImage}
           alt={cert.title}

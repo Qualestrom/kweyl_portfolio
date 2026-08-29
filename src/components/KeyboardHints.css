@@ -59,21 +59,10 @@
 @keyframes hint-glow {
   0%, 100% {
     box-shadow: 0 0 0 transparent;
-    border-color: var(--cryo-glass-border, rgba(255, 255, 255, 0.10));
+    border-color: var(--cryo-glass-border);
   }
   50% {
-    box-shadow: 0 0 8px rgba(103, 232, 249, 0.15);
-    border-color: rgba(103, 232, 249, 0.2);
-  }
-}
-
-[data-theme='light'] @keyframes hint-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 transparent;
-    border-color: rgba(0, 0, 0, 0.10);
-  }
-  50% {
-    box-shadow: 0 0 8px rgba(8, 145, 178, 0.12);
-    border-color: rgba(8, 145, 178, 0.25);
+    box-shadow: 0 0 8px var(--cryo-accent-glow);
+    border-color: var(--cryo-accent);
   }
 }

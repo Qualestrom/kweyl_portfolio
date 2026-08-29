@@ -19,6 +19,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import EditableText from './EditableText';
+import ImageWithPlaceholder from './ImageWithPlaceholder';
 
 const DEFAULT_PROJECT_IMAGES = [
   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80', // Mecha / simulation

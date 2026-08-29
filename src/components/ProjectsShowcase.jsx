@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -10,30 +10,25 @@ import {
   FolderGit2, 
   Globe, 
   Image as ImageIcon,
-  Sparkles,
-  Layers,
-  Check,
-  AlertCircle,
+  Check, 
   X,
-  Orbit,
-  LayoutGrid
+  Sparkles
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import EditableText from './EditableText';
-import StellarCardGallerySingle from './ui/3d-image-gallery';
 
 const DEFAULT_PROJECT_IMAGES = [
-  'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80', // Mecha / simulation
-  'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80', // Mobile / app
-  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80', // Analytics / web
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80', // Abstract 3d
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80', // Matrix code
-  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80', // Modern workspace
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80', // Silicon hardware
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80', // Orbital node
+  'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80', // Mecha / simulation
+  'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1200&q=80', // Mobile / app
+  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', // Analytics / web
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', // Abstract 3D
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80', // Matrix code
+  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', // Modern workspace
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80', // Silicon hardware
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', // Orbital node
 ];
 
 const FALLBACK_PROJECTS = [
@@ -69,22 +64,27 @@ const FALLBACK_PROJECTS = [
   }
 ];
 
+const FULL_WIDTH_PX = 130;
+const COLLAPSED_WIDTH_PX = 42;
+const GAP_PX = 6;
+const MARGIN_PX = 2;
+
 export default function ProjectsShowcase({ isAdmin = false }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeProjectId, setActiveProjectId] = useState(null);
-  const [viewMode, setViewMode] = useState('galaxy'); // 'galaxy' | 'bento'
-  
-  // Gallery slider state per project: { [projectId]: currentSlideIndex }
-  const [activeSlide, setActiveSlide] = useState({});
+  const [index, setIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState({});
-  
+
   // Admin inline-edit states
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [addingSkill, setAddingSkill] = useState(false);
   const [newSkillText, setNewSkillText] = useState('');
   const [editingUrl, setEditingUrl] = useState(null); // 'github' | 'demo' | null
   const [urlDraft, setUrlDraft] = useState('');
+
+  const containerRef = useRef(null);
+  const thumbnailsRef = useRef(null);
+  const x = useMotionValue(0);
 
   // Fetch projects from Firestore
   useEffect(() => {
@@ -96,19 +96,19 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           if (isMounted) {
             setProjects(list);
-            setActiveProjectId(list[0]?.id || null);
+            setIndex(0);
           }
         } else {
           if (isMounted) {
             setProjects(FALLBACK_PROJECTS);
-            setActiveProjectId(FALLBACK_PROJECTS[0].id);
+            setIndex(0);
           }
         }
       } catch (err) {
         console.warn('Firestore fetch projects fallback:', err);
         if (isMounted) {
           setProjects(FALLBACK_PROJECTS);
-          setActiveProjectId(FALLBACK_PROJECTS[0].id);
+          setIndex(0);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -119,44 +119,62 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Format projects into 3D gallery cards
-  const galleryCards = useMemo(() => {
-    return projects.map((p, idx) => {
-      const fallbackImage = DEFAULT_PROJECT_IMAGES[idx % DEFAULT_PROJECT_IMAGES.length];
-      const imageUrl = (p.photos && p.photos.length > 0) ? p.photos[0] : fallbackImage;
-      return {
-        id: p.id,
-        title: p.title,
-        tag: p.tag,
-        description: p.description,
-        skills: p.skills,
-        imageUrl: imageUrl,
-        alt: p.title,
-        githubUrl: p.githubUrl,
-        demoUrl: p.demoUrl,
-        rawProject: p,
-      };
-    });
-  }, [projects]);
-
-  // Currently active project object
+  // Currently active project
   const activeProject = useMemo(() => {
-    return projects.find(p => p.id === activeProjectId) || projects[0] || null;
-  }, [projects, activeProjectId]);
+    return projects[index] || projects[0] || null;
+  }, [projects, index]);
 
-  // Project index formatted (01, 02, etc.)
+  // Project index string (01, 02, etc.)
   const activeIndexNumber = useMemo(() => {
-    if (!activeProject) return '01';
-    const idx = projects.findIndex(p => p.id === activeProject.id);
-    return idx >= 0 ? String(idx + 1).padStart(2, '0') : '01';
-  }, [projects, activeProject]);
+    return String(index + 1).padStart(2, '0');
+  }, [index]);
+
+  // Main Carousel Animation
+  useEffect(() => {
+    if (!isDragging && containerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth || 1;
+      const targetX = -index * containerWidth;
+
+      animate(x, targetX, {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+      });
+    }
+  }, [index, x, isDragging]);
+
+  // Thumbnail Auto-scroll to center active item
+  useEffect(() => {
+    if (thumbnailsRef.current) {
+      let scrollPosition = 0;
+      for (let i = 0; i < index; i++) {
+        scrollPosition += COLLAPSED_WIDTH_PX + GAP_PX;
+      }
+      scrollPosition += MARGIN_PX;
+
+      const containerWidth = thumbnailsRef.current.offsetWidth;
+      const centerOffset = containerWidth / 2 - FULL_WIDTH_PX / 2;
+      scrollPosition -= centerOffset;
+
+      thumbnailsRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth',
+      });
+    }
+  }, [index]);
+
+  // Helper to get image for a project
+  const getProjectImage = (p, idx) => {
+    if (p.photos && p.photos.length > 0) return p.photos[0];
+    return DEFAULT_PROJECT_IMAGES[idx % DEFAULT_PROJECT_IMAGES.length];
+  };
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
   const handleOpenAdd = async () => {
     const newProject = {
       title: 'New Project',
       tag: 'Project',
-      description: 'Click any field to edit.',
+      description: 'Click any field to edit this project.',
       skills: ['React', 'TypeScript'],
       githubUrl: '',
       demoUrl: '',
@@ -166,25 +184,28 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     try {
       const docRef = await addDoc(collection(db, 'projects'), newProject);
       const created = { id: docRef.id, ...newProject };
-      setProjects(prev => [...prev, created]);
-      setActiveProjectId(docRef.id);
+      setProjects(prev => {
+        const next = [...prev, created];
+        setIndex(next.length - 1);
+        return next;
+      });
     } catch (err) {
       console.warn('Add project local fallback:', err);
       const localId = `local-${Date.now()}`;
       const created = { id: localId, ...newProject };
-      setProjects(prev => [...prev, created]);
-      setActiveProjectId(localId);
+      setProjects(prev => {
+        const next = [...prev, created];
+        setIndex(next.length - 1);
+        return next;
+      });
     }
   };
 
-  // Update a single field on the active project (in state + Firestore)
   const handleUpdateField = async (field, value) => {
     if (!activeProject) return;
-    // Optimistic state update
-    setProjects(prev => prev.map(p =>
-      p.id === activeProject.id ? { ...p, [field]: value } : p
+    setProjects(prev => prev.map((p, i) =>
+      i === index ? { ...p, [field]: value } : p
     ));
-    // Persist to Firestore
     try {
       await updateDoc(doc(db, 'projects', activeProject.id), { [field]: value });
     } catch (err) {
@@ -192,7 +213,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
-  // Skills management
   const handleAddSkill = () => {
     const trimmed = newSkillText.trim();
     if (!trimmed || !activeProject) return;
@@ -210,7 +230,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     handleUpdateField('skills', updated);
   };
 
-  // URL inline editing
   const handleSaveUrl = (field) => {
     handleUpdateField(field, urlDraft.trim());
     setEditingUrl(null);
@@ -219,6 +238,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   const handleDeleteProject = async (id, e) => {
     e?.stopPropagation?.();
+    if (!window.confirm('Delete this project?')) return;
     try {
       await deleteDoc(doc(db, 'projects', id));
     } catch (err) {
@@ -226,12 +246,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
     setProjects(prev => {
       const filtered = prev.filter(p => p.id !== id);
-      if (activeProjectId === id) {
-        setActiveProjectId(filtered[0]?.id || null);
-      }
+      setIndex(prevIndex => Math.max(0, Math.min(filtered.length - 1, prevIndex)));
       return filtered;
     });
-    setDeleteConfirmId(null);
   };
 
   const handleUploadPhoto = async (projectId, file) => {
@@ -261,10 +278,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         }
         return p;
       }));
-
-      const currentProj = projects.find(p => p.id === projectId);
-      const newIndex = (currentProj?.photos?.length || 0);
-      setActiveSlide(prev => ({ ...prev, [projectId]: newIndex }));
     } catch (err) {
       console.error('Error uploading photo:', err);
       alert('Photo upload failed. Check Firebase storage configuration.');
@@ -273,7 +286,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
-  const handleRemovePhoto = async (projectId, photoUrl) => {
+  const handleRemovePhoto = async (projectId, photoUrl, e) => {
+    e?.stopPropagation?.();
+    if (!window.confirm('Delete this photo?')) return;
     try {
       await updateDoc(doc(db, 'projects', projectId), {
         photos: arrayRemove(photoUrl)
@@ -285,7 +300,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         }
         return p;
       }));
-      setActiveSlide(prev => ({ ...prev, [projectId]: 0 }));
     } catch (err) {
       console.error('Error removing photo:', err);
     }
@@ -305,553 +319,447 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
-  const handleCardAction = (card, actionType) => {
-    setActiveProjectId(card.id);
-    if (actionType === 'download' || actionType === 'edit') {
-      setViewMode('bento');
+  // Main slide click handler -> redirect to demoUrl or githubUrl
+  const handleSlideClick = (project) => {
+    if (isDragging) return;
+    const targetUrl = project.demoUrl || project.githubUrl;
+    if (targetUrl) {
+      window.open(ensureAbsoluteUrl(targetUrl), '_blank', 'noopener,noreferrer');
     }
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center">
-      {/* ─── Top Control Bar & Mode Switcher ─── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 w-fit">
+    <div className="w-full h-full flex flex-col justify-center max-w-6xl mx-auto">
+      {/* ─── Top Header / Controls ─── */}
+      <div className="flex items-center justify-between gap-3 mb-3 px-1">
+        <div className="flex items-center gap-2.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             Selected Work
           </div>
-          <span className="text-[11px] font-mono text-cyan-400/80 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-0.5 rounded-full hidden sm:inline-block">
-            {String(projects.length).padStart(2, '0')} Systems
+          <span className="text-xs font-mono text-slate-400 bg-white/[0.03] border border-white/[0.08] px-2.5 py-0.5 rounded-full">
+            {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
           </span>
         </div>
 
-        {/* View Mode Switcher + Admin Add Project */}
         <div className="flex items-center gap-2">
-          <div className="inline-flex p-1 rounded-xl bg-slate-900/80 border border-white/10 backdrop-blur-md">
-            <button
-              type="button"
-              onClick={() => setViewMode('galaxy')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                viewMode === 'galaxy'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="3D Orbit View"
-            >
-              <Orbit size={13} />
-              <span>3D Galaxy</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('bento')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                viewMode === 'bento'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Bento Inspector View"
-            >
-              <LayoutGrid size={13} />
-              <span>Bento Grid</span>
-            </button>
-          </div>
-
           {isAdmin && (
-            <button
-              type="button"
-              onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer"
-              title="Add new project"
-            >
-              <Plus size={13} /> Add System
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer"
+                title="Add new project"
+              >
+                <Plus size={13} /> Add Project
+              </button>
+
+              {activeProject && (
+                <button
+                  type="button"
+                  onClick={(e) => handleDeleteProject(activeProject.id, e)}
+                  className="p-1.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer"
+                  title="Delete current project"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* ─── Main View Container ─── */}
-      <AnimatePresence mode="wait">
-        {viewMode === 'galaxy' ? (
-          /* ─────────────────────────────────────────────────────────────
-              3D STELLAR GALAXY VIEW
-             ───────────────────────────────────────────────────────────── */
-          <motion.div
-            key="galaxy-view"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-            className="w-full relative h-[480px] lg:h-[510px] rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-950/60 backdrop-blur-xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-          >
-            <StellarCardGallerySingle
-              cards={galleryCards}
-              onCardSelect={(card) => {
-                if (card) setActiveProjectId(card.id);
-              }}
-              onAction={handleCardAction}
-              title="3D Stellar Constellation"
-              subtitle="Drag to rotate • Scroll to zoom • Click cards to launch or inspect systems"
-              hideHeader={false}
-              className="h-full w-full"
-            />
-          </motion.div>
-        ) : (
-          /* ─────────────────────────────────────────────────────────────
-              BENTO GRID VIEW (With Full Existing Functionalities)
-             ───────────────────────────────────────────────────────────── */
-          <motion.div
-            key="bento-view"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-            className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-auto lg:h-[480px] xl:h-[510px] items-stretch"
-          >
-            {/* ─────────────────────────────────────────────────────────────
-                LEFT COLUMN (5 Cols): Interactive Title List
-               ───────────────────────────────────────────────────────────── */}
-            <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-              {/* Header */}
-              <div>
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white font-['Outfit'] tracking-tight">
-                    Featured Archive
-                  </h2>
-                  <span className="text-xs font-mono text-slate-400">
-                    {String(projects.length).padStart(2, '0')} Total
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 font-mono mb-4 hidden sm:block">
-                  Select a project to inspect architecture & source code
-                </p>
-              </div>
+      {/* ─── Main Carousel Display ─── */}
+      <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.1] bg-slate-950/80 shadow-[0_12px_40px_rgba(0,0,0,0.5)]" ref={containerRef}>
+        <motion.div
+          className="flex cursor-grab active:cursor-grabbing"
+          drag="x"
+          dragElastic={0.2}
+          dragMomentum={false}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={(e, info) => {
+            setIsDragging(false);
+            const containerWidth = containerRef.current?.offsetWidth || 1;
+            const offset = info.offset.x;
+            const velocity = info.velocity.x;
 
-              {/* Interactive Project Titles List */}
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 max-h-[220px] lg:max-h-none">
-                {projects.map((project, idx) => {
-                  const isSelected = activeProject?.id === project.id;
-                  const numStr = String(idx + 1).padStart(2, '0');
+            let newIndex = index;
+            if (Math.abs(velocity) > 500) {
+              newIndex = velocity > 0 ? index - 1 : index + 1;
+            } else if (Math.abs(offset) > containerWidth * 0.25) {
+              newIndex = offset > 0 ? index - 1 : index + 1;
+            }
 
-                  return (
-                    <div
-                      key={project.id}
-                      onMouseEnter={() => setActiveProjectId(project.id)}
-                      onClick={() => setActiveProjectId(project.id)}
-                      className={`group relative rounded-xl p-3 sm:p-3.5 transition-all duration-200 cursor-pointer border flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-cyan-500/15 border-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.15)] text-white'
-                          : 'bg-white/[0.02] border-white/[0.05] text-slate-400 hover:text-slate-200 hover:border-white/15 hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className={`text-xs font-mono font-bold transition-colors ${
-                          isSelected ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
-                        }`}>
-                          {numStr}
-                        </span>
+            newIndex = Math.max(0, Math.min(projects.length - 1, newIndex));
+            setIndex(newIndex);
+          }}
+          style={{ x }}
+        >
+          {projects.map((project, idx) => {
+            const imageUrl = getProjectImage(project, idx);
+            const isCurrent = idx === index;
+            const hasLink = Boolean(project.demoUrl || project.githubUrl);
 
-                        <div className="min-w-0">
-                          <h4 className={`text-sm font-semibold truncate transition-colors font-['Outfit'] ${
-                            isSelected ? 'text-white' : 'text-slate-300 group-hover:text-white'
-                          }`}>
-                            {project.title}
-                          </h4>
-                          <p className="text-[11px] font-mono text-slate-500 truncate">
-                            {project.tag}
-                          </p>
-                        </div>
-                      </div>
+            return (
+              <div 
+                key={project.id || idx} 
+                className="shrink-0 w-full h-[380px] sm:h-[430px] lg:h-[470px] relative overflow-hidden group select-none"
+              >
+                {/* Background Project Image */}
+                <img
+                  src={imageUrl}
+                  alt={project.title}
+                  className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+                  draggable={false}
+                />
 
-                      {/* Right side: Active arrow / Admin actions */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        {isAdmin && (
-                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100">
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteProject(project.id, e)}
-                              className="p-1 rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/30 transition-colors"
-                              title="Delete project"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        )}
+                {/* Dark Gradient Overlay for optimal legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent pointer-events-none" />
 
-                        {isSelected && !isAdmin && (
-                          <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Admin Hint / Fallback Helper */}
-              {isAdmin && projects.length > 0 && projects[0].id === '1' && (
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
-                  <span className="text-[11px] text-amber-400/80 font-mono">Using default templates</span>
-                  <button
-                    type="button"
-                    onClick={handlePushDefaults}
-                    className="text-[11px] font-mono text-cyan-300 hover:underline cursor-pointer"
+                {/* Click to redirect indicator hint (top right) */}
+                {hasLink && !isAdmin && (
+                  <div 
+                    onClick={() => handleSlideClick(project)}
+                    className="absolute top-4 right-4 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/70 text-cyan-300 border border-cyan-500/30 backdrop-blur-md text-xs font-mono opacity-80 group-hover:opacity-100 group-hover:bg-cyan-500/20 cursor-pointer transition-all shadow-lg"
+                    title="Click photo to visit project link"
                   >
-                    Push to DB
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* ─────────────────────────────────────────────────────────────
-                RIGHT COLUMN (7 Cols): Project Showcase Preview Panel
-               ───────────────────────────────────────────────────────────── */}
-            <div className="lg:col-span-7 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/30 transition-all duration-300">
-              {/* Ambient Glow */}
-              <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-
-              <AnimatePresence mode="wait">
-                {activeProject ? (
-                  <motion.div
-                    key={activeProject.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col justify-between h-full space-y-4"
-                  >
-                    {/* Top Row: Tag, Number, and External Links */}
-                    <div>
-                      <div className="flex items-center justify-between gap-3 mb-2">
-                        <EditableText
-                          text={activeProject.tag}
-                          isAdmin={isAdmin}
-                          onSave={(v) => handleUpdateField('tag', v)}
-                          className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold"
-                        />
-
-                        {/* Quick Link Buttons (GitHub & Demo) */}
-                        <div className="flex items-center gap-2">
-                          {/* GitHub URL */}
-                          {isAdmin ? (
-                            editingUrl === 'github' ? (
-                              <form
-                                className="inline-flex items-center gap-1"
-                                onSubmit={(e) => { e.preventDefault(); handleSaveUrl('githubUrl'); }}
-                              >
-                                <input
-                                  type="url"
-                                  value={urlDraft}
-                                  onChange={(e) => setUrlDraft(e.target.value)}
-                                  placeholder="https://github.com/..."
-                                  className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-cyan-400 text-white text-xs outline-none w-44"
-                                  autoFocus
-                                  onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
-                                />
-                                <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
-                                <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
-                              </form>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => { setEditingUrl('github'); setUrlDraft(activeProject.githubUrl || ''); }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] border-dashed hover:text-cyan-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 transition-all cursor-pointer"
-                                title="Click to edit GitHub URL"
-                              >
-                                <FolderGit2 size={13} />
-                                <span>{activeProject.githubUrl ? 'Code' : 'Set Repo'}</span>
-                                <Edit3 size={9} className="text-cyan-400/60" />
-                              </button>
-                            )
-                          ) : activeProject.githubUrl ? (
-                            <a
-                              href={ensureAbsoluteUrl(activeProject.githubUrl)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-slate-300 bg-white/[0.05] border border-white/[0.1] hover:text-cyan-300 hover:border-cyan-400/40 hover:bg-cyan-500/10 transition-all cursor-pointer"
-                              title="View GitHub Repository"
-                            >
-                              <FolderGit2 size={13} />
-                              <span>Code</span>
-                              <ExternalLink size={10} className="text-slate-500" />
-                            </a>
-                          ) : null}
-
-                          {/* Demo URL */}
-                          {isAdmin ? (
-                            editingUrl === 'demo' ? (
-                              <form
-                                className="inline-flex items-center gap-1"
-                                onSubmit={(e) => { e.preventDefault(); handleSaveUrl('demoUrl'); }}
-                              >
-                                <input
-                                  type="url"
-                                  value={urlDraft}
-                                  onChange={(e) => setUrlDraft(e.target.value)}
-                                  placeholder="https://..."
-                                  className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-emerald-400 text-white text-xs outline-none w-44"
-                                  autoFocus
-                                  onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
-                                />
-                                <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
-                                <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
-                              </form>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => { setEditingUrl('demo'); setUrlDraft(activeProject.demoUrl || ''); }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 border-dashed hover:bg-emerald-500/20 transition-all cursor-pointer"
-                                title="Click to edit Demo URL"
-                              >
-                                <Globe size={13} />
-                                <span>{activeProject.demoUrl ? 'Live Demo' : 'Set Demo'}</span>
-                                <Edit3 size={9} className="text-emerald-400/60" />
-                              </button>
-                            )
-                          ) : activeProject.demoUrl ? (
-                            <a
-                              href={ensureAbsoluteUrl(activeProject.demoUrl)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer"
-                              title="View Live Demo"
-                            >
-                              <Globe size={13} />
-                              <span>Live Demo</span>
-                              <ExternalLink size={10} className="text-emerald-400" />
-                            </a>
-                          ) : null}
-
-                          <span className="text-xs font-mono text-slate-500 px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/[0.06]">
-                            {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Project Title */}
-                      <h3 className="text-2xl sm:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2">
-                        <EditableText
-                          text={activeProject.title}
-                          isAdmin={isAdmin}
-                          onSave={(v) => handleUpdateField('title', v)}
-                        />
-                      </h3>
-
-                      {/* Project Description */}
-                      <div className="text-slate-300/90 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                        <EditableText
-                          text={activeProject.description}
-                          isAdmin={isAdmin}
-                          multiline={true}
-                          onSave={(v) => handleUpdateField('description', v)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Media Preview Area */}
-                    <div className="relative w-full h-[180px] sm:h-[200px] rounded-xl lg:rounded-2xl overflow-hidden border border-white/[0.08] bg-slate-950/60 group/media">
-                      {activeProject.photos && activeProject.photos.length > 0 ? (
-                        <>
-                          <AnimatePresence mode="wait">
-                            <motion.img
-                              key={activeSlide[activeProject.id] || 0}
-                              initial={{ opacity: 0, scale: 0.98 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.98 }}
-                              transition={{ duration: 0.3 }}
-                              src={activeProject.photos[activeSlide[activeProject.id] || 0]}
-                              alt={`${activeProject.title} screenshot`}
-                              className="w-full h-full object-cover object-center"
-                            />
-                          </AnimatePresence>
-
-                          {/* Multi-photo Carousel Controls */}
-                          {activeProject.photos.length > 1 && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveSlide(prev => {
-                                    const current = prev[activeProject.id] || 0;
-                                    return {
-                                      ...prev,
-                                      [activeProject.id]: (current - 1 + activeProject.photos.length) % activeProject.photos.length
-                                    };
-                                  });
-                                }}
-                                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/70 border border-white/20 text-white flex items-center justify-center hover:bg-cyan-500/40 transition-colors cursor-pointer backdrop-blur-md z-10"
-                              >
-                                <ChevronLeft size={16} />
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveSlide(prev => {
-                                    const current = prev[activeProject.id] || 0;
-                                    return {
-                                      ...prev,
-                                      [activeProject.id]: (current + 1) % activeProject.photos.length
-                                    };
-                                  });
-                                }}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/70 border border-white/20 text-white flex items-center justify-center hover:bg-cyan-500/40 transition-colors cursor-pointer backdrop-blur-md z-10"
-                              >
-                                <ChevronRight size={16} />
-                              </button>
-
-                              {/* Dots Indicator */}
-                              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 px-2.5 py-1 rounded-full bg-slate-950/60 backdrop-blur-md border border-white/10">
-                                {activeProject.photos.map((_, i) => (
-                                  <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => setActiveSlide(prev => ({ ...prev, [activeProject.id]: i }))}
-                                    className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
-                                      (activeSlide[activeProject.id] || 0) === i
-                                        ? 'bg-cyan-400 w-4'
-                                        : 'bg-white/40 hover:bg-white/70'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </>
-                          )}
-
-                          {/* Admin Photo Controls */}
-                          {isAdmin && (
-                            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
-                              <label
-                                title="Add screenshot"
-                                className="p-1.5 rounded-lg bg-slate-950/80 border border-white/20 text-cyan-300 hover:bg-cyan-500/20 cursor-pointer backdrop-blur-md transition-colors"
-                              >
-                                <Plus size={13} />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={uploading[activeProject.id]}
-                                  onChange={(e) => {
-                                    if (e.target.files?.[0]) handleUploadPhoto(activeProject.id, e.target.files[0]);
-                                  }}
-                                />
-                              </label>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const currentUrl = activeProject.photos[activeSlide[activeProject.id] || 0];
-                                  if (currentUrl) handleRemovePhoto(activeProject.id, currentUrl);
-                                }}
-                                className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/30 text-red-400 hover:bg-red-500/30 cursor-pointer backdrop-blur-md transition-colors"
-                                title="Delete current screenshot"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        /* Placeholder graphic when no photos exist */
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-6">
-                          <div className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-cyan-400/50 mb-2">
-                            <ImageIcon size={22} />
-                          </div>
-                          <span className="text-xs font-mono tracking-wider text-slate-400">
-                            {activeProject.title} Interface Simulation
-                          </span>
-
-                          {isAdmin && (
-                            <label className="mt-3 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer transition-colors inline-flex items-center gap-1.5">
-                              <Plus size={13} />
-                              <span>{uploading[activeProject.id] ? 'Uploading...' : 'Add Screenshot'}</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={uploading[activeProject.id]}
-                                onChange={(e) => {
-                                  if (e.target.files?.[0]) handleUploadPhoto(activeProject.id, e.target.files[0]);
-                                }}
-                              />
-                            </label>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Uploading Overlay */}
-                      {uploading[activeProject.id] && (
-                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
-                          Uploading Screenshot...
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Skills Tags List */}
-                    <div className="pt-2 border-t border-white/[0.06] flex flex-wrap items-center gap-2">
-                      <div className="flex flex-wrap gap-1.5">
-                        {(activeProject.skills || []).map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-white/[0.04] text-slate-300 border border-white/[0.08] inline-flex items-center gap-1.5 transition-colors ${
-                              isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/5' : ''
-                            }`}
-                          >
-                            {skill}
-                            {isAdmin && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(skill)}
-                                className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all cursor-pointer flex-shrink-0"
-                                title={`Remove ${skill}`}
-                              >
-                                <X size={8} />
-                              </button>
-                            )}
-                          </span>
-                        ))}
-
-                        {/* Admin: Add skill button / inline input */}
-                        {isAdmin && !addingSkill && (
-                          <button
-                            type="button"
-                            onClick={() => { setAddingSkill(true); setNewSkillText(''); }}
-                            className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-cyan-500/20 transition-colors cursor-pointer"
-                          >
-                            <Plus size={10} /> Add Skill
-                          </button>
-                        )}
-
-                        {isAdmin && addingSkill && (
-                          <form
-                            className="inline-flex items-center gap-1"
-                            onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }}
-                          >
-                            <input
-                              type="text"
-                              value={newSkillText}
-                              onChange={(e) => setNewSkillText(e.target.value)}
-                              placeholder="Skill name"
-                              className="px-2 py-0.5 rounded-md bg-slate-950/70 border border-cyan-400 text-white text-[11px] font-mono outline-none w-24"
-                              autoFocus
-                              onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSkill(false); setNewSkillText(''); } }}
-                            />
-                            <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
-                            <button type="button" onClick={() => { setAddingSkill(false); setNewSkillText(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
-                          </form>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-slate-500 text-sm font-mono">
-                    No project selected.
+                    <span>Visit Project</span>
+                    <ExternalLink size={12} />
                   </div>
                 )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+                {/* Admin Photo Management Controls (top right) */}
+                {isAdmin && isCurrent && (
+                  <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                    <label
+                      title="Upload new photo for this project"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+                    >
+                      <Plus size={13} />
+                      <span>{uploading[project.id] ? 'Uploading...' : 'Add Photo'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploading[project.id]}
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) handleUploadPhoto(project.id, e.target.files[0]);
+                        }}
+                      />
+                    </label>
+
+                    {project.photos && project.photos.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemovePhoto(project.id, project.photos[0], e)}
+                        className="p-1.5 rounded-xl bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+                        title="Delete project photo"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* ─────────────────────────────────────────────────────────────
+                    PROJECT DETAILS OVERLAY (Lower-Left of the Highlighted Photo)
+                   ───────────────────────────────────────────────────────────── */}
+                <div 
+                  className="absolute bottom-0 left-0 right-0 p-5 sm:p-8 z-20 flex flex-col justify-end max-w-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Project Tag */}
+                  <div className="mb-1.5">
+                    <EditableText
+                      text={project.tag}
+                      isAdmin={isAdmin}
+                      onSave={(v) => handleUpdateField('tag', v)}
+                      className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold drop-shadow-sm"
+                    />
+                  </div>
+
+                  {/* Project Title — Clickable to redirect */}
+                  <h3 
+                    onClick={() => {
+                      if (!isAdmin) handleSlideClick(project);
+                    }}
+                    className={`text-2xl sm:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2 flex items-center gap-2 ${
+                      hasLink && !isAdmin ? 'cursor-pointer hover:text-cyan-300 transition-colors' : ''
+                    }`}
+                  >
+                    <EditableText
+                      text={project.title}
+                      isAdmin={isAdmin}
+                      onSave={(v) => handleUpdateField('title', v)}
+                    />
+                    {hasLink && !isAdmin && (
+                      <ExternalLink size={18} className="opacity-60 group-hover:opacity-100 text-cyan-400 inline shrink-0" />
+                    )}
+                  </h3>
+
+                  {/* Project Description */}
+                  <div className="text-slate-200/90 text-xs sm:text-sm leading-relaxed mb-4 line-clamp-3 sm:line-clamp-4 max-w-xl drop-shadow-sm">
+                    <EditableText
+                      text={project.description}
+                      isAdmin={isAdmin}
+                      multiline={true}
+                      onSave={(v) => handleUpdateField('description', v)}
+                    />
+                  </div>
+
+                  {/* Skills Tags List */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                    {(project.skills || []).map((skill, sIdx) => (
+                      <span
+                        key={sIdx}
+                        className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-white/[0.08] text-cyan-200 border border-white/[0.12] backdrop-blur-md inline-flex items-center gap-1.5 shadow-sm"
+                      >
+                        {skill}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all cursor-pointer"
+                            title={`Remove ${skill}`}
+                          >
+                            <X size={8} />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+
+                    {/* Admin: Add skill inline */}
+                    {isAdmin && !addingSkill && (
+                      <button
+                        type="button"
+                        onClick={() => { setAddingSkill(true); setNewSkillText(''); }}
+                        className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 border-dashed inline-flex items-center gap-1 hover:bg-cyan-500/30 transition-colors cursor-pointer backdrop-blur-md"
+                      >
+                        <Plus size={10} /> Add Skill
+                      </button>
+                    )}
+
+                    {isAdmin && addingSkill && (
+                      <form
+                        className="inline-flex items-center gap-1"
+                        onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }}
+                      >
+                        <input
+                          type="text"
+                          value={newSkillText}
+                          onChange={(e) => setNewSkillText(e.target.value)}
+                          placeholder="Skill name"
+                          className="px-2 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400 text-white text-[11px] font-mono outline-none w-24 backdrop-blur-md"
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSkill(false); setNewSkillText(''); } }}
+                        />
+                        <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
+                        <button type="button" onClick={() => { setAddingSkill(false); setNewSkillText(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
+                      </form>
+                    )}
+                  </div>
+
+                  {/* Action Link Pills: Live Demo & GitHub Code */}
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Live Demo URL */}
+                    {isAdmin ? (
+                      editingUrl === 'demo' ? (
+                        <form
+                          className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-emerald-400"
+                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl('demoUrl'); }}
+                        >
+                          <input
+                            type="url"
+                            value={urlDraft}
+                            onChange={(e) => setUrlDraft(e.target.value)}
+                            placeholder="https://..."
+                            className="px-2 py-0.5 rounded bg-transparent text-white text-xs outline-none w-48 font-mono"
+                            autoFocus
+                            onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
+                          />
+                          <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
+                          <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
+                        </form>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setEditingUrl('demo'); setUrlDraft(project.demoUrl || ''); }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 border-dashed hover:bg-emerald-500/30 transition-all cursor-pointer backdrop-blur-md"
+                          title="Click to edit Demo URL"
+                        >
+                          <Globe size={13} />
+                          <span>{project.demoUrl ? 'Live Demo' : 'Set Demo URL'}</span>
+                          <Edit3 size={10} className="text-emerald-400/70" />
+                        </button>
+                      )
+                    ) : project.demoUrl ? (
+                      <a
+                        href={ensureAbsoluteUrl(project.demoUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold font-mono text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-all cursor-pointer shadow-lg shadow-emerald-500/20 active:scale-95"
+                        title="Open Live Demo"
+                      >
+                        <Globe size={13} />
+                        <span>Live Demo</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    ) : null}
+
+                    {/* GitHub Code URL */}
+                    {isAdmin ? (
+                      editingUrl === 'github' ? (
+                        <form
+                          className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-cyan-400"
+                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl('githubUrl'); }}
+                        >
+                          <input
+                            type="url"
+                            value={urlDraft}
+                            onChange={(e) => setUrlDraft(e.target.value)}
+                            placeholder="https://github.com/..."
+                            className="px-2 py-0.5 rounded bg-transparent text-white text-xs outline-none w-48 font-mono"
+                            autoFocus
+                            onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrl(null); setUrlDraft(''); } }}
+                          />
+                          <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={12} /></button>
+                          <button type="button" onClick={() => { setEditingUrl(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={12} /></button>
+                        </form>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setEditingUrl('github'); setUrlDraft(project.githubUrl || ''); }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-cyan-300 bg-cyan-500/20 border border-cyan-500/40 border-dashed hover:bg-cyan-500/30 transition-all cursor-pointer backdrop-blur-md"
+                          title="Click to edit GitHub URL"
+                        >
+                          <FolderGit2 size={13} />
+                          <span>{project.githubUrl ? 'Source Code' : 'Set Repo URL'}</span>
+                          <Edit3 size={10} className="text-cyan-400/70" />
+                        </button>
+                      )
+                    ) : project.githubUrl ? (
+                      <a
+                        href={ensureAbsoluteUrl(project.githubUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono text-slate-200 bg-white/[0.08] border border-white/[0.15] hover:border-cyan-400/50 hover:bg-cyan-500/20 hover:text-cyan-200 transition-all cursor-pointer backdrop-blur-md active:scale-95 shadow-md"
+                        title="View Source Code"
+                      >
+                        <FolderGit2 size={13} />
+                        <span>Source Code</span>
+                        <ExternalLink size={10} className="text-slate-400" />
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </motion.div>
+
+        {/* ─── Navigation Arrow Buttons ─── */}
+        <motion.button
+          disabled={index === 0}
+          onClick={() => setIndex((i) => Math.max(0, i - 1))}
+          className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
+            index === 0
+              ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
+              : 'bg-slate-950/70 text-white border border-white/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 shadow-lg hover:scale-105 active:scale-95'
+          }`}
+          title="Previous Project"
+        >
+          <ChevronLeft size={20} />
+        </motion.button>
+
+        <motion.button
+          disabled={index === projects.length - 1}
+          onClick={() => setIndex((i) => Math.min(projects.length - 1, i + 1))}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
+            index === projects.length - 1
+              ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
+              : 'bg-slate-950/70 text-white border border-white/20 hover:bg-cyan-500/30 hover:border-cyan-400/50 shadow-lg hover:scale-105 active:scale-95'
+          }`}
+          title="Next Project"
+        >
+          <ChevronRight size={20} />
+        </motion.button>
+      </div>
+
+      {/* ─── Bottom Thumbnail Strip ─── */}
+      <div
+        ref={thumbnailsRef}
+        className="overflow-x-auto mt-3 py-1 px-1"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <style>{`
+          .overflow-x-auto::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        <div className="flex items-center gap-1.5 h-16 sm:h-20" style={{ width: 'fit-content' }}>
+          {projects.map((project, i) => {
+            const thumbUrl = getProjectImage(project, i);
+            const isCurrent = i === index;
+
+            return (
+              <motion.button
+                key={project.id || i}
+                onClick={() => setIndex(i)}
+                initial={false}
+                animate={isCurrent ? 'active' : 'inactive'}
+                variants={{
+                  active: {
+                    width: FULL_WIDTH_PX,
+                    marginLeft: MARGIN_PX,
+                    marginRight: MARGIN_PX,
+                  },
+                  inactive: {
+                    width: COLLAPSED_WIDTH_PX,
+                    marginLeft: 0,
+                    marginRight: 0,
+                  },
+                }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className={`relative shrink-0 h-full overflow-hidden rounded-xl border transition-all cursor-pointer ${
+                  isCurrent
+                    ? 'border-cyan-400 shadow-[0_0_16px_rgba(34,211,238,0.4)] opacity-100 ring-1 ring-cyan-400/50'
+                    : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/30'
+                }`}
+                title={project.title}
+              >
+                <img
+                  src={thumbUrl}
+                  alt={project.title}
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                  draggable={false}
+                />
+                {isCurrent && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-1.5">
+                    <span className="text-[10px] font-semibold text-white font-['Outfit'] truncate">
+                      {project.title}
+                    </span>
+                  </div>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Admin Seed Helper if only fallback projects */}
+      {isAdmin && projects.length > 0 && projects[0].id === '1' && (
+        <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span className="text-amber-400/80">Using fallback templates</span>
+          <button
+            type="button"
+            onClick={handlePushDefaults}
+            className="text-cyan-300 hover:underline cursor-pointer"
+          >
+            Push to Firestore DB
+          </button>
+        </div>
+      )}
     </div>
   );
 }

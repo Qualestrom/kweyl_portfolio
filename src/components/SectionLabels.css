@@ -130,12 +130,20 @@
 /* ── Top right: Theme toggle & Admin actions ── */
 .section-top-actions {
   position: fixed;
-  top: 24px;
-  right: 24px;
+  top: 18px;
+  right: 18px;
   z-index: 500;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .section-top-actions {
+    top: 24px;
+    right: 24px;
+    gap: 12px;
+  }
 }
 
 .admin-logout-badge {

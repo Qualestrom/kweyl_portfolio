@@ -4,8 +4,8 @@ import ProjectsShowcase from '../components/ProjectsShowcase';
 
 export default function ProjectsSection({ isAdmin }) {
   return (
-    <section className="section-viewport overflow-y-auto lg:overflow-hidden py-10 lg:py-0" id="projects-section">
-      <div className="section-content w-full h-full flex items-center justify-center pl-6 sm:pl-10 lg:pl-32 xl:pl-44 pr-6 sm:pr-10 lg:pr-12 xl:pr-16 max-w-[1480px]">
+    <section className="section-viewport overflow-y-auto lg:overflow-hidden py-8 sm:py-10 lg:py-0" id="projects-section">
+      <div className="section-content w-full h-full flex items-center justify-center px-4 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

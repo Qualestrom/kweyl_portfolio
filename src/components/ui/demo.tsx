@@ -1,5 +1,5 @@
-import StellarCardGallerySingle from "@/components/ui/3d-image-gallery";
+import Component from "@/components/ui/thumbnail-carousel";
 
 export default function DemoOne() {
-  return <StellarCardGallerySingle />;
+  return <Component />;
 }

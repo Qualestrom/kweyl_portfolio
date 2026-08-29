@@ -21,12 +21,12 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import EditableText from './EditableText';
 
 const DEFAULT_CERT_IMAGES = [
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80', // Tech / learning
-  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80', // Cloud / network
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80', // Cyber / dev
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80', // Code / data
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80', // Modern abstract
-  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80', // Workspace
+  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80', // Tech / learning
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', // Cloud / network
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80', // Cyber / dev
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80', // Code / data
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', // Modern abstract
+  'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80', // Workspace
 ];
 
 const FALLBACK_CERTIFICATES = [
@@ -80,7 +80,7 @@ const FALLBACK_CERTIFICATES = [
   }
 ];
 
-// Individual High-Resolution Landscape 3D Certificate Card
+// Individual High-Resolution Landscape 3D Certificate Card (Upscaled)
 const LandscapeCarouselCard = ({
   cert,
   idx,
@@ -115,9 +115,9 @@ const LandscapeCarouselCard = ({
       return 1;
     }
     if (currentGlobalAngle < 120 || currentGlobalAngle > 240) {
-      return 0.5;
+      return 0.45;
     }
-    return 0.2;
+    return 0.18;
   });
 
   return (
@@ -125,10 +125,10 @@ const LandscapeCarouselCard = ({
       onClick={() => {
         if (!isActive) onClickCard(idx);
       }}
-      className={`absolute inset-0 rounded-2xl border transition-colors duration-300 flex flex-col justify-between cursor-pointer ${
+      className={`absolute inset-0 rounded-2xl sm:rounded-3xl border transition-colors duration-300 flex flex-col justify-between cursor-pointer ${
         isActive
-          ? 'border-cyan-400/90 bg-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_32px_rgba(34,211,238,0.3)] z-20 ring-1 ring-cyan-400/40'
-          : 'border-white/15 bg-slate-900 shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:border-white/30 z-10'
+          ? 'border-cyan-400/90 bg-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_36px_rgba(34,211,238,0.3)] z-20 ring-1 ring-cyan-400/50'
+          : 'border-white/15 bg-slate-900 shadow-[0_12px_36px_rgba(0,0,0,0.6)] hover:border-white/30 z-10'
       }`}
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
@@ -139,12 +139,12 @@ const LandscapeCarouselCard = ({
       }}
     >
       {/* ─── Top Landscape Certificate Image / Thumbnail Banner ─── */}
-      <div className="relative w-full h-[125px] sm:h-[140px] bg-slate-950 rounded-t-2xl overflow-hidden border-b border-white/[0.08] group/img shrink-0">
+      <div className="relative w-full h-[170px] sm:h-[200px] md:h-[225px] lg:h-[245px] bg-slate-950 rounded-t-2xl sm:rounded-t-3xl overflow-hidden border-b border-white/[0.08] group/img shrink-0">
         <img
           src={certImage}
           alt={cert.title}
           className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
-            hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
+            hasCustomImage ? 'object-contain bg-slate-950 p-2.5 sm:p-3' : 'object-cover'
           }`}
           draggable={false}
         />
@@ -155,14 +155,15 @@ const LandscapeCarouselCard = ({
         {/* Top Right Admin Image Controls */}
         {isAdmin && isActive && (
           <div 
-            className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-30"
+            className="absolute top-3 right-3 flex items-center gap-2 z-30"
             onClick={(e) => e.stopPropagation()}
           >
             <label
               title="Upload Certificate PDF screenshot or image"
-              className="p-1.5 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-md inline-flex items-center gap-1.5"
             >
-              <Upload size={12} />
+              <Upload size={13} />
+              <span>{uploading[cert.id] ? 'Uploading...' : 'Upload Image'}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -178,24 +179,24 @@ const LandscapeCarouselCard = ({
               <button
                 type="button"
                 onClick={(e) => handleRemoveImage(cert.id, e)}
-                className="p-1.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+                className="p-1.5 rounded-xl bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
                 title="Remove custom image"
               >
-                <Trash2 size={12} />
+                <Trash2 size={13} />
               </button>
             )}
           </div>
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono shadow-sm">
-          <ShieldCheck size={11} className="text-cyan-400" />
-          <span>Verified</span>
+        <div className="absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-950/90 border border-cyan-400/40 text-cyan-300 text-xs font-mono shadow-sm">
+          <ShieldCheck size={13} className="text-cyan-400" />
+          <span>Verified Credential</span>
         </div>
 
         {/* Uploading Status Overlay */}
         {uploading[cert.id] && (
-          <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
+          <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center text-cyan-300 text-sm font-mono z-30">
             Uploading Certificate Image...
           </div>
         )}
@@ -203,15 +204,15 @@ const LandscapeCarouselCard = ({
 
       {/* ─── Bottom Details & Text Section (No overflow-hidden so Edit badges float freely) ─── */}
       <div 
-        className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between relative"
+        className="p-4 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between relative"
         onClick={(e) => {
           if (isActive) e.stopPropagation();
         }}
       >
         <div>
           {/* Issuer & Date Row */}
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="text-[11px] font-mono text-cyan-400 font-semibold truncate flex-1 tracking-wide">
+          <div className="flex items-center justify-between gap-3 mb-1.5">
+            <div className="text-xs sm:text-sm font-mono text-cyan-400 font-semibold truncate flex-1 tracking-wide">
               <EditableText
                 text={cert.issuer}
                 isAdmin={isAdmin && isActive}
@@ -219,7 +220,7 @@ const LandscapeCarouselCard = ({
               />
             </div>
 
-            <div className="text-[10px] font-mono text-slate-300 bg-white/[0.08] border border-white/[0.12] px-2 py-0.5 rounded-full shrink-0 font-medium">
+            <div className="text-xs font-mono text-slate-300 bg-white/[0.08] border border-white/[0.12] px-3 py-0.5 rounded-full shrink-0 font-medium">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin && isActive}
@@ -229,7 +230,7 @@ const LandscapeCarouselCard = ({
           </div>
 
           {/* Certificate Title */}
-          <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-extrabold text-white font-['Outfit'] tracking-tight leading-snug">
             <EditableText
               text={cert.title}
               isAdmin={isAdmin && isActive}
@@ -239,11 +240,11 @@ const LandscapeCarouselCard = ({
         </div>
 
         {/* ─── Bottom Actions Row (Verify Link & Admin Actions) ─── */}
-        <div className="pt-2 mt-1 border-t border-white/[0.08] flex items-center justify-between gap-2">
+        <div className="pt-3 mt-2 border-t border-white/[0.08] flex items-center justify-between gap-3">
           {isAdmin && isActive ? (
             isEditingUrl ? (
               <form
-                className="flex-1 flex items-center gap-1"
+                className="flex-1 flex items-center gap-1.5"
                 onSubmit={(e) => { e.preventDefault(); handleSaveUrl(cert.id); }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -252,33 +253,33 @@ const LandscapeCarouselCard = ({
                   value={urlDraft}
                   onChange={(e) => setUrlDraft(e.target.value)}
                   placeholder="https://credential-link..."
-                  className="px-2 py-0.5 rounded bg-slate-950 border border-cyan-400 text-white text-[11px] font-mono outline-none w-full"
+                  className="px-3 py-1 rounded-lg bg-slate-950 border border-cyan-400 text-white text-xs font-mono outline-none w-full"
                   autoFocus
                   onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrlId(null); setUrlDraft(''); } }}
                 />
-                <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
-                <button type="button" onClick={() => { setEditingUrlId(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
+                <button type="submit" className="p-1 text-green-400 hover:text-green-300 cursor-pointer"><Check size={13} /></button>
+                <button type="button" onClick={() => { setEditingUrlId(null); setUrlDraft(''); }} className="p-1 text-red-400 hover:text-red-300 cursor-pointer"><X size={13} /></button>
               </form>
             ) : (
               <div className="flex items-center justify-between w-full" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || ''); }}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:underline cursor-pointer"
                   title="Edit verification link"
                 >
-                  <Globe size={12} />
-                  <span>{cert.verifyUrl ? 'Edit Link' : 'Set Link'}</span>
-                  <Edit3 size={9} className="opacity-70" />
+                  <Globe size={14} />
+                  <span>{cert.verifyUrl ? 'Edit Verification URL' : 'Set Verification URL'}</span>
+                  <Edit3 size={11} className="opacity-70" />
                 </button>
 
                 <button
                   type="button"
                   onClick={(e) => handleDeleteCert(cert.id, e)}
-                  className="p-1 rounded-md text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
                   title="Delete certificate"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             )
@@ -288,15 +289,15 @@ const LandscapeCarouselCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1 rounded-lg text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="w-full inline-flex items-center justify-center gap-2 py-2 px-5 rounded-xl text-xs sm:text-sm font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
               title="Verify Certificate Credential Online"
             >
-              <ShieldCheck size={12} className="text-cyan-400" />
-              <span>Verify Credential</span>
-              <ExternalLink size={11} />
+              <ShieldCheck size={14} className="text-cyan-400" />
+              <span>Verify Credential Online</span>
+              <ExternalLink size={13} />
             </a>
           ) : (
-            <div className="w-full text-center text-[11px] font-mono text-slate-400 py-0.5">
+            <div className="w-full text-center text-xs font-mono text-slate-400 py-1">
               Credential on Record
             </div>
           )}
@@ -376,14 +377,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   const handlePrev = () => {
     if (certificates.length === 0) return;
     const stepAngle = 360 / certificates.length;
-    // Step forward in angle (rotates left seamlessly)
     setTargetAngle(prev => prev + stepAngle);
   };
 
   const handleNext = () => {
     if (certificates.length === 0) return;
     const stepAngle = 360 / certificates.length;
-    // Step backward in angle (rotates right seamlessly in a continuous infinite loop)
     setTargetAngle(prev => prev - stepAngle);
   };
 
@@ -393,10 +392,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     const total = certificates.length;
     const stepAngle = 360 / total;
     
-    // Compute current card index under front
     const currentFrontIdx = (((Math.round(-targetAngle / stepAngle) % total) + total) % total);
     
-    // Find shortest angular difference in steps
     let diff = clickedIdx - currentFrontIdx;
     if (diff > total / 2) diff -= total;
     if (diff < -total / 2) diff += total;
@@ -423,10 +420,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     const stepAngle = 360 / certificates.length;
     const currentRot = rotation.get();
     
-    // Snap to nearest multiple of stepAngle
     let targetSteps = Math.round(currentRot / stepAngle);
     
-    // Advance step if fast velocity swipe
     if (info.velocity.x > 250) {
       targetSteps = Math.ceil(currentRot / stepAngle);
     } else if (info.velocity.x < -250) {
@@ -436,13 +431,13 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     setTargetAngle(targetSteps * stepAngle);
   };
 
-  // Dynamic 3D radius calculation for landscape cards
+  // Dynamic 3D radius calculation for large landscape cards
   const translateZ = useMemo(() => {
     const total = Math.max(certificates.length, 3);
-    const cardWidth = windowWidth > 1024 ? 440 : windowWidth > 640 ? 380 : 320;
+    const cardWidth = windowWidth > 1280 ? 720 : windowWidth > 1024 ? 660 : windowWidth > 768 ? 580 : windowWidth > 640 ? 500 : 340;
     const angleRad = Math.PI / total;
     const computedRadius = Math.round((cardWidth / 2) / Math.tan(angleRad));
-    return Math.max(windowWidth > 768 ? 360 : 280, computedRadius + 30);
+    return Math.max(windowWidth > 768 ? 480 : 320, computedRadius + 40);
   }, [certificates.length, windowWidth]);
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
@@ -558,9 +553,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   return (
     <div className="w-full flex flex-col justify-center select-none py-2">
       {/* ─── Header Bar with Step Navigation & Admin Actions ─── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 px-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5 px-1">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
               <Award size={13} className="text-cyan-400" />
               <span>Certifications</span>
@@ -570,7 +565,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             </span>
           </div>
           <p className="text-xs text-slate-400 font-mono hidden sm:block">
-            Continuous orbital gallery • Drag or click arrows to explore
+            Continuous orbital gallery • Drag or click arrows to explore credentials
           </p>
         </div>
 
@@ -580,18 +575,18 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               type="button"
               onClick={handlePrev}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+              className="p-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
               title="Previous Certificate (Rotate Left)"
             >
-              <ChevronLeft size={17} />
+              <ChevronLeft size={18} />
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
+              className="p-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-white/[0.06] transition-colors cursor-pointer"
               title="Next Certificate (Rotate Right)"
             >
-              <ChevronRight size={17} />
+              <ChevronRight size={18} />
             </button>
           </div>
 
@@ -599,22 +594,22 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-md"
               title="Add new certificate"
             >
-              <Plus size={13} /> Add Credential
+              <Plus size={14} /> Add Credential
             </button>
           )}
         </div>
       </div>
 
-      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Zero-Magnification Z=0 Alignment) ─── */}
+      {/* ─── 3D PERSPECTIVE CAROUSEL STAGE (Upscaled to Match Pages 0–2) ─── */}
       <div 
-        className="w-full relative h-[380px] sm:h-[420px] lg:h-[450px] flex items-center justify-center"
-        style={{ perspective: '1200px' }}
+        className="w-full relative h-[470px] sm:h-[520px] md:h-[560px] lg:h-[600px] flex items-center justify-center"
+        style={{ perspective: '1500px' }}
       >
         <motion.div
-          className="relative w-[330px] sm:w-[410px] lg:w-[450px] h-[245px] sm:h-[270px] cursor-grab active:cursor-grabbing"
+          className="relative w-[340px] sm:w-[500px] md:w-[580px] lg:w-[660px] xl:w-[720px] h-[320px] sm:h-[360px] md:h-[390px] lg:h-[420px] cursor-grab active:cursor-grabbing"
           style={{
             transformStyle: 'preserve-3d',
             rotateY: rotation,

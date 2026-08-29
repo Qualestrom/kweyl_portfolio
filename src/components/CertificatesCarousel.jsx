@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, useAnimationFrame, animate } from 'framer-motion';
+import { motion, useMotionValue, useAnimationFrame, animate, useTransform } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -82,6 +82,208 @@ const FALLBACK_CERTIFICATES = [
   }
 ];
 
+const CarouselCard = ({
+  cert, idx, total, rotation, translateZ, isAdmin,
+  editingUrlId, urlDraft, uploading,
+  setEditingUrlId, setUrlDraft,
+  handleUpdateField, handleSaveUrl, handleDeleteCert,
+  handleUploadImage, handleRemoveImage,
+  onHoverStart, onHoverEnd
+}) => {
+  const angle = (360 / Math.max(total, 1)) * idx;
+  const fallbackImg = DEFAULT_CERT_IMAGES[idx % DEFAULT_CERT_IMAGES.length];
+  const certImage = cert.imageUrl || fallbackImg;
+  const hasCustomImage = Boolean(cert.imageUrl);
+  const isEditingUrl = editingUrlId === cert.id;
+
+  // Calculate if the card is front-facing to dim back cards and disable their pointer events
+  const opacity = useTransform(rotation, (r) => {
+    let currentGlobalAngle = (angle + r) % 360;
+    if (currentGlobalAngle < 0) currentGlobalAngle += 360;
+    if (currentGlobalAngle < 90 || currentGlobalAngle > 270) {
+      return 1;
+    }
+    return 0.35;
+  });
+
+  const pointerEvents = useTransform(rotation, (r) => {
+    let currentGlobalAngle = (angle + r) % 360;
+    if (currentGlobalAngle < 0) currentGlobalAngle += 360;
+    if (currentGlobalAngle < 90 || currentGlobalAngle > 270) {
+      return 'auto';
+    }
+    return 'none';
+  });
+
+  return (
+    <motion.div
+      className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between overflow-hidden group/card"
+      style={{
+        transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
+        opacity,
+        pointerEvents
+      }}
+      onMouseEnter={onHoverStart}
+      onMouseLeave={onHoverEnd}
+    >
+      {/* Top Image Preview Banner */}
+      <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950/90 overflow-hidden border-b border-white/[0.08] group/img">
+        <img
+          src={certImage}
+          alt={cert.title}
+          className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
+            hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
+          }`}
+          draggable={false}
+        />
+
+        {/* Subtle Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent pointer-events-none" />
+
+        {/* Top Right Admin Controls */}
+        {isAdmin && (
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
+            <label
+              title="Upload Certificate PDF screenshot / image"
+              className="p-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+            >
+              <Upload size={12} />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading[cert.id]}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleUploadImage(cert.id, e.target.files[0]);
+                }}
+              />
+            </label>
+
+            {cert.imageUrl && (
+              <button
+                type="button"
+                onClick={(e) => handleRemoveImage(cert.id, e)}
+                className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
+                title="Remove custom image"
+              >
+                <Trash2 size={12} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Top Left Verified Badge */}
+        <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono backdrop-blur-md shadow-sm">
+          <ShieldCheck size={11} className="text-cyan-400" />
+          <span>Verified</span>
+        </div>
+
+        {/* Uploading Status Overlay */}
+        {uploading[cert.id] && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
+            Uploading Image...
+          </div>
+        )}
+      </div>
+
+      {/* Card Content & Details */}
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+        <div>
+          {/* Date and Issuer Line */}
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="text-[11px] font-mono text-cyan-400 font-semibold truncate">
+              <EditableText
+                text={cert.issuer}
+                isAdmin={isAdmin}
+                onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
+              />
+            </span>
+
+            <span className="text-[10px] font-mono text-slate-400 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-full shrink-0">
+              <EditableText
+                text={cert.date}
+                isAdmin={isAdmin}
+                onSave={(v) => handleUpdateField(cert.id, 'date', v)}
+              />
+            </span>
+          </div>
+
+          {/* Certificate Title */}
+          <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug line-clamp-2 mt-1">
+            <EditableText
+              text={cert.title}
+              isAdmin={isAdmin}
+              onSave={(v) => handleUpdateField(cert.id, 'title', v)}
+            />
+          </h3>
+        </div>
+
+        {/* Bottom Action Row: Verify Link / Admin Actions */}
+        <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-2">
+          {isAdmin ? (
+            isEditingUrl ? (
+              <form
+                className="flex-1 flex items-center gap-1"
+                onSubmit={(e) => { e.preventDefault(); handleSaveUrl(cert.id); }}
+              >
+                <input
+                  type="url"
+                  value={urlDraft}
+                  onChange={(e) => setUrlDraft(e.target.value)}
+                  placeholder="https://credential-link..."
+                  className="px-2 py-0.5 rounded bg-slate-950 border border-cyan-400 text-white text-[11px] font-mono outline-none w-full"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrlId(null); setUrlDraft(''); } }}
+                />
+                <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
+                <button type="button" onClick={() => { setEditingUrlId(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
+              </form>
+            ) : (
+              <div className="flex items-center justify-between w-full">
+                <button
+                  type="button"
+                  onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || ''); }}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 hover:underline cursor-pointer"
+                  title="Edit verification link"
+                >
+                  <Globe size={12} />
+                  <span>{cert.verifyUrl ? 'Edit Link' : 'Set Link'}</span>
+                  <Edit3 size={9} className="opacity-70" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleDeleteCert(cert.id, e)}
+                  className="p-1 rounded-md text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                  title="Delete certificate"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            )
+          ) : cert.verifyUrl ? (
+            <a
+              href={ensureAbsoluteUrl(cert.verifyUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Verify Certificate Credential Online"
+            >
+              <ShieldCheck size={13} className="text-cyan-400" />
+              <span>Verify Credential</span>
+              <ExternalLink size={11} />
+            </a>
+          ) : (
+            <div className="w-full text-center text-[11px] font-mono text-slate-500 py-1">
+              Credential on Record
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function CertificatesCarousel({ isAdmin = false }) {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -137,25 +339,6 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       rotation.set(rotation.get() + step);
     }
   });
-
-  // Proximity Hover Detection across page
-  useEffect(() => {
-    const handleGlobalMouseMove = (e) => {
-      if (!wrapperRef.current) return;
-      const rect = wrapperRef.current.getBoundingClientRect();
-      const padding = 80; // Detect hover 80px around the carousel
-      const isNearby = (
-        e.clientX >= rect.left - padding &&
-        e.clientX <= rect.right + padding &&
-        e.clientY >= rect.top - padding &&
-        e.clientY <= rect.bottom + padding
-      );
-      setIsHovered(isNearby);
-    };
-
-    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
-  }, []);
 
   // Pan / Drag gesture handlers
   const handlePanStart = () => {
@@ -390,180 +573,29 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           onPan={handlePan}
           onPanEnd={handlePanEnd}
         >
-          {certificates.map((cert, idx) => {
-            const angle = (360 / Math.max(certificates.length, 1)) * idx;
-            const fallbackImg = DEFAULT_CERT_IMAGES[idx % DEFAULT_CERT_IMAGES.length];
-            const certImage = cert.imageUrl || fallbackImg;
-            const hasCustomImage = Boolean(cert.imageUrl);
-            const isEditingUrl = editingUrlId === cert.id;
-
-            return (
-              <div
-                key={cert.id || idx}
-                className="absolute inset-0 rounded-2xl border border-white/15 bg-slate-900/90 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] hover:border-cyan-400/60 hover:shadow-[0_0_35px_rgba(34,211,238,0.3)] transition-all duration-300 flex flex-col justify-between overflow-hidden group/card"
-                style={{
-                  transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
-              >
-                {/* Top Image Preview Banner */}
-                <div className="relative w-full h-[145px] sm:h-[160px] bg-slate-950/90 overflow-hidden border-b border-white/[0.08] group/img">
-                  <img
-                    src={certImage}
-                    alt={cert.title}
-                    className={`w-full h-full select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-105 ${
-                      hasCustomImage ? 'object-contain bg-slate-950 p-2' : 'object-cover'
-                    }`}
-                    draggable={false}
-                  />
-
-                  {/* Subtle Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent pointer-events-none" />
-
-                  {/* Top Right Admin Controls */}
-                  {isAdmin && (
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
-                      <label
-                        title="Upload Certificate PDF screenshot / image"
-                        className="p-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
-                      >
-                        <Upload size={12} />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploading[cert.id]}
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) handleUploadImage(cert.id, e.target.files[0]);
-                          }}
-                        />
-                      </label>
-
-                      {cert.imageUrl && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleRemoveImage(cert.id, e)}
-                          className="p-1.5 rounded-lg bg-slate-950/80 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-md"
-                          title="Remove custom image"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Top Left Verified Badge */}
-                  <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-950/80 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono backdrop-blur-md shadow-sm">
-                    <ShieldCheck size={11} className="text-cyan-400" />
-                    <span>Verified</span>
-                  </div>
-
-                  {/* Uploading Status Overlay */}
-                  {uploading[cert.id] && (
-                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center text-cyan-300 text-xs font-mono z-30">
-                      Uploading Image...
-                    </div>
-                  )}
-                </div>
-
-                {/* Card Content & Details */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    {/* Date and Issuer Line */}
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-[11px] font-mono text-cyan-400 font-semibold truncate">
-                        <EditableText
-                          text={cert.issuer}
-                          isAdmin={isAdmin}
-                          onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
-                        />
-                      </span>
-
-                      <span className="text-[10px] font-mono text-slate-400 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-full shrink-0">
-                        <EditableText
-                          text={cert.date}
-                          isAdmin={isAdmin}
-                          onSave={(v) => handleUpdateField(cert.id, 'date', v)}
-                        />
-                      </span>
-                    </div>
-
-                    {/* Certificate Title */}
-                    <h3 className="text-sm sm:text-base font-bold text-white font-['Outfit'] tracking-tight leading-snug line-clamp-2 mt-1">
-                      <EditableText
-                        text={cert.title}
-                        isAdmin={isAdmin}
-                        onSave={(v) => handleUpdateField(cert.id, 'title', v)}
-                      />
-                    </h3>
-                  </div>
-
-                  {/* Bottom Action Row: Verify Link / Admin Actions */}
-                  <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-2">
-                    {isAdmin ? (
-                      isEditingUrl ? (
-                        <form
-                          className="flex-1 flex items-center gap-1"
-                          onSubmit={(e) => { e.preventDefault(); handleSaveUrl(cert.id); }}
-                        >
-                          <input
-                            type="url"
-                            value={urlDraft}
-                            onChange={(e) => setUrlDraft(e.target.value)}
-                            placeholder="https://credential-link..."
-                            className="px-2 py-0.5 rounded bg-slate-950 border border-cyan-400 text-white text-[11px] font-mono outline-none w-full"
-                            autoFocus
-                            onKeyDown={(e) => { if (e.key === 'Escape') { setEditingUrlId(null); setUrlDraft(''); } }}
-                          />
-                          <button type="submit" className="p-0.5 text-green-400 hover:text-green-300 cursor-pointer"><Check size={11} /></button>
-                          <button type="button" onClick={() => { setEditingUrlId(null); setUrlDraft(''); }} className="p-0.5 text-red-400 hover:text-red-300 cursor-pointer"><X size={11} /></button>
-                        </form>
-                      ) : (
-                        <div className="flex items-center justify-between w-full">
-                          <button
-                            type="button"
-                            onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || ''); }}
-                            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 hover:underline cursor-pointer"
-                            title="Edit verification link"
-                          >
-                            <Globe size={12} />
-                            <span>{cert.verifyUrl ? 'Edit Link' : 'Set Link'}</span>
-                            <Edit3 size={9} className="opacity-70" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteCert(cert.id, e)}
-                            className="p-1 rounded-md text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
-                            title="Delete certificate"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      )
-                    ) : cert.verifyUrl ? (
-                      <a
-                        href={ensureAbsoluteUrl(cert.verifyUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400/60 transition-all cursor-pointer shadow-sm active:scale-95"
-                        title="Verify Certificate Credential Online"
-                      >
-                        <ShieldCheck size={13} className="text-cyan-400" />
-                        <span>Verify Credential</span>
-                        <ExternalLink size={11} />
-                      </a>
-                    ) : (
-                      <div className="w-full text-center text-[11px] font-mono text-slate-500 py-1">
-                        Credential on Record
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {certificates.map((cert, idx) => (
+            <CarouselCard
+              key={cert.id || idx}
+              cert={cert}
+              idx={idx}
+              total={certificates.length}
+              rotation={rotation}
+              translateZ={translateZ}
+              isAdmin={isAdmin}
+              editingUrlId={editingUrlId}
+              urlDraft={urlDraft}
+              uploading={uploading}
+              setEditingUrlId={setEditingUrlId}
+              setUrlDraft={setUrlDraft}
+              handleUpdateField={handleUpdateField}
+              handleSaveUrl={handleSaveUrl}
+              handleDeleteCert={handleDeleteCert}
+              handleUploadImage={handleUploadImage}
+              handleRemoveImage={handleRemoveImage}
+              onHoverStart={() => setIsHovered(true)}
+              onHoverEnd={() => setIsHovered(false)}
+            />
+          ))}
         </motion.div>
       </div>
 

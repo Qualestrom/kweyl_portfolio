@@ -114,16 +114,17 @@ const ProjectMediaSlider = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background Image with Smooth Crossfade */}
-      <AnimatePresence mode="wait">
+      {/* Background Image with Smooth Crossfade (mode="sync" to overlap incoming/outgoing images) */}
+      <AnimatePresence mode="sync">
         {currentImageUrl ? (
           <motion.div
             key={`${projectId}-img-${photoIndex}-${currentImageUrl}`}
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
             className="absolute inset-0 w-full h-full"
+            style={{ zIndex: 1 }}
           >
             <ImageWithPlaceholder
               src={currentImageUrl}
@@ -135,7 +136,14 @@ const ProjectMediaSlider = ({
             />
           </motion.div>
         ) : (
-          <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none">
+          <motion.div 
+            key="empty-placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none"
+            style={{ zIndex: 1 }}
+          >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
             <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm">
               <div className="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-cyan-500/10 border border-sky-500/30 dark:border-cyan-400/30 flex items-center justify-center text-sky-400 dark:text-cyan-300 shadow-[0_0_24px_rgba(2,132,199,0.2)]">
@@ -148,7 +156,7 @@ const ProjectMediaSlider = ({
                 {isAdmin ? 'Upload project screenshots using "Add Photos"' : 'Project preview coming soon'}
               </span>
             </div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

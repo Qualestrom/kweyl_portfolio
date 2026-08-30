@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRight, Github, Linkedin, Twitter, Instagram, MapPin, Send } from 'lucide-react';
+import { Mail, ArrowRight, MapPin, Send, Globe, MessageSquare, AtSign, Share2 } from 'lucide-react';
 import MagneticButton from '../components/MagneticButton';
 import EditableText from '../components/EditableText';
 import './ContactSection.css';
@@ -8,10 +8,10 @@ import './ContactSection.css';
 // Helper to determine icon based on URL
 const getSocialIcon = (url) => {
   const lower = url.toLowerCase();
-  if (lower.includes('github.com')) return <Github size={18} />;
-  if (lower.includes('linkedin.com')) return <Linkedin size={18} />;
-  if (lower.includes('twitter.com') || lower.includes('x.com')) return <Twitter size={18} />;
-  if (lower.includes('instagram.com')) return <Instagram size={18} />;
+  if (lower.includes('github.com')) return <Globe size={18} />;
+  if (lower.includes('linkedin.com')) return <Share2 size={18} />;
+  if (lower.includes('twitter.com') || lower.includes('x.com')) return <MessageSquare size={18} />;
+  if (lower.includes('instagram.com')) return <AtSign size={18} />;
   return <Mail size={18} />;
 };
 

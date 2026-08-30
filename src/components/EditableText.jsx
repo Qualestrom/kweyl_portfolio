@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Check, X } from 'lucide-react';
 import './EditableText.css';
 
 export default function EditableText({ 
@@ -25,25 +24,29 @@ export default function EditableText({
   const autoResizeTextarea = useCallback(() => {
     if (multiline && inputRef.current) {
       inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = `${Math.max(inputRef.current.scrollHeight, 40)}px`;
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
     }
   }, [multiline]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      autoResizeTextarea();
+      if (multiline) {
+        autoResizeTextarea();
+      }
       // Move cursor to end of text
       if (inputRef.current.setSelectionRange) {
         const len = inputRef.current.value.length;
         inputRef.current.setSelectionRange(len, len);
       }
     }
-  }, [isEditing, autoResizeTextarea]);
+  }, [isEditing, autoResizeTextarea, multiline]);
 
   const handleChange = (e) => {
     setValue(e.target.value);
-    autoResizeTextarea();
+    if (multiline) {
+      autoResizeTextarea();
+    }
   };
 
   const handleSave = () => {
@@ -61,11 +64,21 @@ export default function EditableText({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !multiline) {
       e.preventDefault();
+      e.stopPropagation();
+      handleSave();
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && multiline) {
+      e.preventDefault();
+      e.stopPropagation();
       handleSave();
     } else if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
       handleCancel();
     }
+  };
+
+  const handleBlur = () => {
+    handleSave();
   };
 
   // If not admin, simply render the component
@@ -82,64 +95,42 @@ export default function EditableText({
     return <Component className={className} style={style}>{content}</Component>;
   }
 
-  // Active in-place edit mode
+  // Active in-place edit mode (Ultra-compact inline editor)
   if (isEditing) {
     return (
-      <div className={`editable-wrapper ${multiline ? 'editable-wrapper--block' : ''}`} style={style}>
-        <div className="editable-active-container">
-          {multiline ? (
-            <textarea 
-              ref={inputRef}
-              value={value}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className={`editable-textarea-field ${className}`}
-              rows={1}
-              style={{ overflow: 'hidden' }}
-            />
-          ) : (
-            <input 
-              ref={inputRef}
-              type="text"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className={`editable-input-field ${className}`}
-            />
-          )}
-
-          {/* Action Toolbar */}
-          <div className="editable-actions-bar">
-            <div className="editable-actions-buttons">
-              <button 
-                type="button" 
-                onClick={handleSave} 
-                className="editable-btn-save"
-                title="Save changes"
-              >
-                <Check size={14} /> Save
-              </button>
-              <button 
-                type="button" 
-                onClick={handleCancel} 
-                className="editable-btn-cancel"
-                title="Cancel"
-              >
-                <X size={14} /> Cancel
-              </button>
-            </div>
-            <span className="editable-hint-text">
-              {multiline ? 'Esc to cancel' : '↵ Enter to save • Esc to cancel'}
-            </span>
-          </div>
-        </div>
-      </div>
+      <span 
+        className={`editable-inline-wrapper ${multiline ? 'editable-inline-wrapper--block' : ''}`} 
+        style={style}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {multiline ? (
+          <textarea 
+            ref={inputRef}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className={`editable-textarea-field ${className}`}
+            rows={1}
+          />
+        ) : (
+          <input 
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className={`editable-input-field ${className}`}
+          />
+        )}
+      </span>
     );
   }
 
-  // View mode for Admin (shows subtle dashed outline and edit badge on hover)
+  // View mode for Admin (shows subtle dashed outline on hover)
   const content = multiline 
     ? (value || '').split('\n').map((line, i) => (
         <React.Fragment key={i}>
@@ -157,7 +148,11 @@ export default function EditableText({
     <Component 
       className={`editable-hover-container ${multiline ? 'editable-hover-container--block' : ''} ${className}`} 
       style={style}
-      onClick={() => setIsEditing(true)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(true);
+      }}
     >
       {displayContent}
     </Component>

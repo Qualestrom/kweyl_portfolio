@@ -155,14 +155,13 @@ export default function EditableText({
 
   return (
     <Component 
-      className={`editable-hover-container ${className}`} 
+      className={`editable-hover-container ${multiline ? 'editable-hover-container--block' : ''} ${className}`} 
       style={style}
       onClick={() => setIsEditing(true)}
-      title="Click to edit text"
     >
       {displayContent}
       <span className="editable-hover-badge">
-        <Edit2 size={10} /> Edit
+        <Edit2 size={9} /> Edit
       </span>
     </Component>
   );

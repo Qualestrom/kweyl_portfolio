@@ -1,48 +1,99 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Compass, User, Briefcase, Award, Mail } from 'lucide-react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Compass, User, FolderGit2, Award, Send, Sparkles } from 'lucide-react';
 import './StellarCryoLoader.css';
 
 /**
- * StellarCryoLoader — Full-screen loading overlay
- *
+ * StellarCryoLoader — Full-screen loading overlay inspired by Genshin Impact
+ * 
  * Features:
- * - Static glimmering stars with random glow pulses (matching main StellarBackground)
- * - Constellations that randomly form and fade between nearby stars
- * - A percentage counter (0 → 100) that fills as loading progresses
- * - Genshin-inspired orbital section icons and cycling taglines
- *
- * Props:
- *   isLoading  (boolean)  — When true, shows the overlay.
- *   onExited   (function) — Called after fade-out completes.
+ * - 5 Celestial Section Glyphs (Home, About, Projects, Certs, Contact) in a Genshin-style elemental array
+ * - Sequential ignition & elemental pulse as progress advances (0% → 100%)
+ * - Sleek glowing progress bar with a guiding stellar spark head
+ * - Genshin-style rotating portfolio tips & system lore
+ * - Twinkling four-pointed stars (Primogem style) and ambient constellation canvas
+ * - Responsive, theme-aware (dark & light), and 100% gapless exit transition
  */
 
-// ─── Palettes ────────────────────────────────────────────────────────────────
+// ─── Section Glyphs Config (Genshin Elemental Style) ─────────────────────────
+const SECTION_GLYPHS = [
+  {
+    id: 'home',
+    label: 'Home',
+    elementName: 'Origin',
+    icon: Compass,
+    threshold: 15,
+    color: '#22D3EE', // Cryo / Cyan
+    glow: 'rgba(34, 211, 238, 0.6)',
+    bgGlow: 'rgba(34, 211, 238, 0.12)',
+  },
+  {
+    id: 'about',
+    label: 'About',
+    elementName: 'Persona',
+    icon: User,
+    threshold: 35,
+    color: '#FBBF24', // Geo / Amber
+    glow: 'rgba(251, 191, 36, 0.6)',
+    bgGlow: 'rgba(251, 191, 36, 0.12)',
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    elementName: 'Creations',
+    icon: FolderGit2,
+    threshold: 55,
+    color: '#34D399', // Dendro / Emerald
+    glow: 'rgba(52, 211, 153, 0.6)',
+    bgGlow: 'rgba(52, 211, 153, 0.12)',
+  },
+  {
+    id: 'certs',
+    label: 'Credentials',
+    elementName: 'Mastery',
+    icon: Award,
+    threshold: 75,
+    color: '#A78BFA', // Electro / Amethyst
+    glow: 'rgba(167, 139, 250, 0.6)',
+    bgGlow: 'rgba(167, 139, 250, 0.12)',
+  },
+  {
+    id: 'contact',
+    label: 'Contact',
+    elementName: 'Signal',
+    icon: Send,
+    threshold: 95,
+    color: '#38BDF8', // Hydro / Sky Blue
+    glow: 'rgba(56, 189, 248, 0.6)',
+    bgGlow: 'rgba(56, 189, 248, 0.12)',
+  },
+];
+
+// ─── Rotating Tips & Lore ───────────────────────────────────────────────────
+const LORE_TIPS = [
+  { tag: "SYSTEM TIP", text: "Precision front-ends engineered with React & Framer Motion for 60 FPS fluidity." },
+  { tag: "NAVIGATION", text: "Use arrow keys or left section labels to seamlessly warp through sections." },
+  { tag: "ARCHITECTURE", text: "Full-stack cloud synchronization powered by real-time Firebase Firestore." },
+  { tag: "CROSS-PLATFORM", text: "Delivering rapid, pixel-perfect experiences across Web and Flutter Mobile." },
+  { tag: "PORTFOLIO TIP", text: "Toggle themes anytime using the stellar mode switch in the top-right corner." },
+];
+
+// ─── Canvas Palette ──────────────────────────────────────────────────────────
 const PALETTES = {
   dark: {
-    dust: ['rgba(232,244,253,0.10)', 'rgba(184,223,240,0.08)', 'rgba(255,255,255,0.12)'],
-    star: ['rgba(232,244,253,0.22)', 'rgba(255,255,255,0.28)', 'rgba(197,232,247,0.20)'],
-    glowColor: 'rgba(103, 232, 249, ',  // partial — alpha appended
-    lineColor: 'rgba(103, 232, 249, ',
+    dust: ['rgba(232,244,253,0.12)', 'rgba(184,223,240,0.10)', 'rgba(255,255,255,0.15)'],
+    star: ['rgba(232,244,253,0.30)', 'rgba(255,255,255,0.40)', 'rgba(197,232,247,0.28)'],
+    glowColor: 'rgba(34, 211, 238, ',
+    lineColor: 'rgba(34, 211, 238, ',
     coreColor: '#ffffff',
   },
   light: {
-    dust: ['rgba(91,164,207,0.08)', 'rgba(59,130,160,0.06)', 'rgba(74,144,184,0.08)'],
-    star: ['rgba(91,164,207,0.16)', 'rgba(74,144,184,0.18)', 'rgba(109,179,214,0.14)'],
+    dust: ['rgba(91,164,207,0.10)', 'rgba(59,130,160,0.08)', 'rgba(74,144,184,0.10)'],
+    star: ['rgba(91,164,207,0.22)', 'rgba(74,144,184,0.25)', 'rgba(109,179,214,0.20)'],
     glowColor: 'rgba(8, 145, 178, ',
     lineColor: 'rgba(8, 145, 178, ',
     coreColor: '#0891B2',
   },
 };
-
-const TAGLINES = [
-  "INITIALIZING MAINFRAME",
-  "PRECISION IN EVERY PIXEL",
-  "BUILDING SCALABLE SOLUTIONS",
-  "ESTABLISHING CONNECTION",
-  "PREPARING ENVIRONMENT"
-];
-
-const SECTION_ICONS = [Compass, User, Briefcase, Award, Mail];
 
 const rand = (min, max) => Math.random() * (max - min) + min;
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -51,73 +102,10 @@ function easeInOutQuad(t) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
-// ─── Star Factory ────────────────────────────────────────────────────────────
-function createStar(w, h, palette) {
-  const isStar = Math.random() > 0.65;
-  return {
-    x: rand(0, w),
-    y: rand(0, h),
-    size: isStar ? rand(2, 6.5) : rand(0.6, 2),
-    isStar,
-    color: isStar ? pick(palette.star) : pick(palette.dust),
-    rotation: rand(0, Math.PI * 2),
-    rotationSpeed: isStar ? rand(0.001, 0.005) : 0,
-    breathPhase: rand(0, Math.PI * 2),
-    breathSpeed: rand(0.01, 0.025),
-    breathDepth: rand(0.1, 0.25),
-    baseOpacity: isStar ? rand(0.15, 0.35) : rand(0.05, 0.15),
-    // Glow
-    glowProgress: 0,
-    glowPhase: 'idle',
-  };
-}
-
-// ─── Constellation Factory ───────────────────────────────────────────────────
-// A constellation is a set of star indices connected by lines.
-// It fades in, holds, then fades out.
-function createConstellation(starIndices, stars, maxDist) {
-  // Pick 3-6 nearby stars to form a constellation
-  const seedIdx = starIndices[Math.floor(Math.random() * starIndices.length)];
-  const seed = stars[seedIdx];
-
-  // Find nearby stars sorted by distance
-  const nearby = starIndices
-    .filter(i => i !== seedIdx)
-    .map(i => ({ idx: i, dist: Math.hypot(stars[i].x - seed.x, stars[i].y - seed.y) }))
-    .filter(n => n.dist < maxDist)
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, Math.floor(rand(2, 5)));
-
-  if (nearby.length < 2) return null;
-
-  const nodes = [seedIdx, ...nearby.map(n => n.idx)];
-
-  // Build edges: connect each node to the next (chain), plus 1-2 extra for variety
-  const edges = [];
-  for (let i = 0; i < nodes.length - 1; i++) {
-    edges.push([nodes[i], nodes[i + 1]]);
-  }
-  // Optional cross-link
-  if (nodes.length >= 4 && Math.random() > 0.4) {
-    edges.push([nodes[0], nodes[Math.floor(nodes.length / 2)]]);
-  }
-
-  return {
-    nodes,
-    edges,
-    progress: 0,      // 0 → 1 → hold → 1 → 0
-    phase: 'rising',   // 'rising' | 'holding' | 'falling'
-    holdTimer: 0,
-    holdDuration: rand(80, 200),  // frames to hold
-    riseSpeed: rand(0.012, 0.025),
-    fallSpeed: rand(0.006, 0.015),
-  };
-}
-
-// ─── Draw four-pointed star shape ────────────────────────────────────────────
+// ─── 4-Point Star Drawer (Genshin Primogem Motif) ────────────────────────────
 function drawFourPointStar(ctx, x, y, size, rotation) {
   const outer = size;
-  const inner = size * 0.25;
+  const inner = size * 0.22;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
@@ -138,7 +126,6 @@ function drawFourPointStar(ctx, x, y, size, rotation) {
   ctx.restore();
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 export default function StellarCryoLoader({
   isLoading = true,
   onExited,
@@ -147,17 +134,17 @@ export default function StellarCryoLoader({
   const [fadingOut, setFadingOut] = useState(false);
   const [exited, setExited] = useState(false);
   const [percent, setPercent] = useState(0);
-  const [taglineIndex, setTaglineIndex] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
   const percentRef = useRef(0);
   const startTimeRef = useRef(Date.now());
   const loadingDoneRef = useRef(false);
 
-  // Cycling Taglines
+  // Cycling Tips
   useEffect(() => {
     if (exited) return;
     const interval = setInterval(() => {
-      setTaglineIndex(prev => (prev + 1) % TAGLINES.length);
-    }, 3000);
+      setTipIndex((prev) => (prev + 1) % LORE_TIPS.length);
+    }, 3600);
     return () => clearInterval(interval);
   }, [exited]);
 
@@ -168,7 +155,7 @@ export default function StellarCryoLoader({
     }
   }, [isLoading]);
 
-  // ── Canvas animation ───────────────────────────────────────────────────────
+  // ── Canvas Starfield & Constellations ──────────────────────────────────────
   useEffect(() => {
     if (exited) return;
 
@@ -177,12 +164,12 @@ export default function StellarCryoLoader({
     const ctx = canvas.getContext('2d');
     let w, h;
     let stars = [];
-    let starIndices = []; // indices of star-type particles (not dust)
+    let starIndices = [];
     let constellations = [];
     let frame = 0;
     let raf;
     let nextGlowFrame = 20;
-    let nextConstellationFrame = 60;
+    let nextConstellationFrame = 40;
 
     const getTheme = () => document.documentElement.getAttribute('data-theme') || 'dark';
 
@@ -190,27 +177,71 @@ export default function StellarCryoLoader({
       w = canvas.width = window.innerWidth;
       h = canvas.height = window.innerHeight;
       const palette = PALETTES[getTheme()] || PALETTES.dark;
-      const count = Math.max(100, Math.floor((w * h) / 10000));
-      stars = Array.from({ length: count }, () => createStar(w, h, palette));
-      starIndices = stars.map((s, i) => s.isStar ? i : -1).filter(i => i >= 0);
+      const count = Math.max(80, Math.floor((w * h) / 11000));
+      
+      stars = Array.from({ length: count }, () => {
+        const isStar = Math.random() > 0.6;
+        return {
+          x: rand(0, w),
+          y: rand(0, h),
+          size: isStar ? rand(2.5, 6.5) : rand(0.8, 1.8),
+          isStar,
+          color: isStar ? pick(palette.star) : pick(palette.dust),
+          rotation: rand(0, Math.PI * 2),
+          rotationSpeed: isStar ? rand(0.001, 0.004) : 0,
+          breathPhase: rand(0, Math.PI * 2),
+          breathSpeed: rand(0.012, 0.025),
+          breathDepth: rand(0.15, 0.3),
+          baseOpacity: isStar ? rand(0.2, 0.45) : rand(0.06, 0.18),
+          glowProgress: 0,
+          glowPhase: 'idle',
+        };
+      });
+
+      starIndices = stars.map((s, i) => s.isStar ? i : -1).filter((i) => i >= 0);
       constellations = [];
     };
 
     const triggerGlow = () => {
-      const eligible = stars.filter(s => s.isStar && s.glowPhase === 'idle');
+      const eligible = stars.filter((s) => s.isStar && s.glowPhase === 'idle');
       if (eligible.length === 0) return;
-      const glowing = stars.filter(s => s.glowPhase !== 'idle').length;
-      if (glowing >= 8) return;
       const target = eligible[Math.floor(Math.random() * eligible.length)];
       target.glowPhase = 'rising';
       target.glowProgress = 0;
     };
 
     const spawnConstellation = () => {
-      if (constellations.length >= 4) return;
-      const maxDist = Math.min(w, h) * 0.2;
-      const c = createConstellation(starIndices, stars, maxDist);
-      if (c) constellations.push(c);
+      if (constellations.length >= 3 || starIndices.length < 4) return;
+      const seedIdx = pick(starIndices);
+      const seed = stars[seedIdx];
+      if (!seed) return;
+
+      const maxDist = Math.min(w, h) * 0.22;
+      const nearby = starIndices
+        .filter((i) => i !== seedIdx)
+        .map((i) => ({ idx: i, dist: Math.hypot(stars[i].x - seed.x, stars[i].y - seed.y) }))
+        .filter((n) => n.dist < maxDist)
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, Math.floor(rand(2, 4)));
+
+      if (nearby.length < 2) return;
+
+      const nodes = [seedIdx, ...nearby.map((n) => n.idx)];
+      const edges = [];
+      for (let i = 0; i < nodes.length - 1; i++) {
+        edges.push([nodes[i], nodes[i + 1]]);
+      }
+
+      constellations.push({
+        nodes,
+        edges,
+        progress: 0,
+        phase: 'rising',
+        holdTimer: 0,
+        holdDuration: rand(60, 150),
+        riseSpeed: rand(0.015, 0.028),
+        fallSpeed: rand(0.008, 0.018),
+      });
     };
 
     const animate = () => {
@@ -220,47 +251,40 @@ export default function StellarCryoLoader({
       const theme = getTheme();
       const palette = PALETTES[theme] || PALETTES.dark;
 
-      // ── Update percentage ──
+      // ── Percentage Interpolation ──
       const elapsed = Date.now() - startTimeRef.current;
       let targetPercent;
       if (loadingDoneRef.current) {
-        // Rush to 100
         targetPercent = 100;
       } else {
-        // Slow asymptotic climb to ~85% over the loading period
-        // Uses 1 - e^(-t/tau) curve to approach 85 but never reach it
-        const tau = 2500; // ms
-        targetPercent = Math.min(85, 85 * (1 - Math.exp(-elapsed / tau)));
+        const tau = 2400;
+        targetPercent = Math.min(88, 88 * (1 - Math.exp(-elapsed / tau)));
       }
-      // Smooth interpolation
-      percentRef.current += (targetPercent - percentRef.current) * 0.04;
+
+      // Smooth step
+      const stepSpeed = loadingDoneRef.current ? 0.08 : 0.035;
+      percentRef.current += (targetPercent - percentRef.current) * stepSpeed;
       const displayPercent = Math.min(100, Math.round(percentRef.current));
-      // Only update React state when the displayed number changes
-      if (displayPercent !== Math.round(percentRef.current - (targetPercent - percentRef.current) * 0.04)) {
-        setPercent(displayPercent);
-      }
-      // Update state every few frames to avoid excessive re-renders
-      if (frame % 3 === 0) {
+      
+      if (frame % 2 === 0) {
         setPercent(displayPercent);
       }
 
-      // ── Trigger glows ──
+      // Glow triggers
       if (frame >= nextGlowFrame) {
         triggerGlow();
-        nextGlowFrame = frame + rand(25, 80);
+        nextGlowFrame = frame + rand(20, 60);
       }
 
-      // ── Spawn constellations ──
+      // Constellation triggers
       if (frame >= nextConstellationFrame) {
         spawnConstellation();
-        nextConstellationFrame = frame + rand(100, 250);
+        nextConstellationFrame = frame + rand(80, 180);
       }
 
-      // ── Update & draw constellation lines ──
+      // ── Draw Constellations ──
       for (let ci = constellations.length - 1; ci >= 0; ci--) {
         const c = constellations[ci];
-
-        // Advance state machine
         if (c.phase === 'rising') {
           c.progress += c.riseSpeed;
           if (c.progress >= 1) {
@@ -270,9 +294,7 @@ export default function StellarCryoLoader({
           }
         } else if (c.phase === 'holding') {
           c.holdTimer++;
-          if (c.holdTimer >= c.holdDuration) {
-            c.phase = 'falling';
-          }
+          if (c.holdTimer >= c.holdDuration) c.phase = 'falling';
         } else if (c.phase === 'falling') {
           c.progress -= c.fallSpeed;
           if (c.progress <= 0) {
@@ -282,9 +304,7 @@ export default function StellarCryoLoader({
         }
 
         const alpha = easeInOutQuad(c.progress);
-
-        // Draw edges
-        ctx.strokeStyle = palette.lineColor + (alpha * 0.25).toFixed(3) + ')';
+        ctx.strokeStyle = palette.lineColor + (alpha * 0.22).toFixed(3) + ')';
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (const [a, b] of c.edges) {
@@ -297,70 +317,54 @@ export default function StellarCryoLoader({
         }
         ctx.stroke();
 
-        // Draw node highlights
         for (const ni of c.nodes) {
           const s = stars[ni];
           if (!s) continue;
-          const nodeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
-          nodeGlow.addColorStop(0, palette.glowColor + (alpha * 0.4).toFixed(3) + ')');
+          const nodeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 4);
+          nodeGlow.addColorStop(0, palette.glowColor + (alpha * 0.35).toFixed(3) + ')');
           nodeGlow.addColorStop(1, palette.glowColor + '0)');
           ctx.fillStyle = nodeGlow;
           ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
+          ctx.arc(s.x, s.y, s.size * 4, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // ── Draw stars ──
+      // ── Draw Stars ──
       for (let i = 0; i < stars.length; i++) {
         const p = stars[i];
-
         p.rotation += p.rotationSpeed;
-
         const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
         let opacity = p.baseOpacity + breath;
 
-        // Glow state machine
         if (p.glowPhase === 'rising') {
-          p.glowProgress += 0.03;
+          p.glowProgress += 0.035;
           if (p.glowProgress >= 1) { p.glowProgress = 1; p.glowPhase = 'falling'; }
         } else if (p.glowPhase === 'falling') {
-          p.glowProgress -= 0.01;
+          p.glowProgress -= 0.012;
           if (p.glowProgress <= 0) { p.glowProgress = 0; p.glowPhase = 'idle'; }
         }
 
         const glowEased = easeInOutQuad(p.glowProgress);
         const isGlowing = p.glowPhase !== 'idle' && p.glowProgress > 0.01;
 
-        // Draw glow bloom
         if (isGlowing) {
-          const bloomSize = p.size * (4 + glowEased * 14);
+          const bloomSize = p.size * (3 + glowEased * 10);
           const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
-          outerGrad.addColorStop(0, palette.glowColor + (glowEased * 0.5).toFixed(3) + ')');
-          outerGrad.addColorStop(0.3, palette.glowColor + (glowEased * 0.2).toFixed(3) + ')');
+          outerGrad.addColorStop(0, palette.glowColor + (glowEased * 0.45).toFixed(3) + ')');
           outerGrad.addColorStop(1, palette.glowColor + '0)');
           ctx.fillStyle = outerGrad;
           ctx.beginPath();
           ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
           ctx.fill();
-
-          // Bright core
-          const coreGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-          coreGrad.addColorStop(0, `rgba(255,255,255,${(glowEased * 0.8).toFixed(3)})`);
-          coreGrad.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = coreGrad;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-          ctx.fill();
-
-          opacity = Math.min(1, opacity + glowEased * 0.85);
+          opacity = Math.min(1, opacity + glowEased * 0.8);
         }
 
-        ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity));
+        ctx.globalAlpha = Math.max(0.04, Math.min(1, opacity));
 
         if (p.isStar) {
           ctx.fillStyle = isGlowing ? palette.coreColor : p.color;
-          drawFourPointStar(ctx, p.x, p.y, p.size * (isGlowing ? 1 + glowEased * 0.6 : 1), p.rotation);
+          drawFourPointStar(ctx, p.x, p.y, p.size * (isGlowing ? 1 + glowEased * 0.5 : 1), p.rotation);
         } else {
           ctx.fillStyle = p.color;
           ctx.beginPath();
@@ -383,92 +387,108 @@ export default function StellarCryoLoader({
     };
   }, [exited]);
 
-  // ── Fade-out when loading is done AND counter reaches 100 ──────────────────
+  // ── Fade-out trigger when loaded ───────────────────────────────────────────
   useEffect(() => {
     if (!isLoading && percent >= 100 && !fadingOut && !exited) {
       setFadingOut(true);
       const timer = setTimeout(() => {
         setExited(true);
         onExited?.();
-      }, 850);
+      }, 750);
       return () => clearTimeout(timer);
     }
   }, [isLoading, percent, fadingOut, exited, onExited]);
 
   if (exited) return null;
 
-  const overlayClass = `stellar-cryo-overlay${fadingOut ? ' fade-out' : ''}`;
-
   return (
-    <div className={overlayClass} id="stellar-cryo-loader">
-      <canvas
-        ref={canvasRef}
-        className="stellar-cryo-canvas"
-      />
-      
-      {/* Genshin-Inspired Orbital Loader UI */}
-      <div className="loader-orbital-container">
-        
-        {/* The glowing circular track */}
-        <div className="loader-orbital-track">
-          {/* Progress Arc overlay */}
-          <div 
-            className="loader-orbital-progress" 
-            style={{ 
-              background: `conic-gradient(var(--cryo-accent) ${percent}%, transparent ${percent}%)` 
-            }} 
-          />
-          {/* Inner cutout to make it a ring */}
-          <div className="loader-orbital-inner" />
+    <div 
+      className={`genshin-loader-overlay ${fadingOut ? 'fade-out' : ''}`}
+      id="stellar-cryo-loader"
+    >
+      <canvas ref={canvasRef} className="genshin-loader-canvas" />
+
+      {/* Ambient background glow orb */}
+      <div className="genshin-loader-ambient-glow" />
+
+      <div className="genshin-loader-container">
+        {/* Top Header / Monomark */}
+        <div className="genshin-loader-top">
+          <div className="genshin-crest-badge">
+            <Sparkles size={12} className="genshin-crest-star" />
+            <span>STELLAR MAINFRAME &bull; INITIALIZING</span>
+            <Sparkles size={12} className="genshin-crest-star" />
+          </div>
+          <h2 className="genshin-brand-title">CHRISTOPHER LAMERA</h2>
         </div>
 
-        {/* Section Icons orbiting/arranged in a circle */}
-        <div className="loader-icons-ring">
-          {SECTION_ICONS.map((Icon, idx) => {
-            const angle = (idx / SECTION_ICONS.length) * Math.PI * 2 - Math.PI / 2;
-            const radius = 100; // Distance from center
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-            
-            // Icon lights up if progress has passed its angular position
-            const threshold = (idx / SECTION_ICONS.length) * 100;
-            const isActive = percent >= threshold;
+        {/* ─── Center Elemental Glyph Array (Genshin Signature Style) ────────── */}
+        <div className="genshin-glyphs-array">
+          {/* Connector track line behind glyphs */}
+          <div className="genshin-glyphs-track">
+            <div 
+              className="genshin-glyphs-track-fill" 
+              style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} 
+            />
+          </div>
+
+          {SECTION_GLYPHS.map((glyph, idx) => {
+            const isLit = percent >= glyph.threshold;
+            const Icon = glyph.icon;
 
             return (
               <div 
-                key={idx}
-                className={`loader-orbit-icon ${isActive ? 'active' : ''}`}
-                style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
+                key={glyph.id}
+                className={`genshin-glyph-node ${isLit ? 'lit' : ''}`}
+                style={{
+                  '--glyph-color': glyph.color,
+                  '--glyph-glow': glyph.glow,
+                  '--glyph-bg': glyph.bgGlow,
+                }}
               >
-                <Icon size={18} />
+                {/* Outer decorative diamond frame */}
+                <div className="genshin-glyph-diamond">
+                  <div className="genshin-glyph-inner-card">
+                    <Icon size={22} className="genshin-glyph-icon" />
+                  </div>
+                </div>
+
+                {/* Glyph elemental title under badge */}
+                <div className="genshin-glyph-label">
+                  <span className="genshin-glyph-name">{glyph.label}</span>
+                </div>
               </div>
             );
           })}
         </div>
 
-        {/* Central Emblem */}
-        <div className="loader-center-emblem">
-          <div className="emblem-core">CL</div>
-        </div>
-
-      </div>
-
-      {/* Loading Text & Percent (Moved below the orbital) */}
-      <div className="loading-ui-bottom">
-        <div className="loading-percent-display">
-          <span className="loading-percent-number">{percent}</span>
-          <span className="loading-percent-symbol">%</span>
-        </div>
-        
-        <div className="stellar-cryo-tagline-container">
-          {TAGLINES.map((text, idx) => (
-            <span 
-              key={idx} 
-              className={`stellar-cryo-tagline ${idx === taglineIndex ? 'visible' : ''}`}
+        {/* ─── Glowing Progress Bar with Leading Star ─────────────────────── */}
+        <div className="genshin-progress-section">
+          <div className="genshin-progress-bar-track">
+            <div 
+              className="genshin-progress-bar-fill"
+              style={{ width: `${percent}%` }}
             >
-              {text}
-            </span>
-          ))}
+              {/* Primogem spark head */}
+              <div className="genshin-progress-head-spark" />
+            </div>
+          </div>
+
+          {/* Progress Percent Text */}
+          <div className="genshin-percent-row">
+            <span className="genshin-percent-num">{percent}</span>
+            <span className="genshin-percent-unit">%</span>
+          </div>
+        </div>
+
+        {/* ─── Rotating Tips / System Lore Box ────────────────────────────── */}
+        <div className="genshin-lore-card">
+          <div className="genshin-lore-badge">
+            {LORE_TIPS[tipIndex].tag}
+          </div>
+          <p className="genshin-lore-text" key={tipIndex}>
+            {LORE_TIPS[tipIndex].text}
+          </p>
         </div>
       </div>
     </div>

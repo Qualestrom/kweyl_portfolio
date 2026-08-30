@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Compass, User, Briefcase, Award, Mail } from 'lucide-react';
 import './StellarCryoLoader.css';
 
 /**
@@ -8,6 +9,7 @@ import './StellarCryoLoader.css';
  * - Static glimmering stars with random glow pulses (matching main StellarBackground)
  * - Constellations that randomly form and fade between nearby stars
  * - A percentage counter (0 → 100) that fills as loading progresses
+ * - Genshin-inspired orbital section icons and cycling taglines
  *
  * Props:
  *   isLoading  (boolean)  — When true, shows the overlay.
@@ -31,6 +33,16 @@ const PALETTES = {
     coreColor: '#0891B2',
   },
 };
+
+const TAGLINES = [
+  "INITIALIZING MAINFRAME",
+  "PRECISION IN EVERY PIXEL",
+  "BUILDING SCALABLE SOLUTIONS",
+  "ESTABLISHING CONNECTION",
+  "PREPARING ENVIRONMENT"
+];
+
+const SECTION_ICONS = [Compass, User, Briefcase, Award, Mail];
 
 const rand = (min, max) => Math.random() * (max - min) + min;
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -135,9 +147,19 @@ export default function StellarCryoLoader({
   const [fadingOut, setFadingOut] = useState(false);
   const [exited, setExited] = useState(false);
   const [percent, setPercent] = useState(0);
+  const [taglineIndex, setTaglineIndex] = useState(0);
   const percentRef = useRef(0);
   const startTimeRef = useRef(Date.now());
   const loadingDoneRef = useRef(false);
+
+  // Cycling Taglines
+  useEffect(() => {
+    if (exited) return;
+    const interval = setInterval(() => {
+      setTaglineIndex(prev => (prev + 1) % TAGLINES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [exited]);
 
   // Track when isLoading becomes false
   useEffect(() => {
@@ -383,18 +405,71 @@ export default function StellarCryoLoader({
         ref={canvasRef}
         className="stellar-cryo-canvas"
       />
-      <div className="loading-ui-container">
+      
+      {/* Genshin-Inspired Orbital Loader UI */}
+      <div className="loader-orbital-container">
+        
+        {/* The glowing circular track */}
+        <div className="loader-orbital-track">
+          {/* Progress Arc overlay */}
+          <div 
+            className="loader-orbital-progress" 
+            style={{ 
+              background: `conic-gradient(var(--cryo-accent) ${percent}%, transparent ${percent}%)` 
+            }} 
+          />
+          {/* Inner cutout to make it a ring */}
+          <div className="loader-orbital-inner" />
+        </div>
+
+        {/* Section Icons orbiting/arranged in a circle */}
+        <div className="loader-icons-ring">
+          {SECTION_ICONS.map((Icon, idx) => {
+            const angle = (idx / SECTION_ICONS.length) * Math.PI * 2 - Math.PI / 2;
+            const radius = 100; // Distance from center
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            // Icon lights up if progress has passed its angular position
+            const threshold = (idx / SECTION_ICONS.length) * 100;
+            const isActive = percent >= threshold;
+
+            return (
+              <div 
+                key={idx}
+                className={`loader-orbit-icon ${isActive ? 'active' : ''}`}
+                style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
+              >
+                <Icon size={18} />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Central Emblem */}
+        <div className="loader-center-emblem">
+          <div className="emblem-core">CL</div>
+        </div>
+
+      </div>
+
+      {/* Loading Text & Percent (Moved below the orbital) */}
+      <div className="loading-ui-bottom">
         <div className="loading-percent-display">
           <span className="loading-percent-number">{percent}</span>
           <span className="loading-percent-symbol">%</span>
         </div>
-        <div className="loading-bar-track">
-          <div
-            className="loading-bar-fill"
-            style={{ width: `${percent}%` }}
-          />
+        
+        <div className="stellar-cryo-tagline-container">
+          {TAGLINES.map((text, idx) => (
+            <span 
+              key={idx} 
+              className={`stellar-cryo-tagline ${idx === taglineIndex ? 'visible' : ''}`}
+            >
+              {text}
+            </span>
+          ))}
         </div>
-        <span className="stellar-cryo-text">INITIALIZING</span>
       </div>
     </div>
   );

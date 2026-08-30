@@ -1039,8 +1039,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 />
 
                 {/* Lightened, soft gradient overlay — keeps screenshot bright & clear while ensuring text contrast */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/65 via-slate-950/10 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/40 via-transparent to-transparent pointer-events-none z-10" />
 
                 {/* Click to redirect indicator hint (top right inside frame, only if single photo or not hovering controls) */}
                 {hasLink && !isAdmin && (!project.photos || project.photos.length <= 1) && (
@@ -1149,7 +1149,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   </h3>
 
                   {/* Project Description */}
-                  <div className="text-slate-200/95 text-xs sm:text-sm leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 max-w-2xl drop-shadow-sm">
+                  <div className={`text-slate-200/95 text-xs sm:text-sm leading-relaxed mb-3 max-w-2xl drop-shadow-sm ${isAdmin && isCurrent ? '' : 'line-clamp-3 sm:line-clamp-4'}`}>
                     <EditableText
                       text={project.description}
                       isAdmin={isAdmin && isCurrent}

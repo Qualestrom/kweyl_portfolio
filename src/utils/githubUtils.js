@@ -301,6 +301,7 @@ export async function fetchGitHubRepoMetadata(rawUrl, onStatus = () => {}) {
     skills,
     demoUrl,
     githubUrl: canonicalUrl,
+    status: demoUrl ? 'deployed' : 'in-progress',
     isInferred,
   };
 }

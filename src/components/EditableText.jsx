@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Edit2, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import './EditableText.css';
 
 export default function EditableText({ 
@@ -160,9 +160,6 @@ export default function EditableText({
       onClick={() => setIsEditing(true)}
     >
       {displayContent}
-      <span className="editable-hover-badge">
-        <Edit2 size={9} /> Edit
-      </span>
     </Component>
   );
 }

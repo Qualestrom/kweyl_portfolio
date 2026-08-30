@@ -34,34 +34,6 @@
   outline-offset: 3px;
 }
 
-.editable-hover-badge {
-  position: absolute;
-  top: -10px;
-  right: -4px;
-  background: var(--cryo-accent);
-  color: var(--bg-primary);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  box-shadow: 0 0 10px var(--cryo-accent-glow);
-  opacity: 0;
-  transform: translateY(2px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  pointer-events: none;
-  z-index: 50;
-  white-space: nowrap;
-}
-
-.editable-hover-container:hover .editable-hover-badge {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 /* Active Editing Container */
 .editable-active-container {
   position: relative;

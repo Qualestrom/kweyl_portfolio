@@ -15,7 +15,8 @@ import {
   X,
   Sparkles,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Lock
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -24,6 +25,37 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import { isGitHubRepoUrl, fetchGitHubRepoMetadata } from '../utils/githubUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
+
+// Status badge configurations for projects (Deployed, In Progress, Confidential)
+const PROJECT_STATUS_CONFIG = {
+  'deployed': {
+    label: 'Deployed',
+    colorClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]',
+    dotClass: 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]',
+    icon: Globe,
+  },
+  'in-progress': {
+    label: 'In Progress',
+    colorClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.15)]',
+    dotClass: 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]',
+    icon: Sparkles,
+  },
+  'confidential': {
+    label: 'Confidential',
+    colorClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]',
+    dotClass: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]',
+    icon: Lock,
+  }
+};
+
+const getEffectiveStatus = (project) => {
+  if (project?.status && PROJECT_STATUS_CONFIG[project.status]) {
+    return project.status;
+  }
+  if (project?.demoUrl) return 'deployed';
+  if (project?.githubUrl) return 'in-progress';
+  return 'confidential';
+};
 
 // Multi-Image Gallery & Slideshow Component with Smooth Crossfade Transitions
 const ProjectMediaSlider = ({
@@ -232,6 +264,7 @@ const FALLBACK_PROJECTS = [
     skills: ['Next.js', 'TypeScript', 'Tailwind', 'Stripe', 'PostgreSQL'],
     demoUrl: 'https://demo-ecommerce.example.com',
     githubUrl: 'https://github.com/example/ecommerce',
+    status: 'deployed',
     photos: []
   },
   {
@@ -242,6 +275,7 @@ const FALLBACK_PROJECTS = [
     skills: ['React', 'D3.js', 'Python', 'FastAPI', 'Tailwind'],
     demoUrl: 'https://demo-analytics.example.com',
     githubUrl: 'https://github.com/example/ai-dashboard',
+    status: 'deployed',
     photos: []
   },
   {
@@ -252,6 +286,7 @@ const FALLBACK_PROJECTS = [
     skills: ['Flutter', 'Dart', 'Firebase', 'HealthKit', 'Bloc'],
     demoUrl: 'https://demo-fitness.example.com',
     githubUrl: 'https://github.com/example/fitness-tracker',
+    status: 'deployed',
     photos: []
   },
   {
@@ -262,6 +297,7 @@ const FALLBACK_PROJECTS = [
     skills: ['React', 'Node.js', 'Socket.io', 'MongoDB', 'Redis'],
     demoUrl: 'https://demo-taskflow.example.com',
     githubUrl: 'https://github.com/example/taskflow',
+    status: 'in-progress',
     photos: []
   },
   {
@@ -272,6 +308,7 @@ const FALLBACK_PROJECTS = [
     skills: ['Docker', 'Kubernetes', 'Terraform', 'AWS', 'GitHub Actions'],
     demoUrl: '',
     githubUrl: 'https://github.com/example/devops-pipeline',
+    status: 'confidential',
     photos: []
   }
 ];
@@ -411,6 +448,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       skills: [],
       githubUrl: '',
       demoUrl: '',
+      status: 'in-progress',
       photos: [],
       isInferred: false,
       createdAt: new Date().toISOString(),
@@ -460,6 +498,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       skills: [],
       githubUrl: url,
       demoUrl: '',
+      status: 'in-progress',
       photos: [],
       isInferred: false,
       createdAt: new Date().toISOString(),
@@ -496,6 +535,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         skills: metadata.skills || [],
         githubUrl: metadata.githubUrl || url,
         demoUrl: metadata.demoUrl || '',
+        status: metadata.status || (metadata.demoUrl ? 'deployed' : 'in-progress'),
         isInferred: Boolean(metadata.isInferred),
       };
 
@@ -515,6 +555,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         title: 'New Project',
         tag: 'Web Project',
         githubUrl: url,
+        status: 'in-progress',
       };
       try {
         await updateDoc(doc(db, 'projects', createdId), fallbackPayload);
@@ -524,6 +565,22 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       ));
     } finally {
       setUploading(prev => ({ ...prev, [createdId]: false }));
+    }
+  };
+
+  const handleCycleStatus = async (projectId, currentStatus, e) => {
+    e?.stopPropagation?.();
+    const statusOrder = ['deployed', 'in-progress', 'confidential'];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+
+    setProjects(prev => prev.map(p =>
+      p.id === projectId ? { ...p, status: nextStatus } : p
+    ));
+    try {
+      await updateDoc(doc(db, 'projects', projectId), { status: nextStatus });
+    } catch (err) {
+      console.warn('Status update fallback (local only):', err);
     }
   };
 
@@ -580,6 +637,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           skills: metadata.skills || [],
           githubUrl: metadata.githubUrl || rawVal,
           demoUrl: metadata.demoUrl || '',
+          status: metadata.status || (metadata.demoUrl ? 'deployed' : 'in-progress'),
           isInferred: Boolean(metadata.isInferred),
         };
 
@@ -850,9 +908,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   onRemovePhoto={handleRemovePhoto}
                 />
 
-                {/* Dark Gradient Overlay for optimal legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/40 to-transparent pointer-events-none z-10" />
+                {/* Lightened, soft gradient overlay — keeps screenshot bright & clear while ensuring text contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/65 via-slate-950/10 to-transparent pointer-events-none z-10" />
 
                 {/* Click to redirect indicator hint (top right inside frame, only if single photo or not hovering controls) */}
                 {hasLink && !isAdmin && (!project.photos || project.photos.length <= 1) && (
@@ -902,8 +960,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     </div>
                   )}
 
-                  {/* Project Tag */}
-                  <div className="mb-1">
+                  {/* Project Tag & Status Badge Row */}
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <EditableText
                       text={project.tag}
                       isAdmin={isAdmin && isCurrent}
@@ -911,6 +969,33 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                       onSave={(v) => handleUpdateField(project.id, 'tag', v)}
                       className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold drop-shadow-sm"
                     />
+
+                    <span className="text-slate-500 text-xs select-none">•</span>
+
+                    {/* Project Status Badge */}
+                    {(() => {
+                      const statusKey = getEffectiveStatus(project);
+                      const statusCfg = PROJECT_STATUS_CONFIG[statusKey] || PROJECT_STATUS_CONFIG['in-progress'];
+                      const IconComp = statusCfg.icon;
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={isAdmin && isCurrent ? (e) => handleCycleStatus(project.id, statusKey, e) : undefined}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono border backdrop-blur-md transition-all select-none ${statusCfg.colorClass} ${
+                            isAdmin && isCurrent ? 'cursor-pointer hover:brightness-125 hover:border-cyan-400 active:scale-95' : 'cursor-default'
+                          }`}
+                          title={isAdmin && isCurrent ? `Status: ${statusCfg.label} (Click to toggle: Deployed / In Progress / Confidential)` : `Status: ${statusCfg.label}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotClass}`} />
+                          <IconComp size={11} className="shrink-0" />
+                          <span className="font-semibold">{statusCfg.label}</span>
+                          {isAdmin && isCurrent && (
+                            <span className="text-[9px] opacity-60 ml-0.5" title="Click to switch status">⇄</span>
+                          )}
+                        </button>
+                      );
+                    })()}
                   </div>
 
                   {/* Project Title — Clickable to redirect */}

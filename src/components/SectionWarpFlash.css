@@ -1,0 +1,41 @@
+.warp-flash-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.warp-flash-line {
+  width: 200vw;
+  height: 100vh;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(103, 232, 249, 0) 45%,
+    rgba(103, 232, 249, 0.4) 49%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(103, 232, 249, 0.4) 51%,
+    rgba(103, 232, 249, 0) 55%,
+    transparent 100%
+  );
+  transform: skewX(-15deg);
+  box-shadow: 0 0 50px rgba(103, 232, 249, 0.5);
+  filter: blur(2px);
+}
+
+[data-theme='light'] .warp-flash-line {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(8, 145, 178, 0) 45%,
+    rgba(8, 145, 178, 0.3) 49%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(8, 145, 178, 0.3) 51%,
+    rgba(8, 145, 178, 0) 55%,
+    transparent 100%
+  );
+  box-shadow: 0 0 50px rgba(8, 145, 178, 0.4);
+}

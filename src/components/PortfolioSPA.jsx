@@ -7,6 +7,7 @@ import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import SectionLabels from './SectionLabels';
 import KeyboardHints from './KeyboardHints';
 import MaintenanceOverlay from './MaintenanceOverlay';
+import SectionWarpFlash from './SectionWarpFlash';
 
 // Sections
 import HomeHero from './HomeHero';
@@ -16,24 +17,30 @@ import CertificationsSection from '../sections/CertificationsSection';
 import ContactSection from '../sections/ContactSection';
 
 // ─── Section transition variants ─────────────────────────────────────────────────
-const slideVariants = {
+const warpVariants = {
   enter: (direction) => ({
-    x: direction > 0 ? '80%' : '-80%',
+    x: direction > 0 ? '100%' : '-100%',
+    scale: 0.95,
     opacity: 0,
+    filter: 'blur(10px)',
   }),
   center: {
     x: 0,
+    scale: 1,
     opacity: 1,
+    filter: 'blur(0px)',
   },
   exit: (direction) => ({
-    x: direction > 0 ? '-80%' : '80%',
+    x: direction > 0 ? '-50%' : '50%',
+    scale: 0.9,
     opacity: 0,
+    filter: 'blur(10px)',
   }),
 };
 
 const slideTransition = {
-  duration: 0.5,
-  ease: [0.16, 1, 0.3, 1],
+  duration: 0.8,
+  ease: [0.22, 1, 0.36, 1], // Custom easeOut for the warp
 };
 
 const SECTION_COUNT = 5;
@@ -262,17 +269,25 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
         onLogout={onLogout}
       />
 
-      <div className="stellar-main stellar-main--full">
-        <AnimatePresence mode="wait" custom={direction}>
+      {/* The Warp Flash Overlay */}
+      <SectionWarpFlash 
+        direction={direction} 
+        isVisible={!isRedirecting && currentSection !== undefined} 
+        key={`warp-${currentSection}`} 
+      />
+
+      <div className="stellar-main stellar-main--full" style={{ overflow: 'hidden' }}>
+        <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={currentSection}
             className="section-transition-wrapper"
             custom={direction}
-            variants={slideVariants}
+            variants={warpVariants}
             initial="enter"
             animate="center"
             exit="exit"
             transition={slideTransition}
+            style={{ width: '100%', height: '100%' }}
           >
             {renderSection()}
           </motion.div>

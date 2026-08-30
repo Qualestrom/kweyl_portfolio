@@ -835,7 +835,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
             return (
               <div 
                 key={project.id || idx} 
-                className="shrink-0 w-full h-[450px] sm:h-[500px] lg:h-[540px] relative overflow-hidden group select-none"
+                className="shrink-0 w-full h-[390px] sm:h-[430px] lg:h-[470px] relative overflow-hidden group select-none"
               >
                 {/* Multi-Image Gallery & Crossfade Slideshow */}
                 <ProjectMediaSlider

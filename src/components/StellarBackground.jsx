@@ -82,6 +82,50 @@ const GLOW_INTERVAL_MIN = 40;     // min frames between triggers (~0.7s)
 const GLOW_INTERVAL_MAX = 120;    // max frames between triggers (~2s)
 const MAX_SIMULTANEOUS_GLOWS = 6;
 
+// ─── Constellation Factory ───────────────────────────────────────────────────
+function createConstellation(starIndices, stars, maxDist, mouseX, mouseY) {
+  const seedIdx = starIndices[Math.floor(Math.random() * starIndices.length)];
+  const seed = stars[seedIdx];
+
+  const nearby = starIndices
+    .filter(i => i !== seedIdx)
+    .map(i => ({ idx: i, dist: Math.hypot(stars[i].x - seed.x, stars[i].y - seed.y) }))
+    .filter(n => n.dist < maxDist)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, Math.floor(rand(2, 5)));
+
+  if (nearby.length < 2) return null;
+
+  const nodes = [seedIdx, ...nearby.map(n => n.idx)];
+
+  const edges = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    edges.push([nodes[i], nodes[i + 1]]);
+  }
+  if (nodes.length >= 4 && Math.random() > 0.4) {
+    edges.push([nodes[0], nodes[Math.floor(nodes.length / 2)]]);
+  }
+
+  // Check distance to mouse to possibly boost brightness
+  let isNearMouse = false;
+  if (mouseX >= 0 && mouseY >= 0) {
+    const distToMouse = Math.hypot(seed.x - mouseX, seed.y - mouseY);
+    if (distToMouse < 300) isNearMouse = true;
+  }
+
+  return {
+    nodes,
+    edges,
+    progress: 0,
+    phase: 'rising',
+    holdTimer: 0,
+    holdDuration: rand(120, 300), // slightly longer hold for background
+    riseSpeed: rand(0.008, 0.02), // slightly slower drawing
+    fallSpeed: rand(0.004, 0.01),
+    isNearMouse,
+  };
+}
+
 export default function StellarBackground() {
   const canvasRef = useRef(null);
 
@@ -90,9 +134,14 @@ export default function StellarBackground() {
     const ctx = canvas.getContext('2d');
     let w, h;
     let particles = [];
+    let starIndices = [];
+    let constellations = [];
     let raf;
     let frame = 0;
     let nextGlowFrame = 30; // first glow trigger quickly
+    let nextConstellationFrame = 90; // delay first constellation
+    let mouseX = -1000;
+    let mouseY = -1000;
 
     const getTheme = () => document.documentElement.getAttribute('data-theme') || 'dark';
 
@@ -102,7 +151,22 @@ export default function StellarBackground() {
       const palette = PALETTES[getTheme()] || PALETTES.dark;
       const count = Math.max(90, Math.floor((w * h) / 12000));
       particles = Array.from({ length: count }, () => createStaticParticle(w, h, palette));
+      starIndices = particles.map((p, i) => p.isStar ? i : -1).filter(i => i >= 0);
+      constellations = [];
     };
+
+    const handleMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+    
+    const handleMouseLeave = () => {
+      mouseX = -1000;
+      mouseY = -1000;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
 
     const triggerRandomGlow = () => {
       const eligible = particles.filter(p => p.isStar && p.glowPhase === 'idle');
@@ -116,6 +180,13 @@ export default function StellarBackground() {
       target.glowProgress = 0;
     };
 
+    const spawnConstellation = () => {
+      if (constellations.length >= 3) return; // Max 3 at a time in background
+      const maxDist = Math.min(w, h) * 0.25;
+      const c = createConstellation(starIndices, particles, maxDist, mouseX, mouseY);
+      if (c) constellations.push(c);
+    };
+
     const animate = () => {
       frame++;
       ctx.clearRect(0, 0, w, h);
@@ -127,6 +198,92 @@ export default function StellarBackground() {
       if (frame >= nextGlowFrame) {
         triggerRandomGlow();
         nextGlowFrame = frame + rand(GLOW_INTERVAL_MIN, GLOW_INTERVAL_MAX);
+      }
+
+      // Spawn constellations
+      if (frame >= nextConstellationFrame) {
+        spawnConstellation();
+        nextConstellationFrame = frame + rand(150, 400); // Between 2.5s and ~6.5s
+      }
+
+      // ── Update & draw constellation lines ──
+      for (let ci = constellations.length - 1; ci >= 0; ci--) {
+        const c = constellations[ci];
+
+        if (c.phase === 'rising') {
+          c.progress += c.riseSpeed;
+          if (c.progress >= 1) {
+            c.progress = 1;
+            c.phase = 'holding';
+            c.holdTimer = 0;
+          }
+        } else if (c.phase === 'holding') {
+          c.holdTimer++;
+          if (c.holdTimer >= c.holdDuration) {
+            c.phase = 'falling';
+          }
+        } else if (c.phase === 'falling') {
+          c.progress -= c.fallSpeed;
+          if (c.progress <= 0) {
+            constellations.splice(ci, 1);
+            continue;
+          }
+        }
+
+        const alpha = easeInOutQuad(c.progress);
+        const baseOpacity = c.isNearMouse ? 0.45 : 0.25;
+        
+        // Draw edges sequentially (animating the line drawing)
+        // c.progress (0 to 1) maps to the total length of the edges
+        const totalEdges = c.edges.length;
+        const edgeProgressRaw = c.phase === 'rising' ? c.progress * totalEdges : totalEdges;
+
+        ctx.strokeStyle = palette.glowHalo.replace(/[\d.]+\)$/g, `${(alpha * baseOpacity).toFixed(3)})`);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        for (let ei = 0; ei < totalEdges; ei++) {
+          if (ei > Math.floor(edgeProgressRaw)) continue; // Not started drawing this edge yet
+          
+          const [a, b] = c.edges[ei];
+          const sa = particles[a];
+          const sb = particles[b];
+          if (!sa || !sb) continue;
+
+          ctx.moveTo(sa.x, sa.y);
+          
+          if (ei === Math.floor(edgeProgressRaw) && c.phase === 'rising') {
+             // Partially draw this specific edge
+             const edgeAlpha = edgeProgressRaw - Math.floor(edgeProgressRaw);
+             const currentX = sa.x + (sb.x - sa.x) * easeInOutQuad(edgeAlpha);
+             const currentY = sa.y + (sb.y - sa.y) * easeInOutQuad(edgeAlpha);
+             ctx.lineTo(currentX, currentY);
+          } else {
+             // Fully draw completed edges
+             ctx.lineTo(sb.x, sb.y);
+          }
+        }
+        ctx.stroke();
+
+        // Draw node highlights
+        for (let ni = 0; ni < c.nodes.length; ni++) {
+          // Stagger node highlight appearance with the line drawing
+          const nodeAppearThreshold = ni / (c.nodes.length || 1);
+          if (c.phase === 'rising' && c.progress < nodeAppearThreshold) continue;
+          
+          const s = particles[c.nodes[ni]];
+          if (!s) continue;
+          const nodeAlpha = c.phase === 'rising' ? Math.min(1, (c.progress - nodeAppearThreshold) * 4) : alpha;
+          const nodeGlowAlpha = (nodeAlpha * (c.isNearMouse ? 0.6 : 0.35)).toFixed(3);
+          
+          const nodeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
+          nodeGlow.addColorStop(0, palette.glowHalo.replace(/[\d.]+\)$/g, `${nodeGlowAlpha})`));
+          nodeGlow.addColorStop(1, palette.glowHalo.replace(/[\d.]+\)$/g, '0)'));
+          ctx.fillStyle = nodeGlow;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       for (let i = 0; i < particles.length; i++) {
@@ -163,9 +320,9 @@ export default function StellarBackground() {
 
           // Large soft outer halo (radial gradient)
           const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
-          outerGrad.addColorStop(0, `rgba(103, 232, 249, ${intensity * 0.35})`);
-          outerGrad.addColorStop(0.3, `rgba(103, 232, 249, ${intensity * 0.15})`);
-          outerGrad.addColorStop(1, 'rgba(103, 232, 249, 0)');
+          outerGrad.addColorStop(0, palette.glowHalo.replace(/[\d.]+\)$/g, `${(intensity * 0.35).toFixed(3)})`));
+          outerGrad.addColorStop(0.3, palette.glowHalo.replace(/[\d.]+\)$/g, `${(intensity * 0.15).toFixed(3)})`));
+          outerGrad.addColorStop(1, palette.glowHalo.replace(/[\d.]+\)$/g, '0)'));
           ctx.fillStyle = outerGrad;
           ctx.beginPath();
           ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
@@ -173,9 +330,11 @@ export default function StellarBackground() {
 
           // Medium bright halo
           const midGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize * 0.4);
+          // In dark mode glowHalo is rgba(103,232,249,0.6). We'll use a brighter version for the mid halo.
+          const midColor = palette.glowHalo.replace(/rgba\((\d+),(\d+),(\d+),[\d.]+\)/, 'rgba($1,$2,$3,');
           midGrad.addColorStop(0, `rgba(255, 255, 255, ${intensity * 0.6})`);
-          midGrad.addColorStop(0.5, `rgba(197, 232, 247, ${intensity * 0.25})`);
-          midGrad.addColorStop(1, 'rgba(197, 232, 247, 0)');
+          midGrad.addColorStop(0.5, `${midColor}${intensity * 0.35})`);
+          midGrad.addColorStop(1, `${midColor}0)`);
           ctx.fillStyle = midGrad;
           ctx.beginPath();
           ctx.arc(p.x, p.y, bloomSize * 0.4, 0, Math.PI * 2);
@@ -208,6 +367,8 @@ export default function StellarBackground() {
 
     return () => {
       window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
       cancelAnimationFrame(raf);
     };
   }, []);

@@ -232,7 +232,7 @@ const LandscapeCarouselCard = ({
         <div>
           {/* Issuer & Date Row */}
           <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="text-[11px] sm:text-xs font-mono text-sky-700 dark:text-cyan-400 font-bold truncate flex-1 tracking-wide">
+            <div className="text-[11px] sm:text-xs font-mono text-sky-700 dark:text-cyan-400 font-bold min-w-0 flex-1 truncate tracking-wide">
               <EditableText
                 text={cert.issuer}
                 isAdmin={isAdmin && isActive}

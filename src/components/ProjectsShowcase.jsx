@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, animate } from 'framer-motion';
+import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -10,16 +10,207 @@ import {
   FolderGit2, 
   Globe, 
   Image as ImageIcon,
+  Images,
   Check, 
   X,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
+import { isGitHubRepoUrl, fetchGitHubRepoMetadata } from '../utils/githubUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
+
+// Multi-Image Gallery & Slideshow Component with Smooth Crossfade Transitions
+const ProjectMediaSlider = ({
+  photos = [],
+  fallbackImage = null,
+  title = '',
+  isCurrentSlide = false,
+  isAdmin = false,
+  projectId = '',
+  uploadingStatus = false,
+  onUploadPhotos,
+  onRemovePhoto,
+}) => {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // If photos array changes or gets smaller, clamp index safely
+  useEffect(() => {
+    if (photos.length > 0 && photoIndex >= photos.length) {
+      setPhotoIndex(photos.length - 1);
+    }
+  }, [photos.length, photoIndex]);
+
+  // Automatic slideshow transition when there are multiple photos (every 4.5s, pauses on hover)
+  useEffect(() => {
+    if (!isCurrentSlide || photos.length <= 1 || isHovered) return;
+
+    const interval = setInterval(() => {
+      setPhotoIndex((prev) => (prev + 1) % photos.length);
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [isCurrentSlide, photos.length, isHovered]);
+
+  const hasPhotos = photos && photos.length > 0;
+  const currentImageUrl = hasPhotos ? photos[photoIndex] : fallbackImage;
+  const totalPhotos = photos.length;
+
+  const handleNextPhoto = (e) => {
+    e?.stopPropagation?.();
+    if (totalPhotos > 1) {
+      setPhotoIndex((prev) => (prev + 1) % totalPhotos);
+    }
+  };
+
+  const handlePrevPhoto = (e) => {
+    e?.stopPropagation?.();
+    if (totalPhotos > 1) {
+      setPhotoIndex((prev) => (prev - 1 + totalPhotos) % totalPhotos);
+    }
+  };
+
+  return (
+    <div
+      className="absolute inset-0 w-full h-full overflow-hidden"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Background Image with Smooth Crossfade */}
+      <AnimatePresence mode="wait">
+        {currentImageUrl ? (
+          <motion.div
+            key={`${projectId}-img-${photoIndex}-${currentImageUrl}`}
+            initial={{ opacity: 0, scale: 1.02 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 w-full h-full"
+          >
+            <ImageWithPlaceholder
+              src={currentImageUrl}
+              alt={title || 'Project Preview'}
+              className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
+              containerClassName="w-full h-full"
+              showSpinner={true}
+              draggable={false}
+            />
+          </motion.div>
+        ) : (
+          <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
+            <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm">
+              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-cyan-500/10 border border-sky-500/30 dark:border-cyan-400/30 flex items-center justify-center text-sky-400 dark:text-cyan-300 shadow-[0_0_24px_rgba(2,132,199,0.2)]">
+                <ImageIcon size={28} />
+              </div>
+              <span className="text-sm font-bold text-white font-['Outfit'] tracking-wide">
+                {title || 'Blank Project'}
+              </span>
+              <span className="text-xs font-mono text-slate-400 tracking-wide">
+                {isAdmin ? 'Upload project screenshots using "Add Photos"' : 'Project preview coming soon'}
+              </span>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Multiple Photos Controls (Mini Navigation Arrows on Hover & Dots Counter) */}
+      {totalPhotos > 1 && (
+        <>
+          {/* Left / Right mini navigation buttons */}
+          <div className="absolute inset-y-0 left-3 right-3 flex items-center justify-between pointer-events-none z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button
+              type="button"
+              onClick={handlePrevPhoto}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+              title="Previous Photo"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextPhoto}
+              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+              title="Next Photo"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          {/* Photo Dots & Counter Badge */}
+          <div className="absolute top-3.5 right-3.5 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 border border-white/15 backdrop-blur-md shadow-md pointer-events-auto select-none">
+            <Images size={12} className="text-cyan-400" />
+            <div className="flex items-center gap-1">
+              {photos.map((_, pIdx) => (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPhotoIndex(pIdx);
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                    pIdx === photoIndex
+                      ? 'w-4 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]'
+                      : 'w-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
+                  title={`View photo ${pIdx + 1} of ${totalPhotos}`}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] font-mono text-slate-300 font-bold ml-1">
+              {photoIndex + 1}/{totalPhotos}
+            </span>
+          </div>
+        </>
+      )}
+
+      {/* Admin Photo Management Controls (Top Left) */}
+      {isAdmin && isCurrentSlide && (
+        <div className="absolute top-3.5 left-3.5 z-30 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <label
+            title="Upload photo(s) for this project (select one or multiple)"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+          >
+            <Plus size={13} />
+            <span>{uploadingStatus ? 'Uploading...' : totalPhotos > 0 ? 'Add Photos' : 'Add Photo'}</span>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              disabled={Boolean(uploadingStatus)}
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  onUploadPhotos(projectId, e.target.files);
+                  e.target.value = '';
+                }
+              }}
+            />
+          </label>
+
+          {hasPhotos && (
+            <button
+              type="button"
+              onClick={(e) => onRemovePhoto(projectId, photos[photoIndex], e)}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+              title={`Delete current photo (${photoIndex + 1} of ${totalPhotos})`}
+            >
+              <Trash2 size={12} />
+              <span className="text-[11px] font-mono">{totalPhotos > 1 ? `Delete (${photoIndex + 1}/${totalPhotos})` : 'Delete'}</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const DEFAULT_PROJECT_IMAGES = [
   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80', // Mecha / simulation
@@ -109,6 +300,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const [newSkillText, setNewSkillText] = useState('');
   const [editingUrl, setEditingUrl] = useState(null); // { projectId: string, field: 'demo' | 'github' } | null
   const [urlDraft, setUrlDraft] = useState('');
+
+  // Add project with GitHub URL prompt state
+  const [showAddPrompt, setShowAddPrompt] = useState(false);
+  const [addRepoUrl, setAddRepoUrl] = useState('');
 
   const containerRef = useRef(null);
   const thumbnailsRef = useRef(null);
@@ -204,15 +399,20 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   };
 
   // ─── Admin Handlers (Scoped by Project ID) ─────────────────────────────────
-  const handleOpenAdd = async () => {
+  
+  // Create blank project without GitHub scan
+  const handleCreateBlankProject = async () => {
+    setShowAddPrompt(false);
+    setAddRepoUrl('');
     const newProject = {
-      title: '',
-      tag: '',
+      title: 'New Project',
+      tag: 'Web Application',
       description: '',
       skills: [],
       githubUrl: '',
       demoUrl: '',
       photos: [],
+      isInferred: false,
       createdAt: new Date().toISOString(),
     };
     try {
@@ -232,6 +432,98 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         setIndex(next.length - 1);
         return next;
       });
+    }
+  };
+
+  // Scan GitHub repository and auto-create project (Always Overwrite)
+  const handleScanAndCreateProject = async (e) => {
+    e?.preventDefault?.();
+    const url = addRepoUrl.trim();
+    if (!url) {
+      handleCreateBlankProject();
+      return;
+    }
+
+    if (!isGitHubRepoUrl(url)) {
+      alert('Please enter a valid GitHub repository URL (e.g. https://github.com/owner/repo) or choose "Blank".');
+      return;
+    }
+
+    setShowAddPrompt(false);
+    setAddRepoUrl('');
+
+    // 1. Create initial project doc to immediately show the slide & scanning spinner
+    const initialProject = {
+      title: 'Scanning Repository...',
+      tag: 'Scanning...',
+      description: '',
+      skills: [],
+      githubUrl: url,
+      demoUrl: '',
+      photos: [],
+      isInferred: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    let createdId;
+    try {
+      const docRef = await addDoc(collection(db, 'projects'), initialProject);
+      createdId = docRef.id;
+    } catch (err) {
+      console.warn('Add project initial doc fallback:', err);
+      createdId = `local-${Date.now()}`;
+    }
+
+    const created = { id: createdId, ...initialProject };
+    setProjects(prev => {
+      const next = [...prev, created];
+      setIndex(next.length - 1);
+      return next;
+    });
+
+    // 2. Begin multi-tier scan
+    setUploading(prev => ({ ...prev, [createdId]: 'Connecting to GitHub...' }));
+
+    try {
+      const metadata = await fetchGitHubRepoMetadata(url, (status) => {
+        setUploading(prev => ({ ...prev, [createdId]: status }));
+      });
+
+      const updatedPayload = {
+        title: metadata.title || 'Untitled Project',
+        tag: metadata.tag || 'Software Project',
+        description: metadata.description || '',
+        skills: metadata.skills || [],
+        githubUrl: metadata.githubUrl || url,
+        demoUrl: metadata.demoUrl || '',
+        isInferred: Boolean(metadata.isInferred),
+      };
+
+      try {
+        await updateDoc(doc(db, 'projects', createdId), updatedPayload);
+      } catch (dbErr) {
+        console.warn('Update doc fallback (local only):', dbErr);
+      }
+
+      setProjects(prev => prev.map(p =>
+        p.id === createdId ? { ...p, ...updatedPayload } : p
+      ));
+    } catch (scanErr) {
+      console.error('Scan GitHub metadata failed:', scanErr);
+      alert('GitHub Scan Notice: ' + (scanErr.message || 'Could not auto-fetch repo details.') + '\nYou can still fill details manually.');
+      const fallbackPayload = {
+        title: 'New Project',
+        tag: 'Web Project',
+        githubUrl: url,
+      };
+      try {
+        await updateDoc(doc(db, 'projects', createdId), fallbackPayload);
+      } catch (_) {}
+      setProjects(prev => prev.map(p =>
+        p.id === createdId ? { ...p, ...fallbackPayload } : p
+      ));
+    } finally {
+      setUploading(prev => ({ ...prev, [createdId]: false }));
     }
   };
 
@@ -266,10 +558,57 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     handleUpdateField(projectId, 'skills', updated);
   };
 
-  const handleSaveUrl = (projectId, field) => {
-    handleUpdateField(projectId, field, urlDraft.trim());
+  const handleSaveUrl = async (projectId, field) => {
+    const rawVal = urlDraft.trim();
     setEditingUrl(null);
     setUrlDraft('');
+
+    // If setting/editing GitHub URL, trigger auto-scan & overwrite all details
+    if (field === 'githubUrl' && isGitHubRepoUrl(rawVal)) {
+      handleUpdateField(projectId, 'githubUrl', rawVal);
+
+      setUploading(prev => ({ ...prev, [projectId]: 'Connecting to GitHub...' }));
+      try {
+        const metadata = await fetchGitHubRepoMetadata(rawVal, (status) => {
+          setUploading(prev => ({ ...prev, [projectId]: status }));
+        });
+
+        const overwritePayload = {
+          title: metadata.title || 'Untitled Project',
+          tag: metadata.tag || 'Software Project',
+          description: metadata.description || '',
+          skills: metadata.skills || [],
+          githubUrl: metadata.githubUrl || rawVal,
+          demoUrl: metadata.demoUrl || '',
+          isInferred: Boolean(metadata.isInferred),
+        };
+
+        await updateDoc(doc(db, 'projects', projectId), overwritePayload);
+
+        setProjects(prev => prev.map(p =>
+          p.id === projectId ? { ...p, ...overwritePayload } : p
+        ));
+      } catch (err) {
+        console.error('Error re-scanning GitHub repo:', err);
+        alert('GitHub Scan Notice: ' + (err.message || 'Could not auto-fetch repo details.'));
+      } finally {
+        setUploading(prev => ({ ...prev, [projectId]: false }));
+      }
+    } else {
+      handleUpdateField(projectId, field, rawVal);
+    }
+  };
+
+  const handleConfirmInferred = async (projectId, e) => {
+    e?.stopPropagation?.();
+    setProjects(prev => prev.map(p =>
+      p.id === projectId ? { ...p, isInferred: false } : p
+    ));
+    try {
+      await updateDoc(doc(db, 'projects', projectId), { isInferred: false });
+    } catch (err) {
+      console.warn('Confirm inferred local fallback:', err);
+    }
   };
 
   const handleDeleteProject = async (id, e) => {
@@ -287,11 +626,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     });
   };
 
-  const handleUploadPhoto = async (projectId, file) => {
-    if (!file) return;
-    setUploading(prev => ({ ...prev, [projectId]: true }));
+  const handleUploadPhotos = async (projectId, fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    setUploading(prev => ({ ...prev, [projectId]: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...` }));
     try {
-      if (['1', '2', '3'].includes(projectId)) {
+      if (['1', '2', '3', '4', '5'].includes(projectId)) {
         const fp = FALLBACK_PROJECTS.find(p => p.id === projectId);
         if (fp) {
           const { id, ...data } = fp;
@@ -299,24 +639,32 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         }
       }
 
-      const storageRef = ref(storage, `projects/${projectId}/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(storageRef);
+      const uploadedUrls = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploading(prev => ({ ...prev, [projectId]: `Uploading photo ${i + 1}/${files.length}...` }));
+        const storageRef = ref(storage, `projects/${projectId}/${Date.now()}-${i}-${file.name}`);
+        await uploadBytes(storageRef, file);
+        const downloadUrl = await getDownloadURL(storageRef);
+        uploadedUrls.push(downloadUrl);
+      }
 
-      await updateDoc(doc(db, 'projects', projectId), {
-        photos: arrayUnion(downloadUrl)
-      });
+      for (const downloadUrl of uploadedUrls) {
+        await updateDoc(doc(db, 'projects', projectId), {
+          photos: arrayUnion(downloadUrl)
+        });
+      }
 
       setProjects(prev => prev.map(p => {
         if (p.id === projectId) {
-          const updatedPhotos = [...(p.photos || []), downloadUrl];
+          const updatedPhotos = [...(p.photos || []), ...uploadedUrls];
           return { ...p, photos: updatedPhotos };
         }
         return p;
       }));
     } catch (err) {
-      console.error('Error uploading photo:', err);
-      alert('Photo upload failed. Check Firebase storage configuration.');
+      console.error('Error uploading photo(s):', err);
+      alert('Photo upload failed: ' + (err.message || 'Check Firebase storage configuration.'));
     } finally {
       setUploading(prev => ({ ...prev, [projectId]: false }));
     }
@@ -324,7 +672,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   const handleRemovePhoto = async (projectId, photoUrl, e) => {
     e?.stopPropagation?.();
-    if (!window.confirm('Delete this photo?')) return;
+    if (!photoUrl) return;
+    if (!window.confirm('Delete this photo from project gallery?')) return;
     try {
       await updateDoc(doc(db, 'projects', projectId), {
         photos: arrayRemove(photoUrl)
@@ -378,27 +727,77 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           </span>
 
           {isAdmin && (
-            <div className="flex items-center gap-1.5 ml-1">
-              <button
-                type="button"
-                onClick={handleOpenAdd}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-sky-100 dark:bg-cyan-500/20 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/40 hover:bg-sky-200 dark:hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-sm"
-                title="Add new project"
+            showAddPrompt ? (
+              <form 
+                onSubmit={handleScanAndCreateProject}
+                className="inline-flex items-center gap-1.5 p-1 px-2 rounded-2xl bg-white dark:bg-slate-900 border-2 border-sky-500 dark:border-cyan-400 shadow-xl backdrop-blur-md z-40 max-w-full flex-wrap animate-fadeIn"
               >
-                <Plus size={13} /> Add Project
-              </button>
-
-              {activeProject && (
+                <FolderGit2 size={14} className="text-sky-600 dark:text-cyan-400 shrink-0" />
+                <input
+                  type="url"
+                  value={addRepoUrl}
+                  onChange={(e) => setAddRepoUrl(e.target.value)}
+                  placeholder="https://github.com/owner/repo"
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/15 text-slate-900 dark:text-white text-xs font-mono outline-none w-52 sm:w-72"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setShowAddPrompt(false);
+                      setAddRepoUrl('');
+                    }
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold bg-sky-500 dark:bg-cyan-500 text-white dark:text-slate-950 hover:bg-sky-600 dark:hover:bg-cyan-400 transition-colors cursor-pointer shadow-sm"
+                  title="Scan repository and auto-fill project details"
+                >
+                  <Sparkles size={12} />
+                  <span>Scan</span>
+                </button>
                 <button
                   type="button"
-                  onClick={(e) => handleDeleteProject(activeProject.id, e)}
-                  className="p-1 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer shadow-sm"
-                  title="Delete current project"
+                  onClick={handleCreateBlankProject}
+                  className="px-2.5 py-1 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Create blank project without GitHub scan"
                 >
-                  <Trash2 size={13} />
+                  Blank
                 </button>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddPrompt(false);
+                    setAddRepoUrl('');
+                  }}
+                  className="p-1 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  title="Cancel"
+                >
+                  <X size={14} />
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-center gap-1.5 ml-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAddPrompt(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-sky-100 dark:bg-cyan-500/20 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/40 hover:bg-sky-200 dark:hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-sm"
+                  title="Add new project from GitHub repository"
+                >
+                  <Plus size={13} /> Add Project
+                </button>
+
+                {activeProject && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteProject(activeProject.id, e)}
+                    className="p-1 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer shadow-sm"
+                    title="Delete current project"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            )
           )}
         </div>
       </div>
@@ -430,81 +829,33 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           style={{ x }}
         >
           {projects.map((project, idx) => {
-            const imageUrl = getProjectImage(project, idx);
             const isCurrent = idx === index;
             const hasLink = Boolean(project.demoUrl || project.githubUrl);
 
             return (
               <div 
                 key={project.id || idx} 
-                className="shrink-0 w-full h-[380px] sm:h-[430px] lg:h-[470px] relative overflow-hidden group select-none"
+                className="shrink-0 w-full h-[450px] sm:h-[500px] lg:h-[540px] relative overflow-hidden group select-none"
               >
-                {/* Background Project Image or Sleek Empty Placeholder */}
-                {imageUrl ? (
-                  <ImageWithPlaceholder
-                    src={imageUrl}
-                    alt={project.title || 'Project Preview'}
-                    className="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-105"
-                    containerClassName="absolute inset-0"
-                    showSpinner={true}
-                    draggable={false}
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
-                    <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm">
-                      <div className="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-cyan-500/10 border border-sky-500/30 dark:border-cyan-400/30 flex items-center justify-center text-sky-400 dark:text-cyan-300 shadow-[0_0_24px_rgba(2,132,199,0.2)]">
-                        <ImageIcon size={28} />
-                      </div>
-                      <span className="text-sm font-bold text-white font-['Outfit'] tracking-wide">
-                        {project.title || 'Blank Project'}
-                      </span>
-                      <span className="text-xs font-mono text-slate-400 tracking-wide">
-                        {isAdmin ? 'Upload project screenshot using "Add Photo"' : 'Project preview coming soon'}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {/* Multi-Image Gallery & Crossfade Slideshow */}
+                <ProjectMediaSlider
+                  photos={project.photos || []}
+                  fallbackImage={getProjectImage(project, idx)}
+                  title={project.title || 'Project Preview'}
+                  isCurrentSlide={isCurrent}
+                  isAdmin={isAdmin}
+                  projectId={project.id}
+                  uploadingStatus={uploading[project.id]}
+                  onUploadPhotos={handleUploadPhotos}
+                  onRemovePhoto={handleRemovePhoto}
+                />
 
                 {/* Dark Gradient Overlay for optimal legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/30 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/40 to-transparent pointer-events-none z-10" />
 
-                {/* Admin Photo Management Controls (top left inside frame) */}
-                {isAdmin && isCurrent && (
-                  <div className="absolute top-3.5 left-3.5 z-30 flex items-center gap-2">
-                    <label
-                      title="Upload new photo for this project"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 text-xs font-medium cursor-pointer backdrop-blur-md transition-colors shadow-lg"
-                    >
-                      <Plus size={13} />
-                      <span>{uploading[project.id] ? 'Uploading...' : 'Add Photo'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={uploading[project.id]}
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) handleUploadPhoto(project.id, e.target.files[0]);
-                        }}
-                      />
-                    </label>
-
-                    {project.photos && project.photos.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleRemovePhoto(project.id, project.photos[0], e)}
-                        className="p-1.5 rounded-xl bg-slate-950/90 border border-red-500/40 text-red-400 hover:bg-red-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
-                        title="Delete project photo"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Click to redirect indicator hint (top right inside frame) */}
-                {hasLink && !isAdmin && (
+                {/* Click to redirect indicator hint (top right inside frame, only if single photo or not hovering controls) */}
+                {hasLink && !isAdmin && (!project.photos || project.photos.length <= 1) && (
                   <div 
                     onClick={() => handleSlideClick(project)}
                     className="absolute top-3.5 right-3.5 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md text-xs font-mono opacity-80 group-hover:opacity-100 group-hover:bg-cyan-500/20 cursor-pointer transition-all shadow-lg"
@@ -515,15 +866,44 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   </div>
                 )}
 
+                {/* Scanning / Uploading Status Overlay */}
+                {Boolean(uploading[project.id]) && (
+                  <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-2.5 text-cyan-300 text-xs font-mono z-40 backdrop-blur-md">
+                    <Sparkles size={24} className="animate-spin text-cyan-400" />
+                    <span className="font-bold text-sm text-cyan-200 animate-pulse">
+                      {typeof uploading[project.id] === 'string' ? uploading[project.id] : 'Processing...'}
+                    </span>
+                    <span className="text-[11px] text-slate-400">Updating project details & media</span>
+                  </div>
+                )}
+
                 {/* ─────────────────────────────────────────────────────────────
                     PROJECT DETAILS OVERLAY (Lower-Left of the Highlighted Photo)
                    ───────────────────────────────────────────────────────────── */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 p-5 sm:p-8 z-20 flex flex-col justify-end max-w-2xl"
+                  className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 md:p-8 z-20 flex flex-col justify-end max-w-3xl max-h-[85%]"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Inferred Review Banner */}
+                  {isAdmin && isCurrent && project.isInferred && (
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-mono backdrop-blur-md shadow-md">
+                      <AlertTriangle size={13} className="text-amber-400 shrink-0" />
+                      <span className="text-[11px] font-medium leading-tight">
+                        Details auto-detected from files. Please check & confirm.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => handleConfirmInferred(project.id, e)}
+                        className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-bold hover:bg-amber-300 transition-colors cursor-pointer shrink-0"
+                        title="Acknowledge and mark details as confirmed"
+                      >
+                        <CheckCircle2 size={11} /> Confirm
+                      </button>
+                    </div>
+                  )}
+
                   {/* Project Tag */}
-                  <div className="mb-1.5">
+                  <div className="mb-1">
                     <EditableText
                       text={project.tag}
                       isAdmin={isAdmin && isCurrent}
@@ -538,7 +918,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     onClick={() => {
                       if (!isAdmin) handleSlideClick(project);
                     }}
-                    className={`text-2xl sm:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2 flex items-center gap-2 ${
+                    className={`text-xl sm:text-2xl lg:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2 flex items-center gap-2 flex-wrap ${
                       hasLink && !isAdmin ? 'cursor-pointer hover:text-cyan-300 transition-colors' : ''
                     }`}
                   >
@@ -554,7 +934,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   </h3>
 
                   {/* Project Description */}
-                  <div className="text-slate-200/90 text-xs sm:text-sm leading-relaxed mb-4 line-clamp-3 sm:line-clamp-4 max-w-xl drop-shadow-sm">
+                  <div className="text-slate-200/95 text-xs sm:text-sm leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 max-w-2xl drop-shadow-sm">
                     <EditableText
                       text={project.description}
                       isAdmin={isAdmin && isCurrent}
@@ -565,7 +945,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   </div>
 
                   {/* Skills Tags List */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
                     {(project.skills || []).map((skill, sIdx) => (
                       <span
                         key={sIdx}
@@ -797,6 +1177,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     <span className="text-[9px] font-mono text-slate-400 font-semibold truncate px-1">
                       {project.title || 'Project'}
                     </span>
+                  </div>
+                )}
+                {project.photos && project.photos.length > 1 && (
+                  <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 text-[9px] font-mono text-cyan-300 border border-cyan-500/30 z-10 flex items-center gap-0.5">
+                    <Images size={8} />
+                    <span>{project.photos.length}</span>
                   </div>
                 )}
                 {isCurrent && (

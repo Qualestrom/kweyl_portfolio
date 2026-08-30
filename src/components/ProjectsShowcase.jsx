@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { 
   Plus, 
   Trash2, 
@@ -16,7 +17,8 @@ import {
   Sparkles,
   AlertTriangle,
   CheckCircle2,
-  Lock
+  Lock,
+  GripHorizontal
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -68,9 +70,11 @@ const ProjectMediaSlider = ({
   uploadingStatus = false,
   onUploadPhotos,
   onRemovePhoto,
+  onReorderPhotos,
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   // If photos array changes or gets smaller, clamp index safely
   useEffect(() => {
@@ -81,14 +85,26 @@ const ProjectMediaSlider = ({
 
   // Automatic slideshow transition when there are multiple photos (every 4.5s, pauses on hover)
   useEffect(() => {
-    if (!isCurrentSlide || photos.length <= 1 || isHovered) return;
+    if (!isCurrentSlide || photos.length <= 1 || isHovered || isReordering) return;
 
     const interval = setInterval(() => {
       setPhotoIndex((prev) => (prev + 1) % photos.length);
     }, 4500);
 
     return () => clearInterval(interval);
-  }, [isCurrentSlide, photos.length, isHovered]);
+  }, [isCurrentSlide, photos.length, isHovered, isReordering]);
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(photos);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    if (onReorderPhotos) {
+      onReorderPhotos(projectId, items);
+    }
+    setPhotoIndex(result.destination.index);
+  };
 
   const hasPhotos = photos && photos.length > 0;
   const currentImageUrl = hasPhotos ? photos[photoIndex] : fallbackImage;
@@ -212,7 +228,7 @@ const ProjectMediaSlider = ({
       )}
 
       {/* Admin Photo Management Controls (Top Left) */}
-      {isAdmin && isCurrentSlide && (
+      {isAdmin && isCurrentSlide && !isReordering && (
         <div className="absolute top-3.5 left-3.5 z-30 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           <label
             title="Upload photo(s) for this project (select one or multiple)"
@@ -235,6 +251,18 @@ const ProjectMediaSlider = ({
             />
           </label>
 
+          {hasPhotos && totalPhotos > 1 && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setIsReordering(true); }}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-950/90 border border-sky-500/40 text-sky-400 hover:bg-sky-500/30 text-xs cursor-pointer backdrop-blur-md transition-colors shadow-lg"
+              title="Reorder photos"
+            >
+              <GripHorizontal size={12} />
+              <span className="text-[11px] font-mono">Reorder</span>
+            </button>
+          )}
+
           {hasPhotos && (
             <button
               type="button"
@@ -246,6 +274,56 @@ const ProjectMediaSlider = ({
               <span className="text-[11px] font-mono">{totalPhotos > 1 ? `Delete (${photoIndex + 1}/${totalPhotos})` : 'Delete'}</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Reorder Overlay */}
+      {isAdmin && isCurrentSlide && isReordering && (
+        <div 
+          className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-6 text-white font-bold font-['Outfit'] flex items-center gap-2 text-lg">
+            <GripHorizontal className="text-cyan-400" /> Reorder Gallery Photos
+          </div>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="photos" direction="horizontal">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="flex gap-4 overflow-x-auto p-4 bg-slate-900/50 rounded-xl max-w-full items-center min-h-[140px]"
+                >
+                  {photos.map((url, index) => (
+                    <Draggable key={url} draggableId={url} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`relative flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing ${
+                            snapshot.isDragging ? 'border-cyan-400 scale-105 shadow-xl shadow-cyan-500/20 z-50' : 'border-white/10 hover:border-white/30'
+                          }`}
+                        >
+                          <img src={url} alt={`Thumbnail ${index}`} className="w-full h-full object-cover pointer-events-none" />
+                          <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md text-white text-[10px] px-1.5 rounded font-mono border border-white/20">
+                            {index + 1}
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+          <button
+            onClick={() => setIsReordering(false)}
+            className="mt-8 px-8 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:scale-105 active:scale-95 flex items-center gap-2"
+          >
+            <Check size={16} /> Done Reordering
+          </button>
         </div>
       )}
     </div>
@@ -782,6 +860,23 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
+  const handleReorderPhotos = async (projectId, newPhotosArray) => {
+    try {
+      setProjects(prev => prev.map(p => {
+        if (p.id === projectId) {
+          return { ...p, photos: newPhotosArray };
+        }
+        return p;
+      }));
+
+      await updateDoc(doc(db, 'projects', projectId), {
+        photos: newPhotosArray
+      });
+    } catch (err) {
+      console.error('Error reordering photos:', err);
+    }
+  };
+
   const handlePushDefaults = async () => {
     if (!window.confirm('Push default showcase projects to Firebase database?')) return;
     try {
@@ -940,6 +1035,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   uploadingStatus={uploading[project.id]}
                   onUploadPhotos={handleUploadPhotos}
                   onRemovePhoto={handleRemovePhoto}
+                  onReorderPhotos={handleReorderPhotos}
                 />
 
                 {/* Lightened, soft gradient overlay — keeps screenshot bright & clear while ensuring text contrast */}

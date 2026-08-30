@@ -382,6 +382,15 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
+  // Synchronize projects to localStorage whenever updated
+  useEffect(() => {
+    if (projects && projects.length > 0) {
+      try {
+        localStorage.setItem('portfolio_projects', JSON.stringify(projects));
+      } catch (_) {}
+    }
+  }, [projects]);
+
   // Currently active project
   const activeProject = useMemo(() => {
     return projects[index] || projects[0] || null;
@@ -688,14 +697,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     if (!fileList || fileList.length === 0) return;
     const files = Array.from(fileList);
     setUploading(prev => ({ ...prev, [projectId]: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...` }));
+    
     try {
-      if (['1', '2', '3', '4', '5'].includes(projectId)) {
-        const fp = FALLBACK_PROJECTS.find(p => p.id === projectId);
-        if (fp) {
-          const { id, ...data } = fp;
-          await setDoc(doc(db, 'projects', projectId), data, { merge: true });
-        }
-      }
+      const currentProj = projects.find(p => p.id === projectId);
 
       const uploadedUrls = [];
       for (let i = 0; i < files.length; i++) {
@@ -707,15 +711,30 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         uploadedUrls.push(downloadUrl);
       }
 
-      for (const downloadUrl of uploadedUrls) {
-        await updateDoc(doc(db, 'projects', projectId), {
-          photos: arrayUnion(downloadUrl)
-        });
+      // Preserve all existing photos and append newly uploaded ones
+      const currentPhotos = (currentProj && Array.isArray(currentProj.photos)) ? [...currentProj.photos] : [];
+      const updatedPhotos = [...currentPhotos, ...uploadedUrls];
+
+      // Update in Firestore without wiping any fields
+      try {
+        if (currentProj) {
+          const { id, ...dataToSave } = currentProj;
+          await setDoc(doc(db, 'projects', projectId), {
+            ...dataToSave,
+            photos: updatedPhotos
+          }, { merge: true });
+        } else {
+          await updateDoc(doc(db, 'projects', projectId), {
+            photos: updatedPhotos
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Firestore photo update fallback:', dbErr);
       }
 
+      // Update in React State
       setProjects(prev => prev.map(p => {
         if (p.id === projectId) {
-          const updatedPhotos = [...(p.photos || []), ...uploadedUrls];
           return { ...p, photos: updatedPhotos };
         }
         return p;
@@ -733,13 +752,20 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     if (!photoUrl) return;
     if (!window.confirm('Delete this photo from project gallery?')) return;
     try {
-      await updateDoc(doc(db, 'projects', projectId), {
-        photos: arrayRemove(photoUrl)
-      });
+      const currentProj = projects.find(p => p.id === projectId);
+      const updatedPhotos = (currentProj?.photos || []).filter(u => u !== photoUrl);
+
+      try {
+        await updateDoc(doc(db, 'projects', projectId), {
+          photos: updatedPhotos
+        });
+      } catch (err) {
+        console.warn('Firestore remove photo fallback:', err);
+      }
+
       setProjects(prev => prev.map(p => {
         if (p.id === projectId) {
-          const updated = (p.photos || []).filter(u => u !== photoUrl);
-          return { ...p, photos: updated };
+          return { ...p, photos: updatedPhotos };
         }
         return p;
       }));

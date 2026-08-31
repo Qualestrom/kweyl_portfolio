@@ -5,12 +5,14 @@ import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
 import InteractiveBackground from './components/InteractiveBackground';
 import PortfolioSPA from './components/PortfolioSPA';
+import WarpArrivalOverlay from './components/WarpArrivalOverlay';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import ThumbnailPreview from './pages/ThumbnailPreview.jsx';
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
   const [loaderExited, setLoaderExited] = useState(false);
+  const [showWarpArrival, setShowWarpArrival] = useState(false);
 
   useEffect(() => {
     const minDelay = new Promise(resolve => setTimeout(resolve, 5000));
@@ -26,8 +28,16 @@ export default function App() {
       {!loaderExited && (
         <StellarCryoLoader
           isLoading={!appReady}
-          onExited={() => setLoaderExited(true)}
+          onExited={() => {
+            setLoaderExited(true);
+            setShowWarpArrival(true);
+          }}
         />
+      )}
+
+      {/* Warp Arrival Overlay */}
+      {showWarpArrival && (
+        <WarpArrivalOverlay onComplete={() => setShowWarpArrival(false)} />
       )}
 
       {/* Persistent backgrounds — starfield + circuit constellation grid */}

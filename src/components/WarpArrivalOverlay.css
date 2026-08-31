@@ -1,0 +1,19 @@
+.warp-arrival-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999990; /* High enough to overlay the page, but below loader if needed */
+  pointer-events: none;
+  animation: warp-arrival-fade-out 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.warp-arrival-overlay canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes warp-arrival-fade-out {
+  0% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
+}

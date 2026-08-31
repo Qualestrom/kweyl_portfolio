@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { spawnRealConstellation } from '../utils/constellations';
 
 /**
  * StellarBackground — Static starry-night ambient background
@@ -82,49 +83,7 @@ const GLOW_INTERVAL_MIN = 40;     // min frames between triggers (~0.7s)
 const GLOW_INTERVAL_MAX = 120;    // max frames between triggers (~2s)
 const MAX_SIMULTANEOUS_GLOWS = 6;
 
-// ─── Constellation Factory ───────────────────────────────────────────────────
-function createConstellation(starIndices, stars, maxDist, mouseX, mouseY) {
-  const seedIdx = starIndices[Math.floor(Math.random() * starIndices.length)];
-  const seed = stars[seedIdx];
 
-  const nearby = starIndices
-    .filter(i => i !== seedIdx)
-    .map(i => ({ idx: i, dist: Math.hypot(stars[i].x - seed.x, stars[i].y - seed.y) }))
-    .filter(n => n.dist < maxDist)
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, Math.floor(rand(2, 5)));
-
-  if (nearby.length < 2) return null;
-
-  const nodes = [seedIdx, ...nearby.map(n => n.idx)];
-
-  const edges = [];
-  for (let i = 0; i < nodes.length - 1; i++) {
-    edges.push([nodes[i], nodes[i + 1]]);
-  }
-  if (nodes.length >= 4 && Math.random() > 0.4) {
-    edges.push([nodes[0], nodes[Math.floor(nodes.length / 2)]]);
-  }
-
-  // Check distance to mouse to possibly boost brightness
-  let isNearMouse = false;
-  if (mouseX >= 0 && mouseY >= 0) {
-    const distToMouse = Math.hypot(seed.x - mouseX, seed.y - mouseY);
-    if (distToMouse < 300) isNearMouse = true;
-  }
-
-  return {
-    nodes,
-    edges,
-    progress: 0,
-    phase: 'rising',
-    holdTimer: 0,
-    holdDuration: rand(120, 300), // slightly longer hold for background
-    riseSpeed: rand(0.008, 0.02), // slightly slower drawing
-    fallSpeed: rand(0.004, 0.01),
-    isNearMouse,
-  };
-}
 
 export default function StellarBackground() {
   const canvasRef = useRef(null);
@@ -182,9 +141,25 @@ export default function StellarBackground() {
 
     const spawnConstellation = () => {
       if (constellations.length >= 3) return; // Max 3 at a time in background
-      const maxDist = Math.min(w, h) * 0.25;
-      const c = createConstellation(starIndices, particles, maxDist, mouseX, mouseY);
-      if (c) constellations.push(c);
+      const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
+      const c = spawnRealConstellation(w, h, rand, getStarColor);
+      
+      c.progress = 0;
+      c.phase = 'rising';
+      c.holdTimer = 0;
+      c.holdDuration = rand(120, 300);
+      c.riseSpeed = rand(0.008, 0.02);
+      c.fallSpeed = rand(0.004, 0.01);
+      
+      let isNearMouse = false;
+      const firstNode = c.nodes[0];
+      if (mouseX >= 0 && mouseY >= 0 && firstNode) {
+        const distToMouse = Math.hypot(firstNode.x - mouseX, firstNode.y - mouseY);
+        if (distToMouse < 300) isNearMouse = true;
+      }
+      c.isNearMouse = isNearMouse;
+      
+      constellations.push(c);
     };
 
     const animate = () => {
@@ -245,9 +220,9 @@ export default function StellarBackground() {
         for (let ei = 0; ei < totalEdges; ei++) {
           if (ei > Math.floor(edgeProgressRaw)) continue; // Not started drawing this edge yet
           
-          const [a, b] = c.edges[ei];
-          const sa = particles[a];
-          const sb = particles[b];
+          const edge = c.edges[ei];
+          const sa = c.nodes[edge.from];
+          const sb = c.nodes[edge.to];
           if (!sa || !sb) continue;
 
           ctx.moveTo(sa.x, sa.y);
@@ -271,7 +246,7 @@ export default function StellarBackground() {
           const nodeAppearThreshold = ni / (c.nodes.length || 1);
           if (c.phase === 'rising' && c.progress < nodeAppearThreshold) continue;
           
-          const s = particles[c.nodes[ni]];
+          const s = c.nodes[ni];
           if (!s) continue;
           const nodeAlpha = c.phase === 'rising' ? Math.min(1, (c.progress - nodeAppearThreshold) * 4) : alpha;
           const nodeGlowAlpha = (nodeAlpha * (c.isNearMouse ? 0.6 : 0.35)).toFixed(3);
@@ -283,6 +258,12 @@ export default function StellarBackground() {
           ctx.beginPath();
           ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
           ctx.fill();
+          
+          // Draw the actual star for the node
+          ctx.globalAlpha = Math.max(0.02, Math.min(1, nodeAlpha * 0.8));
+          ctx.fillStyle = s.color;
+          s.rotation += s.rotationSpeed;
+          drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
         }
       }
 

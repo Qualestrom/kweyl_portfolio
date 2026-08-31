@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Compass, User, FolderGit2, Award, Send, Sparkles } from 'lucide-react';
+import { spawnRealConstellation } from '../utils/constellations';
 import './StellarCryoLoader.css';
 
 /**
@@ -197,14 +198,14 @@ export default function StellarCryoLoader({
     isWarpingRef.current = true;
     setIsWarping(true);
 
-    // Let the canvas warp sequence execute for 850ms, then trigger exit
+    // Let the canvas warp sequence execute for 2500ms, then trigger exit
     setTimeout(() => {
       setFadingOut(true);
       setTimeout(() => {
         setExited(true);
         onExited?.();
-      }, 400);
-    }, 850);
+      }, 600);
+    }, 2500);
   }, [isReadyToEnter, onExited]);
 
   // Global keydown listener for "Press any key to enter"
@@ -310,51 +311,20 @@ export default function StellarCryoLoader({
 
     // ── Alive "Connect-a-Dot" Constellation Spawner ──
     const spawnConstellation = () => {
-      if (constellations.length >= 4 || starIndices.length < 5) return;
-      const seedIdx = pick(starIndices);
-      const seed = stars[seedIdx];
-      if (!seed) return;
+      if (constellations.length >= 4) return;
+      const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
+      const c = spawnRealConstellation(w, h, rand, getStarColor);
 
-      const maxDist = Math.min(w, h) * 0.26;
-      const nearby = starIndices
-        .filter((i) => i !== seedIdx)
-        .map((i) => ({ idx: i, dist: Math.hypot(stars[i].x - seed.x, stars[i].y - seed.y) }))
-        .filter((n) => n.dist < maxDist && n.dist > 30)
-        .sort((a, b) => a.dist - b.dist)
-        .slice(0, Math.floor(rand(3, 6)));
-
-      if (nearby.length < 2) return;
-
-      const nodes = [seedIdx, ...nearby.map((n) => n.idx)];
-      const edges = [];
-      for (let i = 0; i < nodes.length - 1; i++) {
-        edges.push({
-          from: nodes[i],
-          to: nodes[i + 1],
-          drawn: 0, // 0 to 1 draw progress
-        });
-      }
-      // Add one cross branch for organic celestial look
-      if (nodes.length >= 4 && Math.random() > 0.4) {
-        edges.push({
-          from: nodes[0],
-          to: nodes[2],
-          drawn: 0,
-        });
-      }
-
-      constellations.push({
-        nodes,
-        edges,
-        activeEdgeIdx: 0,
-        phase: 'drawing', // 'drawing' -> 'holding' -> 'fading'
-        holdTimer: 0,
-        holdDuration: rand(90, 180),
-        drawSpeed: rand(0.04, 0.075),
-        fadeAlpha: 1,
-        nodeFlashes: [], // Shockwave ripples when connected
-        energyPulses: [], // Pulsing starlight traveling along lines
-      });
+      c.activeEdgeIdx = 0;
+      c.phase = 'drawing'; // 'drawing' -> 'holding' -> 'fading'
+      c.holdTimer = 0;
+      c.holdDuration = rand(90, 180);
+      c.drawSpeed = rand(0.04, 0.075);
+      c.fadeAlpha = 1;
+      c.nodeFlashes = []; // Shockwave ripples when connected
+      c.energyPulses = []; // Pulsing starlight traveling along lines
+      
+      constellations.push(c);
     };
 
     const animate = () => {
@@ -364,7 +334,7 @@ export default function StellarCryoLoader({
 
       // ── Handle Warp Zoom Velocity ──
       if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.028);
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.010);
       }
 
       ctx.clearRect(0, 0, w, h);
@@ -434,7 +404,7 @@ export default function StellarCryoLoader({
             if (currentEdge.drawn >= 1) {
               currentEdge.drawn = 1;
               // Node ignition ripple at target star
-              const targetStar = stars[currentEdge.to];
+              const targetStar = c.nodes[currentEdge.to];
               if (targetStar) {
                 c.nodeFlashes.push({ x: targetStar.x, y: targetStar.y, r: 0, maxR: 24, alpha: 1 });
               }
@@ -460,14 +430,23 @@ export default function StellarCryoLoader({
         }
 
         const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
+        
+        // Draw constellation nodes
+        for (let ni = 0; ni < c.nodes.length; ni++) {
+          const s = c.nodes[ni];
+          ctx.globalAlpha = Math.max(0.02, Math.min(1, masterAlpha * 0.8));
+          ctx.fillStyle = s.color;
+          s.rotation += s.rotationSpeed;
+          drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
+        }
 
         // Draw active connecting lines (Connect-a-Dot laser trace)
         for (let ei = 0; ei < c.edges.length; ei++) {
           const edge = c.edges[ei];
           if (edge.drawn <= 0) continue;
 
-          const sa = stars[edge.from];
-          const sb = stars[edge.to];
+          const sa = c.nodes[edge.from];
+          const sb = c.nodes[edge.to];
           if (!sa || !sb) continue;
 
           const targetX = sa.x + (sb.x - sa.x) * edge.drawn;
@@ -519,8 +498,8 @@ export default function StellarCryoLoader({
           }
           const curEdge = c.edges[pulse.edgeIdx];
           if (curEdge && curEdge.drawn >= 1) {
-            const sa = stars[curEdge.from];
-            const sb = stars[curEdge.to];
+            const sa = c.nodes[curEdge.from];
+            const sb = c.nodes[curEdge.to];
             if (sa && sb) {
               const px = sa.x + (sb.x - sa.x) * pulse.t;
               const py = sa.y + (sb.y - sa.y) * pulse.t;
@@ -648,10 +627,18 @@ export default function StellarCryoLoader({
       if (isWarpingRef.current && warp > 0.3) {
         const flashProgress = (warp - 0.3) / 0.7; // 0 to 1
         const maxR = Math.hypot(w, h) * 1.1;
+        // Theme-aware flash colors
         const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * flashProgress);
-        flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
-        flashGrad.addColorStop(0.6, `rgba(34, 211, 238, ${Math.min(0.9, flashProgress * 1.1)})`);
-        flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        if (theme === 'light') {
+          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
+          flashGrad.addColorStop(0.6, `rgba(186, 230, 253, ${Math.min(0.9, flashProgress * 1.1)})`); // sky-200
+          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        } else {
+          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
+          flashGrad.addColorStop(0.6, `rgba(34, 211, 238, ${Math.min(0.9, flashProgress * 1.1)})`); // cyan-400
+          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        }
 
         ctx.fillStyle = flashGrad;
         ctx.fillRect(0, 0, w, h);
@@ -691,8 +678,8 @@ export default function StellarCryoLoader({
       {/* ─── Bottom-Centered HUD (Pure Genshin Spatial Hierarchy) ─── */}
       <div className={`genshin-bottom-hud ${isWarping ? 'hud-warp-exit' : ''}`}>
         
-        {/* ─── 5 Elemental Section Glyphs (Icon-Only Row) ─── */}
-        <div className="genshin-elemental-row">
+        {/* ─── Elemental Row Section ─── */}
+        <div className="genshin-elemental-row" id="hud-icons-section">
           {SECTION_GLYPHS.map((glyph) => {
             const isLit = percent >= glyph.threshold;
             const Icon = glyph.icon;
@@ -704,14 +691,13 @@ export default function StellarCryoLoader({
                 title={glyph.label}
               >
                 <Icon size={24} className="genshin-element-svg" />
-                <span className="genshin-element-label">{glyph.elementName}</span>
               </div>
             );
           })}
         </div>
 
-        {/* ─── Dynamic Loading Area / Genshin "Press to Start" Prompt ─── */}
-        <div className="genshin-bottom-center-stage">
+        {/* ─── Loading / Prompt Area Section ─── */}
+        <div className="genshin-bottom-center-stage" id="hud-prompt-section">
           {!isReadyToEnter ? (
             /* Active Loading Progress Bar & Status Text */
             <div className="genshin-progress-container">
@@ -743,8 +729,8 @@ export default function StellarCryoLoader({
           )}
         </div>
 
-        {/* ─── Rotating Lore & System Tips ─── */}
-        <div className="genshin-tip-row">
+        {/* ─── Tips Section ─── */}
+        <div className="genshin-tip-row" id="hud-tips-section">
           <span className="genshin-tip-tag">[{LORE_TIPS[tipIndex].tag}]</span>
           <span className="genshin-tip-text" key={tipIndex}>
             {LORE_TIPS[tipIndex].text}

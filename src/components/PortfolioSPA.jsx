@@ -73,7 +73,7 @@ export const DEFAULT_CONFIG = {
 };
 
 // ─── Portfolio SPA (state-based navigation) ──────────────────────────────────────
-export default function PortfolioSPA({ isAdmin = false, onLogout }) {
+export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited = true }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [direction, setDirection] = useState(0);
   const [config, setConfig] = useState(() => {
@@ -280,7 +280,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
         className="stellar-main stellar-main--full" 
         style={{ overflow: 'hidden', transformOrigin: 'center 48%' }}
         initial={{ scale: 0.04, opacity: 0, filter: 'blur(14px)' }}
-        animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+        animate={loaderExited ? { scale: 1, opacity: 1, filter: 'blur(0px)' } : { scale: 0.04, opacity: 0, filter: 'blur(14px)' }}
         transition={{ duration: 1.35, ease: [0.16, 1, 0.3, 1] }}
       >
         <AnimatePresence mode="popLayout" custom={direction}>

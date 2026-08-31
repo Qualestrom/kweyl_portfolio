@@ -200,16 +200,19 @@ export default function StellarCryoLoader({
 
     // Warp sequence:
     // 1. First ~600ms: Swift acceleration into warp + HUD zooms in to center
-    // 2. 600ms to 2000ms: Gradual deceleration (viewer reaching closer to destination)
-    // 3. At 1900ms (warp almost done): Fade out loader overlay
-    // 4. At 2200ms: Hand over to homepage zoom-in from smallest scale
+    // 2. 600ms to 1400ms: Gradual deceleration (viewer reaching closer to destination)
+    // 3. At 1400ms (warp almost done): Loader begins forward zoom-out (700ms duration)
+    // 4. At 1850ms: Hand over to homepage zoom-in (delayed entry, overlapping with end of warp)
+    // 5. At 2150ms: Loader fully unmounts
     setTimeout(() => {
       setFadingOut(true);
       setTimeout(() => {
-        setExited(true);
         onExited?.();
-      }, 350);
-    }, 1900);
+      }, 450); // 1400 + 450 = 1850ms
+      setTimeout(() => {
+        setExited(true);
+      }, 750); // 1400 + 750 = 2150ms
+    }, 1400);
   }, [isReadyToEnter, onExited]);
 
   // Global keydown listener for "Press any key to enter"

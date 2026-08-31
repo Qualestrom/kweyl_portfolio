@@ -198,14 +198,14 @@ export default function StellarCryoLoader({
     isWarpingRef.current = true;
     setIsWarping(true);
 
-    // Let the canvas warp sequence execute for 2500ms, then trigger exit
+    // Let the canvas warp sequence execute for 1800ms, then hand over smoothly to arrival
     setTimeout(() => {
       setFadingOut(true);
       setTimeout(() => {
         setExited(true);
         onExited?.();
-      }, 600);
-    }, 2500);
+      }, 400);
+    }, 1800);
   }, [isReadyToEnter, onExited]);
 
   // Global keydown listener for "Press any key to enter"
@@ -334,7 +334,7 @@ export default function StellarCryoLoader({
 
       // ── Handle Warp Zoom Velocity ──
       if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.010);
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.015);
       }
 
       ctx.clearRect(0, 0, w, h);
@@ -623,21 +623,21 @@ export default function StellarCryoLoader({
         }
       }
 
-      // ── 7. Hyper-Space Warp Celestial Bloom / Flash ──
-      if (isWarpingRef.current && warp > 0.3) {
-        const flashProgress = (warp - 0.3) / 0.7; // 0 to 1
+      // ── 7. Hyper-Space Warp Celestial Bloom / Flash (Theme-Aware) ──
+      if (isWarpingRef.current && warp > 0.45) {
+        const flashProgress = (warp - 0.45) / 0.55; // 0 to 1
         const maxR = Math.hypot(w, h) * 1.1;
-        // Theme-aware flash colors
         const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * flashProgress);
         
         if (theme === 'light') {
-          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
-          flashGrad.addColorStop(0.6, `rgba(186, 230, 253, ${Math.min(0.9, flashProgress * 1.1)})`); // sky-200
-          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.9, flashProgress * 1.2)})`);
+          flashGrad.addColorStop(0.5, `rgba(186, 230, 253, ${Math.min(0.75, flashProgress * 0.9)})`);
+          flashGrad.addColorStop(1, 'rgba(244, 247, 251, 0)');
         } else {
-          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
-          flashGrad.addColorStop(0.6, `rgba(34, 211, 238, ${Math.min(0.9, flashProgress * 1.1)})`); // cyan-400
-          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          flashGrad.addColorStop(0, `rgba(103, 232, 249, ${Math.min(0.75, flashProgress * 1.1)})`);
+          flashGrad.addColorStop(0.35, `rgba(34, 211, 238, ${Math.min(0.5, flashProgress * 0.8)})`);
+          flashGrad.addColorStop(0.75, `rgba(11, 19, 43, ${Math.min(0.8, flashProgress * 1.0)})`);
+          flashGrad.addColorStop(1, 'rgba(5, 8, 17, 0)');
         }
 
         ctx.fillStyle = flashGrad;
@@ -675,19 +675,24 @@ export default function StellarCryoLoader({
       {/* Ambient background glow orb */}
       <div className="genshin-loader-ambient-glow" />
 
-      {/* ─── Bottom-Centered HUD (Pure Genshin Spatial Hierarchy) ─── */}
+      {/* ─── Bottom-Centered HUD (Strict 3-Row Spatial Hierarchy) ─── */}
       <div className={`genshin-bottom-hud ${isWarping ? 'hud-warp-exit' : ''}`}>
         
-        {/* ─── Elemental Row Section ─── */}
-        <div className="genshin-elemental-row" id="hud-icons-section">
-          {SECTION_GLYPHS.map((glyph) => {
-            const isLit = percent >= glyph.threshold;
+        {/* Row 1: The Icons (Progressive Loading Indicator) */}
+        <div className="genshin-elemental-row" id="hud-icons">
+          {SECTION_GLYPHS.map((glyph, index) => {
+            const startP = index * 20;
+            const ratio = Math.min(1, Math.max(0, (percent - startP) / 20));
+            const isLit = ratio >= 1;
             const Icon = glyph.icon;
 
             return (
               <div
                 key={glyph.id}
                 className={`genshin-element-node ${isLit ? 'lit' : ''}`}
+                style={{
+                  '--node-ratio': ratio,
+                }}
                 title={glyph.label}
               >
                 <Icon size={24} className="genshin-element-svg" />
@@ -696,45 +701,36 @@ export default function StellarCryoLoader({
           })}
         </div>
 
-        {/* ─── Loading / Prompt Area Section ─── */}
-        <div className="genshin-bottom-center-stage" id="hud-prompt-section">
+        {/* Row 2: Tip Title (loading) OR Click Anywhere Prompt (ready) */}
+        <div className="genshin-hud-row-mid" id="hud-mid-row">
           {!isReadyToEnter ? (
-            /* Active Loading Progress Bar & Status Text */
-            <div className="genshin-progress-container">
-              <div className="genshin-progress-bar-track">
-                <div
-                  className="genshin-progress-bar-fill"
-                  style={{ width: `${percent}%` }}
-                >
-                  {/* Primogem Spark Head */}
-                  <div className="genshin-progress-spark-head" />
-                </div>
-              </div>
-
-              {/* Dynamic Descriptive Status Phrase (No raw % digits) */}
-              <div className="genshin-status-row">
-                <span className="genshin-status-text">{currentStatus}</span>
-              </div>
+            <div className="genshin-tip-title" id="hud-tip-title">
+              <span className="genshin-tip-tag">[{LORE_TIPS[tipIndex].tag}]</span>
             </div>
           ) : (
-            /* Genshin "Press to Start" Celestial Prompt */
-            <div className="genshin-enter-prompt" onClick={handleEnter}>
+            <div className="genshin-enter-prompt" onClick={handleEnter} id="hud-click-prompt">
               <div className="genshin-enter-banner">
                 <Sparkles size={15} className="genshin-enter-star left" />
                 <span className="genshin-enter-text">CLICK ANYWHERE TO ENTER</span>
                 <Sparkles size={15} className="genshin-enter-star right" />
               </div>
-              <span className="genshin-enter-subtext">Tap screen or press any key to enter</span>
             </div>
           )}
         </div>
 
-        {/* ─── Tips Section ─── */}
-        <div className="genshin-tip-row" id="hud-tips-section">
-          <span className="genshin-tip-tag">[{LORE_TIPS[tipIndex].tag}]</span>
-          <span className="genshin-tip-text" key={tipIndex}>
-            {LORE_TIPS[tipIndex].text}
-          </span>
+        {/* Row 3: Tip Text (loading) OR Tap Screen Subtext (ready) */}
+        <div className="genshin-hud-row-bottom" id="hud-bottom-row">
+          {!isReadyToEnter ? (
+            <div className="genshin-tip-text-wrap" id="hud-tip-text">
+              <p className="genshin-tip-text" key={tipIndex}>
+                {LORE_TIPS[tipIndex].text}
+              </p>
+            </div>
+          ) : (
+            <div className="genshin-enter-subtext-wrap" id="hud-tap-screen">
+              <span className="genshin-enter-subtext">Tap screen or press any key to enter</span>
+            </div>
+          )}
         </div>
 
       </div>

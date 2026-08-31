@@ -16,25 +16,26 @@ export default function WarpArrivalOverlay({ onComplete }) {
     let w = canvas.width = window.innerWidth;
     let h = canvas.height = window.innerHeight;
     
-    // Generate streaks starting from outer edges
-    const streakCount = Math.max(80, Math.floor((w * h) / 10000));
+    // Generate streaks bursting OUTWARD from center (forward hyperspace travel)
+    const streakCount = Math.max(90, Math.floor((w * h) / 9000));
     const streaks = Array.from({ length: streakCount }, () => {
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.hypot(w, h) * (0.5 + Math.random() * 0.5); // Start far away
-      const speed = Math.random() * 20 + 30; // Fast initial speed
-      const length = Math.random() * 150 + 50;
+      const distance = Math.random() * 80 + 20; // Start near center
+      const speed = Math.random() * 25 + 35; // Fast initial forward velocity
+      const length = Math.random() * 120 + 80;
       
       return {
         angle,
         distance,
         speed,
         length,
-        size: Math.random() * 2 + 1,
+        size: Math.random() * 2 + 1.2,
       };
     });
     
     let frame = 0;
     let raf;
+    const maxFrames = 50;
     
     const animate = () => {
       frame++;
@@ -42,64 +43,61 @@ export default function WarpArrivalOverlay({ onComplete }) {
       
       const cx = w / 2;
       const cy = h / 2;
+      const progress = frame / maxFrames; // 0 to 1
+      const alphaFade = Math.max(0, 1 - progress);
       
       const isLight = theme === 'light';
-      const streakColor = isLight ? 'rgba(8, 145, 178, ' : 'rgba(34, 211, 238, ';
-      const coreColor = isLight ? '#0891B2' : '#ffffff';
+      const streakColor = isLight ? 'rgba(2, 132, 199, ' : 'rgba(34, 211, 238, ';
+      const coreColor = isLight ? '#0284C7' : '#FFFFFF';
       
-      // Update and draw streaks (moving INWARD)
+      // Update and draw streaks (moving OUTWARD and decelerating)
       for (const streak of streaks) {
-        streak.distance -= streak.speed;
-        
-        // Slow down as it approaches center
-        streak.speed *= 0.94;
-        
-        if (streak.distance < 10) continue; // Passed center
+        streak.distance += streak.speed;
+        streak.speed *= 0.93; // Decelerate smoothly
         
         const x = cx + Math.cos(streak.angle) * streak.distance;
         const y = cy + Math.sin(streak.angle) * streak.distance;
         
-        // Tail is further out
-        const tailX = cx + Math.cos(streak.angle) * (streak.distance + streak.length * (streak.speed / 10));
-        const tailY = cy + Math.sin(streak.angle) * (streak.distance + streak.length * (streak.speed / 10));
+        // Tail is closer to center
+        const tailDist = Math.max(0, streak.distance - streak.length * (streak.speed / 20));
+        const tailX = cx + Math.cos(streak.angle) * tailDist;
+        const tailY = cy + Math.sin(streak.angle) * tailDist;
         
-        const grad = ctx.createLinearGradient(x, y, tailX, tailY);
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.2, coreColor);
-        grad.addColorStop(1, streakColor + '0)');
+        const grad = ctx.createLinearGradient(tailX, tailY, x, y);
+        grad.addColorStop(0, streakColor + '0)');
+        grad.addColorStop(0.5, streakColor + (alphaFade * 0.7).toFixed(3) + ')');
+        grad.addColorStop(1, coreColor);
         
         ctx.strokeStyle = grad;
         ctx.lineWidth = Math.max(1, streak.size * (streak.speed / 15));
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(tailX, tailY);
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(x, y);
         ctx.stroke();
       }
       
-      // Central bloom shrinking/fading
-      const maxR = Math.hypot(w, h) * 1.1;
-      
-      // Flash starts at 1, goes to 0 rapidly
-      const flashProgress = Math.max(0, 1 - frame / 45); 
-      
-      if (flashProgress > 0) {
-        const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * Math.max(0.1, flashProgress));
+      // Initial central hyperspace bloom fading out
+      const bloomProgress = Math.max(0, 1 - frame / 28);
+      if (bloomProgress > 0) {
+        const maxR = Math.hypot(w, h) * 0.9;
+        const bloomGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * bloomProgress);
         
         if (isLight) {
-          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
-          flashGrad.addColorStop(0.6, `rgba(186, 230, 253, ${Math.min(0.9, flashProgress * 1.1)})`);
-          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          bloomGrad.addColorStop(0, `rgba(255, 255, 255, ${bloomProgress * 0.85})`);
+          bloomGrad.addColorStop(0.4, `rgba(186, 230, 253, ${bloomProgress * 0.6})`);
+          bloomGrad.addColorStop(1, 'rgba(244, 247, 251, 0)');
         } else {
-          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(1, flashProgress * 1.5)})`);
-          flashGrad.addColorStop(0.6, `rgba(34, 211, 238, ${Math.min(0.9, flashProgress * 1.1)})`);
-          flashGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          bloomGrad.addColorStop(0, `rgba(103, 232, 249, ${bloomProgress * 0.65})`);
+          bloomGrad.addColorStop(0.3, `rgba(34, 211, 238, ${bloomProgress * 0.45})`);
+          bloomGrad.addColorStop(0.7, `rgba(11, 19, 43, ${bloomProgress * 0.7})`);
+          bloomGrad.addColorStop(1, 'rgba(5, 8, 17, 0)');
         }
         
-        ctx.fillStyle = flashGrad;
+        ctx.fillStyle = bloomGrad;
         ctx.fillRect(0, 0, w, h);
       }
       
-      if (frame < 80) {
+      if (frame < maxFrames) {
         raf = requestAnimationFrame(animate);
       } else {
         if (onComplete) onComplete();

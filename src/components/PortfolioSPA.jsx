@@ -278,10 +278,10 @@ export default function PortfolioSPA({ isAdmin = false, onLogout }) {
 
       <motion.div 
         className="stellar-main stellar-main--full" 
-        style={{ overflow: 'hidden' }}
-        initial={{ scale: 0.88, opacity: 0, filter: 'blur(10px)' }}
+        style={{ overflow: 'hidden', transformOrigin: 'center 48%' }}
+        initial={{ scale: 0.04, opacity: 0, filter: 'blur(14px)' }}
         animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.35, ease: [0.16, 1, 0.3, 1] }}
       >
         <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div

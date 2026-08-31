@@ -198,14 +198,18 @@ export default function StellarCryoLoader({
     isWarpingRef.current = true;
     setIsWarping(true);
 
-    // Let the canvas warp sequence execute for 1800ms, then hand over smoothly to arrival
+    // Warp sequence:
+    // 1. First ~600ms: Swift acceleration into warp + HUD zooms in to center
+    // 2. 600ms to 2000ms: Gradual deceleration (viewer reaching closer to destination)
+    // 3. At 1900ms (warp almost done): Fade out loader overlay
+    // 4. At 2200ms: Hand over to homepage zoom-in from smallest scale
     setTimeout(() => {
       setFadingOut(true);
       setTimeout(() => {
         setExited(true);
         onExited?.();
-      }, 400);
-    }, 1800);
+      }, 350);
+    }, 1900);
   }, [isReadyToEnter, onExited]);
 
   // Global keydown listener for "Press any key to enter"
@@ -332,9 +336,26 @@ export default function StellarCryoLoader({
       const theme = getTheme();
       const palette = PALETTES[theme] || PALETTES.dark;
 
-      // ── Handle Warp Zoom Velocity ──
+      // ── Handle Warp Zoom Velocity with Gradual Deceleration ──
+      let currentWarpSpeed = 0;
+      let streakFactor = 0;
+
       if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.015);
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.0075);
+        const p = warpProgressRef.current;
+
+        if (p < 0.22) {
+          // 1. Initial swift acceleration into warp
+          const accel = p / 0.22;
+          currentWarpSpeed = Math.sin(accel * (Math.PI / 2)) * 46;
+          streakFactor = accel;
+        } else {
+          // 2. Gradual deceleration — reaching closer to destination
+          const decel = (p - 0.22) / 0.78;
+          const decelCurve = Math.pow(1 - decel, 2.2);
+          currentWarpSpeed = decelCurve * 46 + 0.6;
+          streakFactor = decelCurve;
+        }
       }
 
       ctx.clearRect(0, 0, w, h);
@@ -342,7 +363,6 @@ export default function StellarCryoLoader({
       const cx = w * 0.5;
       const cy = h * 0.48;
       const warp = warpProgressRef.current;
-      const warpSpeedFactor = Math.pow(warp, 2.8) * 45;
 
       // ── 1. Draw Nebula Background Clouds ──
       for (const neb of nebulae) {
@@ -582,26 +602,32 @@ export default function StellarCryoLoader({
           opacity = Math.min(1, opacity + glowEased * 0.85);
         }
 
-        // ── If Warping: Stretch into Hyper-Speed Radial Light Beams ──
-        if (isWarpingRef.current && warp > 0) {
+        // ── If Warping: Stretch into Hyper-Speed Radial Light Beams with Deceleration ──
+        if (isWarpingRef.current && warpProgressRef.current > 0.01) {
           const dx = p.x - cx;
           const dy = p.y - cy;
           const dist = Math.hypot(dx, dy) || 1;
           const angle = Math.atan2(dy, dx);
-          const stretchLength = (dist * 0.12 + 10) * warpSpeedFactor;
+          const stretchLength = (dist * 0.08 + 8) * (streakFactor * 1.5 + 0.1);
 
           const prevX = p.x;
           const prevY = p.y;
-          p.x += Math.cos(angle) * (warpSpeedFactor * (dist / 200 + 0.5));
-          p.y += Math.sin(angle) * (warpSpeedFactor * (dist / 200 + 0.5));
+          p.x += Math.cos(angle) * (currentWarpSpeed * (dist / 220 + 0.4));
+          p.y += Math.sin(angle) * (currentWarpSpeed * (dist / 220 + 0.4));
 
           const streakGrad = ctx.createLinearGradient(prevX, prevY, p.x, p.y);
-          streakGrad.addColorStop(0, palette.starGlow + '0)');
-          streakGrad.addColorStop(0.5, palette.coreColor);
-          streakGrad.addColorStop(1, '#ffffff');
+          if (theme === 'light') {
+            streakGrad.addColorStop(0, 'rgba(2, 132, 199, 0)');
+            streakGrad.addColorStop(0.5, `rgba(14, 165, 233, ${(0.4 + streakFactor * 0.5).toFixed(2)})`);
+            streakGrad.addColorStop(1, '#0284C7');
+          } else {
+            streakGrad.addColorStop(0, palette.starGlow + '0)');
+            streakGrad.addColorStop(0.5, palette.starGlow + `${(0.4 + streakFactor * 0.5).toFixed(2)})`);
+            streakGrad.addColorStop(1, '#ffffff');
+          }
 
           ctx.strokeStyle = streakGrad;
-          ctx.lineWidth = Math.max(1.5, p.size * (1 + warp * 0.8));
+          ctx.lineWidth = Math.max(1.2, p.size * (0.8 + streakFactor * 0.8));
           ctx.beginPath();
           ctx.moveTo(prevX, prevY);
           ctx.lineTo(p.x + Math.cos(angle) * stretchLength, p.y + Math.sin(angle) * stretchLength);

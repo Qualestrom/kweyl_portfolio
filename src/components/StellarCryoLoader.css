@@ -96,15 +96,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Warp Exit Transition for HUD */
+/* Warp Exit: Loading screen HUD fully zooms in towards the center */
 .genshin-bottom-hud.hud-warp-exit {
-  transform: scale(2.8) translateY(30px);
+  transform: scale(0.08) translateY(-80px);
   opacity: 0;
-  filter: blur(12px);
+  filter: blur(8px);
   pointer-events: none;
-  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.7s ease;
+  transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.65s ease;
 }
 
 /* ─── Elemental Glyphs Row (Icon Only, Centered) ──────────────────────────── */

@@ -76,27 +76,6 @@ export default function WarpArrivalOverlay({ onComplete }) {
         ctx.stroke();
       }
       
-      // Initial central hyperspace bloom fading out
-      const bloomProgress = Math.max(0, 1 - frame / 28);
-      if (bloomProgress > 0) {
-        const maxR = Math.hypot(w, h) * 0.9;
-        const bloomGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * bloomProgress);
-        
-        if (isLight) {
-          bloomGrad.addColorStop(0, `rgba(255, 255, 255, ${bloomProgress * 0.85})`);
-          bloomGrad.addColorStop(0.4, `rgba(186, 230, 253, ${bloomProgress * 0.6})`);
-          bloomGrad.addColorStop(1, 'rgba(244, 247, 251, 0)');
-        } else {
-          bloomGrad.addColorStop(0, `rgba(103, 232, 249, ${bloomProgress * 0.65})`);
-          bloomGrad.addColorStop(0.3, `rgba(34, 211, 238, ${bloomProgress * 0.45})`);
-          bloomGrad.addColorStop(0.7, `rgba(11, 19, 43, ${bloomProgress * 0.7})`);
-          bloomGrad.addColorStop(1, 'rgba(5, 8, 17, 0)');
-        }
-        
-        ctx.fillStyle = bloomGrad;
-        ctx.fillRect(0, 0, w, h);
-      }
-      
       if (frame < maxFrames) {
         raf = requestAnimationFrame(animate);
       } else {

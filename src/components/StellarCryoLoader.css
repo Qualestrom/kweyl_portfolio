@@ -32,6 +32,15 @@
   cursor: pointer;
 }
 
+.genshin-loader-overlay.is-warping {
+  transform: scale(3) translateZ(0);
+  opacity: 0;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center 48%;
+  pointer-events: none;
+}
+
 .genshin-loader-overlay.fade-out {
   opacity: 0;
   visibility: hidden;
@@ -109,28 +118,6 @@
   padding: 6px 12px;
 }
 
-/* Connector track line behind icons */
-.genshin-elemental-track {
-  position: absolute;
-  top: 24px;
-  left: 28px;
-  right: 28px;
-  height: 1.5px;
-  background: rgba(255, 255, 255, 0.08);
-  z-index: 1;
-}
-
-[data-theme='light'] .genshin-elemental-track {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.genshin-elemental-track-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #22D3EE, #FBBF24, #34D399, #A78BFA, #38BDF8);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
-  transition: width 0.25s ease-out;
-}
-
 /* Individual Icon Node */
 .genshin-element-node {
   position: relative;
@@ -142,27 +129,6 @@
   cursor: default;
 }
 
-.genshin-element-icon-wrap {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-[data-theme='light'] .genshin-element-icon-wrap {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
 .genshin-element-svg {
   color: rgba(255, 255, 255, 0.3);
   transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
@@ -170,15 +136,6 @@
 
 [data-theme='light'] .genshin-element-svg {
   color: rgba(0, 0, 0, 0.28);
-}
-
-.genshin-element-aura {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s ease;
 }
 
 .genshin-element-label {
@@ -196,23 +153,15 @@
 }
 
 /* ─── Active / Lit State when progress passes threshold ─── */
-.genshin-element-node.lit .genshin-element-icon-wrap {
-  border-color: var(--element-color);
-  background: var(--element-bg, rgba(34, 211, 238, 0.18));
-  box-shadow: 0 0 20px var(--element-glow),
-              inset 0 0 10px var(--element-glow),
-              0 6px 18px rgba(0, 0, 0, 0.5);
+.genshin-element-node.lit .genshin-element-svg {
+  color: #22D3EE;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.8));
   animation: element-ignite 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.genshin-element-node.lit .genshin-element-svg {
-  color: var(--element-color);
-  filter: drop-shadow(0 0 8px var(--element-glow));
-}
-
 .genshin-element-node.lit .genshin-element-label {
-  color: var(--element-color);
-  text-shadow: 0 0 8px var(--element-glow);
+  color: #22D3EE;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
   font-weight: 700;
 }
 
@@ -430,20 +379,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Hyper-Space Warp Celestial Bloom / Whiteout Flash ───────────────────── */
-.genshin-warp-flash {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-  opacity: 0;
-  background: radial-gradient(circle at 50% 48%, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 35%, rgba(34, 211, 238, 0.8) 75%, rgba(14, 165, 233, 0.4) 100%);
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.genshin-warp-flash.active {
-  opacity: 1;
-}
 
 /* ─── Responsive Layout ───────────────────────────────────────────────────── */
 @media (max-width: 640px) {
@@ -459,25 +394,14 @@
     padding: 4px 6px;
   }
 
-  .genshin-element-icon-wrap {
-    width: 36px;
-    height: 36px;
-  }
-
   .genshin-element-svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
   }
 
   .genshin-element-label {
     font-size: 0.56rem;
     letter-spacing: 1px;
-  }
-
-  .genshin-elemental-track {
-    top: 20px;
-    left: 20px;
-    right: 20px;
   }
 
   .genshin-progress-container {

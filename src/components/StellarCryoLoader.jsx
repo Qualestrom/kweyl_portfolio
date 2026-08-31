@@ -24,9 +24,6 @@ const SECTION_GLYPHS = [
     elementName: 'ORIGIN',
     icon: Compass,
     threshold: 12,
-    color: '#22D3EE', // Cryo / Cyan
-    glow: 'rgba(34, 211, 238, 0.7)',
-    bgGlow: 'rgba(34, 211, 238, 0.18)',
   },
   {
     id: 'about',
@@ -34,9 +31,6 @@ const SECTION_GLYPHS = [
     elementName: 'PERSONA',
     icon: User,
     threshold: 32,
-    color: '#FBBF24', // Geo / Amber
-    glow: 'rgba(251, 191, 36, 0.7)',
-    bgGlow: 'rgba(251, 191, 36, 0.18)',
   },
   {
     id: 'projects',
@@ -44,9 +38,6 @@ const SECTION_GLYPHS = [
     elementName: 'CREATIONS',
     icon: FolderGit2,
     threshold: 52,
-    color: '#34D399', // Dendro / Emerald
-    glow: 'rgba(52, 211, 153, 0.7)',
-    bgGlow: 'rgba(52, 211, 153, 0.18)',
   },
   {
     id: 'certs',
@@ -54,9 +45,6 @@ const SECTION_GLYPHS = [
     elementName: 'MASTERY',
     icon: Award,
     threshold: 72,
-    color: '#A78BFA', // Electro / Amethyst
-    glow: 'rgba(167, 139, 250, 0.7)',
-    bgGlow: 'rgba(167, 139, 250, 0.18)',
   },
   {
     id: 'contact',
@@ -64,9 +52,6 @@ const SECTION_GLYPHS = [
     elementName: 'SIGNAL',
     icon: Send,
     threshold: 92,
-    color: '#38BDF8', // Hydro / Sky Blue
-    glow: 'rgba(56, 189, 248, 0.7)',
-    bgGlow: 'rgba(56, 189, 248, 0.18)',
   },
 ];
 
@@ -708,14 +693,6 @@ export default function StellarCryoLoader({
         
         {/* ─── 5 Elemental Section Glyphs (Icon-Only Row) ─── */}
         <div className="genshin-elemental-row">
-          {/* Connector track line behind icons */}
-          <div className="genshin-elemental-track">
-            <div
-              className="genshin-elemental-track-fill"
-              style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
-            />
-          </div>
-
           {SECTION_GLYPHS.map((glyph) => {
             const isLit = percent >= glyph.threshold;
             const Icon = glyph.icon;
@@ -724,17 +701,9 @@ export default function StellarCryoLoader({
               <div
                 key={glyph.id}
                 className={`genshin-element-node ${isLit ? 'lit' : ''}`}
-                style={{
-                  '--element-color': glyph.color,
-                  '--element-glow': glyph.glow,
-                  '--element-bg': glyph.bgGlow,
-                }}
                 title={glyph.label}
               >
-                <div className="genshin-element-icon-wrap">
-                  <Icon size={20} className="genshin-element-svg" />
-                  <div className="genshin-element-aura" />
-                </div>
+                <Icon size={24} className="genshin-element-svg" />
                 <span className="genshin-element-label">{glyph.elementName}</span>
               </div>
             );
@@ -783,9 +752,6 @@ export default function StellarCryoLoader({
         </div>
 
       </div>
-
-      {/* ─── Full-Screen Warp Zoom Celestial Flash / Portal Bloom ─── */}
-      <div className={`genshin-warp-flash ${isWarping ? 'active' : ''}`} />
     </div>
   );
 }

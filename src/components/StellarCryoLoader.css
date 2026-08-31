@@ -1,5 +1,6 @@
 /* ============================================================
    StellarCryoLoader — Genshin Impact Inspired Celestial Loading Screen
+   Layout: Bottom-Centered Spatial HUD over Living Starfield Canvas
    Theme-aware: adapts to [data-theme='dark'] / [data-theme='light']
    ============================================================ */
 
@@ -10,20 +11,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   background: #050811;
   background: radial-gradient(circle at 50% 45%, #0B132B 0%, #050811 75%, #020408 100%);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 1;
   visibility: visible;
   overflow: hidden;
   user-select: none;
+  touch-action: manipulation;
 }
 
 [data-theme='light'] .genshin-loader-overlay {
   background: #F4F7FB;
   background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #EDF2F7 70%, #E2E8F0 100%);
+}
+
+.genshin-loader-overlay.is-ready {
+  cursor: pointer;
 }
 
 .genshin-loader-overlay.fade-out {
@@ -32,7 +38,7 @@
   pointer-events: none;
 }
 
-/* Canvas fills the entire overlay behind content */
+/* ─── Living Celestial Canvas ─────────────────────────────────────────────── */
 .genshin-loader-canvas {
   position: absolute;
   inset: 0;
@@ -45,241 +51,204 @@
 /* Ambient Radial Glow Orb */
 .genshin-loader-ambient-glow {
   position: absolute;
-  top: 45%;
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.08) 0%, rgba(56, 189, 248, 0.03) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.09) 0%, rgba(56, 189, 248, 0.04) 40%, transparent 70%);
   pointer-events: none;
   z-index: 2;
-  filter: blur(40px);
+  filter: blur(50px);
 }
 
 [data-theme='light'] .genshin-loader-ambient-glow {
-  background: radial-gradient(circle, rgba(8, 145, 178, 0.08) 0%, rgba(14, 165, 233, 0.04) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(8, 145, 178, 0.09) 0%, rgba(14, 165, 233, 0.04) 40%, transparent 70%);
 }
 
-/* ─── Main Content Container ──────────────────────────────────────────────── */
-.genshin-loader-container {
+/* ─── Centered Bottom HUD (Genshin Impact Layout) ─────────────────────────── */
+.genshin-bottom-hud {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 680px;
-  padding: 24px 20px;
+  max-width: 620px;
+  padding: 0 24px clamp(32px, 5vh, 52px) 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 36px;
-  animation: genshin-fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  justify-content: flex-end;
+  gap: 16px;
+  animation: genshin-hud-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s ease;
 }
 
-@keyframes genshin-fade-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes genshin-hud-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Top Header & Brand ─────────────────────────────────────────────────── */
-.genshin-loader-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+/* Warp Exit Transition for HUD */
+.genshin-bottom-hud.hud-warp-exit {
+  transform: translateY(28px) scale(0.95);
+  opacity: 0;
+  filter: blur(8px);
+  pointer-events: none;
 }
 
-.genshin-crest-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--cryo-accent, #22D3EE);
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
-}
-
-[data-theme='light'] .genshin-crest-badge {
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #0891B2;
-}
-
-.genshin-crest-star {
-  animation: genshin-star-spin 6s linear infinite;
-}
-
-@keyframes genshin-star-spin {
-  0% { transform: rotate(0deg) scale(0.9); opacity: 0.7; }
-  50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
-  100% { transform: rotate(360deg) scale(0.9); opacity: 0.7; }
-}
-
-.genshin-brand-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 4px;
-  color: #F8FAFC;
-  text-shadow: 0 2px 14px rgba(0,0,0,0.6);
-  margin: 0;
-}
-
-[data-theme='light'] .genshin-brand-title {
-  color: #0F172A;
-  text-shadow: none;
-}
-
-/* ─── Center Elemental Glyph Array (Signature Genshin 5 Elements) ────────── */
-.genshin-glyphs-array {
+/* ─── Elemental Glyphs Row (Icon Only, Centered) ──────────────────────────── */
+.genshin-elemental-row {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 540px;
-  padding: 10px 16px;
+  max-width: 440px;
+  padding: 6px 12px;
 }
 
-/* Background Connecting Track Line */
-.genshin-glyphs-track {
+/* Connector track line behind icons */
+.genshin-elemental-track {
   position: absolute;
-  top: 36px;
-  left: 36px;
-  right: 36px;
-  height: 2px;
+  top: 24px;
+  left: 28px;
+  right: 28px;
+  height: 1.5px;
   background: rgba(255, 255, 255, 0.08);
   z-index: 1;
 }
 
-[data-theme='light'] .genshin-glyphs-track {
+[data-theme='light'] .genshin-elemental-track {
   background: rgba(0, 0, 0, 0.08);
 }
 
-.genshin-glyphs-track-fill {
+.genshin-elemental-track-fill {
   height: 100%;
   background: linear-gradient(90deg, #22D3EE, #FBBF24, #34D399, #A78BFA, #38BDF8);
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
-  transition: width 0.3s ease-out;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+  transition: width 0.25s ease-out;
 }
 
-/* Individual Glyph Node */
-.genshin-glyph-node {
+/* Individual Icon Node */
+.genshin-element-node {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   cursor: default;
 }
 
-/* Outer Diamond Rune Plate (Genshin Elemental Icon Shape) */
-.genshin-glyph-diamond {
-  width: 52px;
-  height: 52px;
+.genshin-element-icon-wrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: rotate(45deg);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.7);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme='light'] .genshin-glyph-diamond {
-  background: rgba(255, 255, 255, 0.9);
+[data-theme='light'] .genshin-element-icon-wrap {
+  background: rgba(255, 255, 255, 0.85);
   border: 1.5px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-/* Inner Counter-Rotated Card for Icon */
-.genshin-glyph-inner-card {
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.25);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+.genshin-element-svg {
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme='light'] .genshin-glyph-inner-card {
-  color: rgba(0, 0, 0, 0.25);
+[data-theme='light'] .genshin-element-svg {
+  color: rgba(0, 0, 0, 0.28);
 }
 
-/* Label below the rune plate */
-.genshin-glyph-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.genshin-element-aura {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.genshin-glyph-name {
+.genshin-element-label {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
-  transition: all 0.4s ease;
+  transition: all 0.35s ease;
 }
 
-[data-theme='light'] .genshin-glyph-name {
+[data-theme='light'] .genshin-element-label {
   color: rgba(0, 0, 0, 0.35);
 }
 
-/* ─── Active / Lit State when progress passes threshold ──────────────────── */
-.genshin-glyph-node.lit .genshin-glyph-diamond {
-  border-color: var(--glyph-color);
-  background: var(--glyph-bg, rgba(34, 211, 238, 0.15));
-  box-shadow: 0 0 24px var(--glyph-glow),
-              inset 0 0 14px var(--glyph-glow),
-              0 8px 24px rgba(0, 0, 0, 0.6);
-  animation: genshin-glyph-ignite 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ─── Active / Lit State when progress passes threshold ─── */
+.genshin-element-node.lit .genshin-element-icon-wrap {
+  border-color: var(--element-color);
+  background: var(--element-bg, rgba(34, 211, 238, 0.18));
+  box-shadow: 0 0 20px var(--element-glow),
+              inset 0 0 10px var(--element-glow),
+              0 6px 18px rgba(0, 0, 0, 0.5);
+  animation: element-ignite 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.genshin-glyph-node.lit .genshin-glyph-inner-card {
-  color: var(--glyph-color);
-  filter: drop-shadow(0 0 8px var(--glyph-glow));
+.genshin-element-node.lit .genshin-element-svg {
+  color: var(--element-color);
+  filter: drop-shadow(0 0 8px var(--element-glow));
 }
 
-.genshin-glyph-node.lit .genshin-glyph-name {
-  color: var(--glyph-color);
-  text-shadow: 0 0 10px var(--glyph-glow);
+.genshin-element-node.lit .genshin-element-label {
+  color: var(--element-color);
+  text-shadow: 0 0 8px var(--element-glow);
   font-weight: 700;
 }
 
-@keyframes genshin-glyph-ignite {
-  0% { transform: rotate(45deg) scale(0.9); }
-  50% { transform: rotate(45deg) scale(1.18); }
-  100% { transform: rotate(45deg) scale(1); }
+@keyframes element-ignite {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
-/* ─── Glowing Progress Bar & Indicator ───────────────────────────────────── */
-.genshin-progress-section {
+/* ─── Center Stage: Progress Bar & Status Text or Ready Prompt ────────────── */
+.genshin-bottom-center-stage {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  min-height: 52px;
+}
+
+/* ─── Progress Bar Wrap ─── */
+.genshin-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
 }
 
 .genshin-progress-bar-track {
   position: relative;
   width: 100%;
-  height: 4px;
+  height: 3.5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
   overflow: visible;
 }
 
@@ -293,22 +262,22 @@
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, #0891B2, #22D3EE, #A78BFA);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.8),
-              0 0 28px rgba(167, 139, 250, 0.4);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.8),
+              0 0 24px rgba(167, 139, 250, 0.4);
   transition: width 0.15s ease-out;
 }
 
-/* Spark at the head of progress bar */
-.genshin-progress-head-spark {
+/* Primogem spark head at leading edge */
+.genshin-progress-spark-head {
   position: absolute;
   right: -5px;
   top: 50%;
   transform: translateY(-50%) rotate(45deg);
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
   background: #FFFFFF;
-  box-shadow: 0 0 12px #FFFFFF, 0 0 20px #22D3EE;
+  box-shadow: 0 0 10px #FFFFFF, 0 0 18px #22D3EE;
   animation: spark-pulse 1.2s ease-in-out infinite alternate;
 }
 
@@ -317,124 +286,224 @@
   100% { transform: translateY(-50%) rotate(45deg) scale(1.25); opacity: 1; }
 }
 
-/* Percentage Number Row */
-.genshin-percent-row {
+/* Dynamic Status Row (Replacing numeric %) */
+.genshin-status-row {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
-  font-family: 'Outfit', sans-serif;
-  color: #F8FAFC;
-  user-select: none;
-}
-
-[data-theme='light'] .genshin-percent-row {
-  color: #0F172A;
-}
-
-.genshin-percent-num {
-  font-size: 2.2rem;
-  font-weight: 300;
-  letter-spacing: 1px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.genshin-percent-unit {
-  font-size: 0.95rem;
-  font-weight: 400;
-  opacity: 0.6;
-}
-
-/* ─── Rotating Lore & Tips Card (Genshin Style) ──────────────────────────── */
-.genshin-lore-card {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  max-width: 480px;
-  text-align: center;
-  min-height: 74px;
   justify-content: center;
+  text-align: center;
 }
 
-[data-theme='light'] .genshin-lore-card {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-
-.genshin-lore-badge {
-  display: inline-block;
+.genshin-status-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 2.2px;
   text-transform: uppercase;
-  color: var(--cryo-accent, #22D3EE);
-  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+  animation: status-text-fade 0.35s ease-out;
 }
 
-[data-theme='light'] .genshin-lore-badge {
+[data-theme='light'] .genshin-status-text {
   color: #0891B2;
+  text-shadow: none;
 }
 
-.genshin-lore-text {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 400;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.75);
-  margin: 0;
-  animation: lore-text-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-[data-theme='light'] .genshin-lore-text {
-  color: rgba(15, 23, 42, 0.75);
-}
-
-@keyframes lore-text-fade {
-  from { opacity: 0; transform: translateY(6px); }
+@keyframes status-text-fade {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Responsive Adaptations ──────────────────────────────────────────────── */
+/* ─── Genshin "Press to Start" Prompt ─────────────────────────────────────── */
+.genshin-enter-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 16px;
+  border-radius: 999px;
+  animation: enter-prompt-appear 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.genshin-enter-prompt:hover {
+  transform: scale(1.04);
+}
+
+@keyframes enter-prompt-appear {
+  0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.genshin-enter-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  color: #F8FAFC;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.9),
+               0 0 28px rgba(34, 211, 238, 0.7);
+  animation: enter-text-pulse 2.2s ease-in-out infinite;
+}
+
+[data-theme='light'] .genshin-enter-banner {
+  color: #0F172A;
+  text-shadow: 0 0 16px rgba(14, 165, 233, 0.4);
+}
+
+.genshin-enter-star {
+  color: var(--cryo-accent, #22D3EE);
+  filter: drop-shadow(0 0 8px #22D3EE);
+  animation: star-spin-slow 6s linear infinite;
+}
+
+@keyframes star-spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes enter-text-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(0.99); }
+  50% { opacity: 1; transform: scale(1.01); }
+}
+
+.genshin-enter-subtext {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='light'] .genshin-enter-subtext {
+  color: rgba(15, 23, 42, 0.5);
+}
+
+/* ─── Rotating Lore & Tips Row ────────────────────────────────────────────── */
+.genshin-tip-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  max-width: 560px;
+  padding: 0 12px;
+}
+
+.genshin-tip-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--cryo-accent, #22D3EE);
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+[data-theme='light'] .genshin-tip-tag {
+  color: #0891B2;
+}
+
+.genshin-tip-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  animation: tip-text-fade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme='light'] .genshin-tip-text {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+@keyframes tip-text-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Hyper-Space Warp Celestial Bloom / Whiteout Flash ───────────────────── */
+.genshin-warp-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 48%, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 35%, rgba(34, 211, 238, 0.8) 75%, rgba(14, 165, 233, 0.4) 100%);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.genshin-warp-flash.active {
+  opacity: 1;
+}
+
+/* ─── Responsive Layout ───────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .genshin-glyphs-array {
-    padding: 6px 8px;
+  .genshin-bottom-hud {
+    padding-bottom: 24px;
+    padding-left: 14px;
+    padding-right: 14px;
+    gap: 12px;
   }
-  .genshin-glyph-diamond {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+
+  .genshin-elemental-row {
+    max-width: 100%;
+    padding: 4px 6px;
   }
-  .genshin-glyph-inner-card svg {
-    width: 17px;
-    height: 17px;
+
+  .genshin-element-icon-wrap {
+    width: 36px;
+    height: 36px;
   }
-  .genshin-glyph-name {
-    font-size: 0.62rem;
+
+  .genshin-element-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .genshin-element-label {
+    font-size: 0.56rem;
     letter-spacing: 1px;
   }
-  .genshin-glyphs-track {
-    top: 30px;
-    left: 24px;
-    right: 24px;
+
+  .genshin-elemental-track {
+    top: 20px;
+    left: 20px;
+    right: 20px;
   }
-  .genshin-brand-title {
-    font-size: 1.15rem;
-    letter-spacing: 3px;
+
+  .genshin-progress-container {
+    max-width: 100%;
   }
-  .genshin-percent-num {
-    font-size: 1.8rem;
+
+  .genshin-status-text {
+    font-size: 0.66rem;
+    letter-spacing: 1.5px;
   }
-  .genshin-lore-card {
-    padding: 10px 16px;
-    max-width: 90vw;
+
+  .genshin-enter-banner {
+    font-size: 0.84rem;
+    letter-spacing: 2.5px;
+  }
+
+  .genshin-enter-subtext {
+    font-size: 0.62rem;
+  }
+
+  .genshin-tip-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .genshin-tip-text {
+    font-size: 0.7rem;
   }
 }

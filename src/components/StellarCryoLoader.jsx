@@ -199,20 +199,18 @@ export default function StellarCryoLoader({
     setIsWarping(true);
 
     // Warp sequence:
-    // 1. First ~600ms: Swift acceleration into warp + HUD zooms in to center
-    // 2. 600ms to 1400ms: Gradual deceleration (viewer reaching closer to destination)
-    // 3. At 1400ms (warp almost done): Loader begins forward zoom-out (700ms duration)
-    // 4. At 1850ms: Hand over to homepage zoom-in (delayed entry, overlapping with end of warp)
-    // 5. At 2150ms: Loader fully unmounts
+    // 1. Loader scales to 500% (CSS handles this via .is-warping)
+    // 2. Warp streaks happen in canvas and decelerate.
+    // 3. At 1500ms, warp streaks complete and canvas blooms white.
+    // 4. At 1700ms, fade out loader and trigger homepage zoom in (split-second delay).
+    
     setTimeout(() => {
       setFadingOut(true);
-      setTimeout(() => {
-        onExited?.();
-      }, 450); // 1400 + 450 = 1850ms
+      onExited?.();
       setTimeout(() => {
         setExited(true);
-      }, 750); // 1400 + 750 = 2150ms
-    }, 1400);
+      }, 700);
+    }, 1700);
   }, [isReadyToEnter, onExited]);
 
   // Global keydown listener for "Press any key to enter"
@@ -344,7 +342,7 @@ export default function StellarCryoLoader({
       let streakFactor = 0;
 
       if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.0075);
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.011);
         const p = warpProgressRef.current;
 
         if (p < 0.22) {

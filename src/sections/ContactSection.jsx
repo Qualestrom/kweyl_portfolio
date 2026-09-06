@@ -55,8 +55,10 @@ export default function ContactSection({ config, isAdmin }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSending(true);
-    const subject = `Portfolio Contact from ${formData.name}`;
-    const body = `Name: ${formData.name}%0AEmail: ${formData.email}%0A%0AMessage:%0A${formData.message}`;
+    const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
+    const body = encodeURIComponent(
+      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+    );
     window.location.href = `mailto:chrislamera0408@gmail.com?subject=${subject}&body=${body}`;
     setTimeout(() => setIsSending(false), 1200);
   };

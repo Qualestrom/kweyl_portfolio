@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 export default function App() {
   const [appReady, setAppReady] = useState(false);
   const [loaderExited, setLoaderExited] = useState(false);
+  const [isWarping, setIsWarping] = useState(false);
 
   useEffect(() => {
     const minDelay = new Promise(resolve => setTimeout(resolve, 5000));
@@ -25,14 +26,16 @@ export default function App() {
       {!loaderExited && (
         <StellarCryoLoader
           isLoading={!appReady}
+          onWarpStart={() => setIsWarping(true)}
           onExited={() => {
             setLoaderExited(true);
+            setIsWarping(false);
           }}
         />
       )}
 
       {/* Persistent backgrounds — starfield + circuit constellation grid */}
-      <StellarBackground />
+      <StellarBackground isWarping={isWarping} />
       <InteractiveBackground />
 
       {/* Theme + Router shell */}

@@ -148,6 +148,7 @@ function drawFourPointStar(ctx, x, y, size, rotation) {
 export default function StellarCryoLoader({
   isLoading = true,
   onExited,
+  onWarpStart,
 }) {
   const canvasRef = useRef(null);
   const [percent, setPercent] = useState(0);
@@ -197,6 +198,7 @@ export default function StellarCryoLoader({
     if (!isReadyToEnter || isWarpingRef.current) return;
     isWarpingRef.current = true;
     setIsWarping(true);
+    onWarpStart?.();
 
     // Warp sequence:
     // 1. Star streaks accelerate radially then smoothly decelerate to vanishing point.
@@ -210,7 +212,7 @@ export default function StellarCryoLoader({
         setExited(true);
       }, 700);
     }, 1700);
-  }, [isReadyToEnter, onExited]);
+  }, [isReadyToEnter, onExited, onWarpStart]);
 
   // Global keydown listener for "Press any key to enter"
   useEffect(() => {
@@ -315,7 +317,7 @@ export default function StellarCryoLoader({
 
     // ── Alive "Connect-a-Dot" Constellation Spawner ──
     const spawnConstellation = () => {
-      if (constellations.length >= 4) return;
+      if (isWarpingRef.current || constellations.length >= 4) return;
       const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
       const c = spawnRealConstellation(w, h, rand, getStarColor);
 
@@ -400,11 +402,11 @@ export default function StellarCryoLoader({
       }
 
       // ── 3. Glow & Spawners ──
-      if (frame >= nextGlowFrame) {
+      if (frame >= nextGlowFrame && !isWarpingRef.current) {
         triggerStarGlow();
         nextGlowFrame = frame + rand(20, 50);
       }
-      if (frame >= nextConstellationFrame) {
+      if (frame >= nextConstellationFrame && !isWarpingRef.current) {
         spawnConstellation();
         nextConstellationFrame = frame + rand(70, 150);
       }
@@ -414,122 +416,129 @@ export default function StellarCryoLoader({
       }
 
       // ── 4. Draw Alive Connect-a-Dot Constellations ──
-      for (let ci = constellations.length - 1; ci >= 0; ci--) {
-        const c = constellations[ci];
+      if (isWarpingRef.current) {
+        // Immediately halt constellations and clear stationary stars/lines during hyper-warp
+        if (constellations.length > 0) {
+          constellations = [];
+        }
+      } else {
+        for (let ci = constellations.length - 1; ci >= 0; ci--) {
+          const c = constellations[ci];
 
-        if (c.phase === 'drawing') {
-          const currentEdge = c.edges[c.activeEdgeIdx];
-          if (currentEdge) {
-            currentEdge.drawn += c.drawSpeed;
-            if (currentEdge.drawn >= 1) {
-              currentEdge.drawn = 1;
-              // Node ignition ripple at target star
-              const targetStar = c.nodes[currentEdge.to];
-              if (targetStar) {
-                c.nodeFlashes.push({ x: targetStar.x, y: targetStar.y, r: 0, maxR: 24, alpha: 1 });
+          if (c.phase === 'drawing') {
+            const currentEdge = c.edges[c.activeEdgeIdx];
+            if (currentEdge) {
+              currentEdge.drawn += c.drawSpeed;
+              if (currentEdge.drawn >= 1) {
+                currentEdge.drawn = 1;
+                // Node ignition ripple at target star
+                const targetStar = c.nodes[currentEdge.to];
+                if (targetStar) {
+                  c.nodeFlashes.push({ x: targetStar.x, y: targetStar.y, r: 0, maxR: 24, alpha: 1 });
+                }
+                c.activeEdgeIdx++;
               }
-              c.activeEdgeIdx++;
+            } else {
+              c.phase = 'holding';
+              c.holdTimer = 0;
+              // Spawn an energy pulse
+              c.energyPulses.push({ edgeIdx: 0, t: 0, speed: 0.03 });
             }
-          } else {
-            c.phase = 'holding';
-            c.holdTimer = 0;
-            // Spawn an energy pulse
-            c.energyPulses.push({ edgeIdx: 0, t: 0, speed: 0.03 });
+          } else if (c.phase === 'holding') {
+            c.holdTimer++;
+            if (c.holdTimer >= c.holdDuration || isWarpingRef.current) {
+              c.phase = 'fading';
+            }
+          } else if (c.phase === 'fading') {
+            c.fadeAlpha -= 0.02;
+            if (c.fadeAlpha <= 0) {
+              constellations.splice(ci, 1);
+              continue;
+            }
           }
-        } else if (c.phase === 'holding') {
-          c.holdTimer++;
-          if (c.holdTimer >= c.holdDuration || isWarpingRef.current) {
-            c.phase = 'fading';
+
+          const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
+          
+          // Draw constellation nodes
+          for (let ni = 0; ni < c.nodes.length; ni++) {
+            const s = c.nodes[ni];
+            ctx.globalAlpha = Math.max(0.02, Math.min(1, masterAlpha * 0.8));
+            ctx.fillStyle = s.color;
+            s.rotation += s.rotationSpeed;
+            drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
           }
-        } else if (c.phase === 'fading') {
-          c.fadeAlpha -= 0.02;
-          if (c.fadeAlpha <= 0) {
-            constellations.splice(ci, 1);
-            continue;
-          }
-        }
 
-        const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
-        
-        // Draw constellation nodes
-        for (let ni = 0; ni < c.nodes.length; ni++) {
-          const s = c.nodes[ni];
-          ctx.globalAlpha = Math.max(0.02, Math.min(1, masterAlpha * 0.8));
-          ctx.fillStyle = s.color;
-          s.rotation += s.rotationSpeed;
-          drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
-        }
+          // Draw active connecting lines (Connect-a-Dot laser trace)
+          for (let ei = 0; ei < c.edges.length; ei++) {
+            const edge = c.edges[ei];
+            if (edge.drawn <= 0) continue;
 
-        // Draw active connecting lines (Connect-a-Dot laser trace)
-        for (let ei = 0; ei < c.edges.length; ei++) {
-          const edge = c.edges[ei];
-          if (edge.drawn <= 0) continue;
+            const sa = c.nodes[edge.from];
+            const sb = c.nodes[edge.to];
+            if (!sa || !sb) continue;
 
-          const sa = c.nodes[edge.from];
-          const sb = c.nodes[edge.to];
-          if (!sa || !sb) continue;
+            const targetX = sa.x + (sb.x - sa.x) * edge.drawn;
+            const targetY = sa.y + (sb.y - sa.y) * edge.drawn;
 
-          const targetX = sa.x + (sb.x - sa.x) * edge.drawn;
-          const targetY = sa.y + (sb.y - sa.y) * edge.drawn;
-
-          // Glowing laser beam
-          ctx.strokeStyle = palette.constellationLine + (masterAlpha * 0.45).toFixed(3) + ')';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(sa.x, sa.y);
-          ctx.lineTo(targetX, targetY);
-          ctx.stroke();
-
-          // Leading starlight head while drawing
-          if (edge.drawn < 1) {
-            ctx.fillStyle = palette.constellationPulse;
-            ctx.shadowColor = palette.constellationPulse;
-            ctx.shadowBlur = 10;
+            // Glowing laser beam
+            ctx.strokeStyle = palette.constellationLine + (masterAlpha * 0.45).toFixed(3) + ')';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.arc(targetX, targetY, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-          }
-        }
+            ctx.moveTo(sa.x, sa.y);
+            ctx.lineTo(targetX, targetY);
+            ctx.stroke();
 
-        // Draw Node Ripples
-        for (let fi = c.nodeFlashes.length - 1; fi >= 0; fi--) {
-          const fl = c.nodeFlashes[fi];
-          fl.r += 1.2;
-          fl.alpha = Math.max(0, 1 - fl.r / fl.maxR);
-          if (fl.alpha <= 0) {
-            c.nodeFlashes.splice(fi, 1);
-            continue;
-          }
-          ctx.strokeStyle = palette.starGlow + (fl.alpha * masterAlpha * 0.7).toFixed(3) + ')';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        // Draw Energy Pulses traveling along lines
-        for (let pi = c.energyPulses.length - 1; pi >= 0; pi--) {
-          const pulse = c.energyPulses[pi];
-          pulse.t += pulse.speed;
-          if (pulse.t >= 1) {
-            pulse.t = 0;
-            pulse.edgeIdx = (pulse.edgeIdx + 1) % c.edges.length;
-          }
-          const curEdge = c.edges[pulse.edgeIdx];
-          if (curEdge && curEdge.drawn >= 1) {
-            const sa = c.nodes[curEdge.from];
-            const sb = c.nodes[curEdge.to];
-            if (sa && sb) {
-              const px = sa.x + (sb.x - sa.x) * pulse.t;
-              const py = sa.y + (sb.y - sa.y) * pulse.t;
+            // Leading starlight head while drawing
+            if (edge.drawn < 1) {
               ctx.fillStyle = palette.constellationPulse;
               ctx.shadowColor = palette.constellationPulse;
-              ctx.shadowBlur = 8;
+              ctx.shadowBlur = 10;
               ctx.beginPath();
-              ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+              ctx.arc(targetX, targetY, 3, 0, Math.PI * 2);
               ctx.fill();
               ctx.shadowBlur = 0;
+            }
+          }
+
+          // Draw Node Ripples
+          for (let fi = c.nodeFlashes.length - 1; fi >= 0; fi--) {
+            const fl = c.nodeFlashes[fi];
+            fl.r += 1.2;
+            fl.alpha = Math.max(0, 1 - fl.r / fl.maxR);
+            if (fl.alpha <= 0) {
+              c.nodeFlashes.splice(fi, 1);
+              continue;
+            }
+            ctx.strokeStyle = palette.starGlow + (fl.alpha * masterAlpha * 0.7).toFixed(3) + ')';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Draw Energy Pulses traveling along lines
+          for (let pi = c.energyPulses.length - 1; pi >= 0; pi--) {
+            const pulse = c.energyPulses[pi];
+            pulse.t += pulse.speed;
+            if (pulse.t >= 1) {
+              pulse.t = 0;
+              pulse.edgeIdx = (pulse.edgeIdx + 1) % c.edges.length;
+            }
+            const curEdge = c.edges[pulse.edgeIdx];
+            if (curEdge && curEdge.drawn >= 1) {
+              const sa = c.nodes[curEdge.from];
+              const sb = c.nodes[curEdge.to];
+              if (sa && sb) {
+                const px = sa.x + (sb.x - sa.x) * pulse.t;
+                const py = sa.y + (sb.y - sa.y) * pulse.t;
+                ctx.fillStyle = palette.constellationPulse;
+                ctx.shadowColor = palette.constellationPulse;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+              }
             }
           }
         }

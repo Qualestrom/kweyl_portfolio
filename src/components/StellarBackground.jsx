@@ -85,8 +85,13 @@ const MAX_SIMULTANEOUS_GLOWS = 6;
 
 
 
-export default function StellarBackground() {
+export default function StellarBackground({ isWarping = false }) {
   const canvasRef = useRef(null);
+  const isWarpingRef = useRef(isWarping);
+
+  useEffect(() => {
+    isWarpingRef.current = isWarping;
+  }, [isWarping]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -140,7 +145,7 @@ export default function StellarBackground() {
     };
 
     const spawnConstellation = () => {
-      if (constellations.length >= 3) return; // Max 3 at a time in background
+      if (isWarpingRef.current || constellations.length >= 3) return; // Max 3 at a time in background
       const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
       const c = spawnRealConstellation(w, h, rand, getStarColor);
       
@@ -176,94 +181,100 @@ export default function StellarBackground() {
       }
 
       // Spawn constellations
-      if (frame >= nextConstellationFrame) {
+      if (frame >= nextConstellationFrame && !isWarpingRef.current) {
         spawnConstellation();
         nextConstellationFrame = frame + rand(150, 400); // Between 2.5s and ~6.5s
       }
 
       // ── Update & draw constellation lines ──
-      for (let ci = constellations.length - 1; ci >= 0; ci--) {
-        const c = constellations[ci];
-
-        if (c.phase === 'rising') {
-          c.progress += c.riseSpeed;
-          if (c.progress >= 1) {
-            c.progress = 1;
-            c.phase = 'holding';
-            c.holdTimer = 0;
-          }
-        } else if (c.phase === 'holding') {
-          c.holdTimer++;
-          if (c.holdTimer >= c.holdDuration) {
-            c.phase = 'falling';
-          }
-        } else if (c.phase === 'falling') {
-          c.progress -= c.fallSpeed;
-          if (c.progress <= 0) {
-            constellations.splice(ci, 1);
-            continue;
-          }
+      if (isWarpingRef.current) {
+        if (constellations.length > 0) {
+          constellations = [];
         }
+      } else {
+        for (let ci = constellations.length - 1; ci >= 0; ci--) {
+          const c = constellations[ci];
 
-        const alpha = easeInOutQuad(c.progress);
-        const baseOpacity = c.isNearMouse ? 0.45 : 0.25;
-        
-        // Draw edges sequentially (animating the line drawing)
-        // c.progress (0 to 1) maps to the total length of the edges
-        const totalEdges = c.edges.length;
-        const edgeProgressRaw = c.phase === 'rising' ? c.progress * totalEdges : totalEdges;
-
-        ctx.strokeStyle = palette.glowHalo.replace(/[\d.]+\)$/g, `${(alpha * baseOpacity).toFixed(3)})`);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        
-        for (let ei = 0; ei < totalEdges; ei++) {
-          if (ei > Math.floor(edgeProgressRaw)) continue; // Not started drawing this edge yet
-          
-          const edge = c.edges[ei];
-          const sa = c.nodes[edge.from];
-          const sb = c.nodes[edge.to];
-          if (!sa || !sb) continue;
-
-          ctx.moveTo(sa.x, sa.y);
-          
-          if (ei === Math.floor(edgeProgressRaw) && c.phase === 'rising') {
-             // Partially draw this specific edge
-             const edgeAlpha = edgeProgressRaw - Math.floor(edgeProgressRaw);
-             const currentX = sa.x + (sb.x - sa.x) * easeInOutQuad(edgeAlpha);
-             const currentY = sa.y + (sb.y - sa.y) * easeInOutQuad(edgeAlpha);
-             ctx.lineTo(currentX, currentY);
-          } else {
-             // Fully draw completed edges
-             ctx.lineTo(sb.x, sb.y);
+          if (c.phase === 'rising') {
+            c.progress += c.riseSpeed;
+            if (c.progress >= 1) {
+              c.progress = 1;
+              c.phase = 'holding';
+              c.holdTimer = 0;
+            }
+          } else if (c.phase === 'holding') {
+            c.holdTimer++;
+            if (c.holdTimer >= c.holdDuration) {
+              c.phase = 'falling';
+            }
+          } else if (c.phase === 'falling') {
+            c.progress -= c.fallSpeed;
+            if (c.progress <= 0) {
+              constellations.splice(ci, 1);
+              continue;
+            }
           }
-        }
-        ctx.stroke();
 
-        // Draw node highlights
-        for (let ni = 0; ni < c.nodes.length; ni++) {
-          // Stagger node highlight appearance with the line drawing
-          const nodeAppearThreshold = ni / (c.nodes.length || 1);
-          if (c.phase === 'rising' && c.progress < nodeAppearThreshold) continue;
+          const alpha = easeInOutQuad(c.progress);
+          const baseOpacity = c.isNearMouse ? 0.45 : 0.25;
           
-          const s = c.nodes[ni];
-          if (!s) continue;
-          const nodeAlpha = c.phase === 'rising' ? Math.min(1, (c.progress - nodeAppearThreshold) * 4) : alpha;
-          const nodeGlowAlpha = (nodeAlpha * (c.isNearMouse ? 0.6 : 0.35)).toFixed(3);
-          
-          const nodeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
-          nodeGlow.addColorStop(0, palette.glowHalo.replace(/[\d.]+\)$/g, `${nodeGlowAlpha})`));
-          nodeGlow.addColorStop(1, palette.glowHalo.replace(/[\d.]+\)$/g, '0)'));
-          ctx.fillStyle = nodeGlow;
+          // Draw edges sequentially (animating the line drawing)
+          // c.progress (0 to 1) maps to the total length of the edges
+          const totalEdges = c.edges.length;
+          const edgeProgressRaw = c.phase === 'rising' ? c.progress * totalEdges : totalEdges;
+
+          ctx.strokeStyle = palette.glowHalo.replace(/[\d.]+\)$/g, `${(alpha * baseOpacity).toFixed(3)})`);
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
-          ctx.fill();
           
-          // Draw the actual star for the node
-          ctx.globalAlpha = Math.max(0.02, Math.min(1, nodeAlpha * 0.8));
-          ctx.fillStyle = s.color;
-          s.rotation += s.rotationSpeed;
-          drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
+          for (let ei = 0; ei < totalEdges; ei++) {
+            if (ei > Math.floor(edgeProgressRaw)) continue; // Not started drawing this edge yet
+            
+            const edge = c.edges[ei];
+            const sa = c.nodes[edge.from];
+            const sb = c.nodes[edge.to];
+            if (!sa || !sb) continue;
+
+            ctx.moveTo(sa.x, sa.y);
+            
+            if (ei === Math.floor(edgeProgressRaw) && c.phase === 'rising') {
+               // Partially draw this specific edge
+               const edgeAlpha = edgeProgressRaw - Math.floor(edgeProgressRaw);
+               const currentX = sa.x + (sb.x - sa.x) * easeInOutQuad(edgeAlpha);
+               const currentY = sa.y + (sb.y - sa.y) * easeInOutQuad(edgeAlpha);
+               ctx.lineTo(currentX, currentY);
+            } else {
+               // Fully draw completed edges
+               ctx.lineTo(sb.x, sb.y);
+            }
+          }
+          ctx.stroke();
+
+          // Draw node highlights
+          for (let ni = 0; ni < c.nodes.length; ni++) {
+            // Stagger node highlight appearance with the line drawing
+            const nodeAppearThreshold = ni / (c.nodes.length || 1);
+            if (c.phase === 'rising' && c.progress < nodeAppearThreshold) continue;
+            
+            const s = c.nodes[ni];
+            if (!s) continue;
+            const nodeAlpha = c.phase === 'rising' ? Math.min(1, (c.progress - nodeAppearThreshold) * 4) : alpha;
+            const nodeGlowAlpha = (nodeAlpha * (c.isNearMouse ? 0.6 : 0.35)).toFixed(3);
+            
+            const nodeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 5);
+            nodeGlow.addColorStop(0, palette.glowHalo.replace(/[\d.]+\)$/g, `${nodeGlowAlpha})`));
+            nodeGlow.addColorStop(1, palette.glowHalo.replace(/[\d.]+\)$/g, '0)'));
+            ctx.fillStyle = nodeGlow;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size * 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw the actual star for the node
+            ctx.globalAlpha = Math.max(0.02, Math.min(1, nodeAlpha * 0.8));
+            ctx.fillStyle = s.color;
+            s.rotation += s.rotationSpeed;
+            drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
+          }
         }
       }
 

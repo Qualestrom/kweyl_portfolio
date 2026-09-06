@@ -108,7 +108,7 @@ export default function StellarBackground() {
       w = canvas.width = window.innerWidth;
       h = canvas.height = window.innerHeight;
       const palette = PALETTES[getTheme()] || PALETTES.dark;
-      const count = Math.max(90, Math.floor((w * h) / 12000));
+      const count = Math.max(65, Math.floor((w * h) / 16000));
       particles = Array.from({ length: count }, () => createStaticParticle(w, h, palette));
       starIndices = particles.map((p, i) => p.isStar ? i : -1).filter(i => i >= 0);
       constellations = [];

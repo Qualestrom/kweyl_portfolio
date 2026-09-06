@@ -19,28 +19,22 @@ import ContactSection from '../sections/ContactSection';
 // ─── Section transition variants ─────────────────────────────────────────────────
 const warpVariants = {
   enter: (direction) => ({
-    x: direction > 0 ? '100%' : '-100%',
-    scale: 0.95,
+    x: direction > 0 ? 50 : -50,
     opacity: 0,
-    filter: 'blur(10px)',
   }),
   center: {
     x: 0,
-    scale: 1,
     opacity: 1,
-    filter: 'blur(0px)',
   },
   exit: (direction) => ({
-    x: direction > 0 ? '-50%' : '50%',
-    scale: 0.9,
+    x: direction > 0 ? -50 : 50,
     opacity: 0,
-    filter: 'blur(10px)',
   }),
 };
 
 const slideTransition = {
-  duration: 0.8,
-  ease: [0.22, 1, 0.36, 1], // Custom easeOut for the warp
+  duration: 0.38,
+  ease: [0.22, 1, 0.36, 1], // Smooth and lightweight
 };
 
 const SECTION_COUNT = 5;
@@ -57,6 +51,7 @@ export const DEFAULT_CONFIG = {
   heroBtnPrimaryText: 'View Projects',
   heroBtnSecondaryText: 'Download CV',
   heroCvUrl: '/cv.pdf',
+  heroCvData: null,
   isMaintenanceMode: false,
   heroSocials: [
     { id: '1', url: 'https://github.com', label: 'GitHub Profile' },
@@ -212,7 +207,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
       case 1: return <AboutSection {...props} onNavigateContact={() => navigateTo(4)} />;
       case 2: return <ProjectsSection isAdmin={isAdmin} />;
       case 3: return <CertificationsSection isAdmin={isAdmin} />;
-      case 4: return <ContactSection />;
+      case 4: return <ContactSection {...props} />;
       default: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
     }
   };
@@ -269,21 +264,21 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         onLogout={onLogout}
       />
 
-      {/* The Warp Flash Overlay */}
+      {/* The Warp Flash Overlay (only during user navigation) */}
       <SectionWarpFlash 
         direction={direction} 
-        isVisible={!isRedirecting && currentSection !== undefined} 
+        isVisible={!isRedirecting && direction !== 0} 
         key={`warp-${currentSection}`} 
       />
 
       <motion.div 
         className="stellar-main stellar-main--full" 
-        style={{ overflow: 'hidden', transformOrigin: 'center 48%' }}
-        initial={{ scale: 0.05, opacity: 0, filter: 'blur(14px)' }}
-        animate={loaderExited ? { scale: 1, opacity: 1, filter: 'blur(0px)' } : { scale: 0.05, opacity: 0, filter: 'blur(14px)' }}
-        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+        style={{ overflow: 'hidden' }}
+        initial={{ opacity: 0, y: 14 }}
+        animate={loaderExited ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <AnimatePresence mode="popLayout" custom={direction}>
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentSection}
             className="section-transition-wrapper"

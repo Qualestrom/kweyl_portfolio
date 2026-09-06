@@ -18,11 +18,11 @@ export default function InteractiveBackground() {
     let mouse = { x: -1000, y: -1000, radius: 150 };
     let frame = 0;
 
-    const SPACING = 48;
+    const SPACING = 60;
     const SPRING = 0.05;
     const FRICTION = 0.85;
     const REPULSION = 5;
-    const CIRCUIT_DENSITY = 0.28; // subtle circuit connections
+    const CIRCUIT_DENSITY = 0.24; // subtle circuit connections
 
     let cols = 0;
 
@@ -88,9 +88,11 @@ export default function InteractiveBackground() {
 
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const distSq = dx * dx + dy * dy;
+        const radiusSq = mouse.radius * mouse.radius;
 
-        if (distance < mouse.radius) {
+        if (distSq < radiusSq) {
+          const distance = Math.sqrt(distSq) || 1;
           const force = (mouse.radius - distance) / mouse.radius;
           const angle = Math.atan2(dy, dx);
           p.vx += Math.cos(angle) * force * REPULSION;

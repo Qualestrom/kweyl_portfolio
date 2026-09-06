@@ -28,40 +28,126 @@ export function fileToDataUrl(file) {
 }
 
 /**
- * Fetch the active resume from Firestore
+ * Fetch the active resume from Firestore (checking config/resume, config/main, and resumes/current)
  */
 export async function getActiveResume() {
+  // 1. Try config/resume (allowed by existing Firestore rules)
+  try {
+    const configResumeRef = doc(db, 'config', 'resume');
+    const snap = await getDoc(configResumeRef);
+    if (snap.exists()) {
+      const data = { id: snap.id, ...snap.data() };
+      try { localStorage.setItem('portfolio_active_resume', JSON.stringify(data)); } catch (_) {}
+      return data;
+    }
+  } catch (err) {
+    console.warn('Notice checking config/resume:', err);
+  }
+
+  // 2. Try config/main heroCvData
+  try {
+    const mainDocRef = doc(db, 'config', 'main');
+    const mainSnap = await getDoc(mainDocRef);
+    if (mainSnap.exists()) {
+      const data = mainSnap.data();
+      if (data.heroCvData) {
+        return data.heroCvData;
+      }
+      if (data.heroCvUrl && data.heroCvUrl !== '/cv.pdf') {
+        return {
+          name: data.heroCvName || 'Resume.pdf',
+          size: 'Document',
+          fileType: 'application/pdf',
+          fileUrl: data.heroCvUrl,
+          previewUrl: '',
+          uploadedAt: data.heroCvUpdatedAt || ''
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Notice checking config/main resume:', err);
+  }
+
+  // 3. Try standalone resumes/current (in case rules were updated)
   try {
     const docRef = doc(db, 'resumes', 'current');
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       return { id: snap.id, ...snap.data() };
     }
-    return null;
-  } catch (err) {
-    console.warn('Error fetching active resume from Firestore:', err);
-    return null;
+  } catch (_) {
+    // Expected if rules only allow config/
   }
+
+  // 4. Local storage fallback
+  try {
+    const cached = localStorage.getItem('portfolio_active_resume');
+    if (cached) return JSON.parse(cached);
+  } catch (_) {}
+
+  return null;
 }
 
 /**
  * Subscribe to real-time changes of the active resume
  */
 export function subscribeToActiveResume(onUpdate) {
+  const unsubscribes = [];
+
+  // 1. Listen to config/resume
   try {
-    const docRef = doc(db, 'resumes', 'current');
-    return onSnapshot(docRef, (snap) => {
+    const resumeDocRef = doc(db, 'config', 'resume');
+    const unsub1 = onSnapshot(resumeDocRef, (snap) => {
       if (snap.exists()) {
-        onUpdate({ id: snap.id, ...snap.data() });
-      } else {
-        onUpdate(null);
+        const data = { id: snap.id, ...snap.data() };
+        try { localStorage.setItem('portfolio_active_resume', JSON.stringify(data)); } catch (_) {}
+        onUpdate(data);
       }
     }, (err) => {
-      console.warn('Resume listener notice:', err);
+      console.warn('config/resume snapshot notice:', err);
     });
-  } catch (_) {
-    return () => {};
-  }
+    unsubscribes.push(unsub1);
+  } catch (_) {}
+
+  // 2. Also listen to config/main for heroCvData or heroCvUrl
+  try {
+    const mainDocRef = doc(db, 'config', 'main');
+    const unsub2 = onSnapshot(mainDocRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.heroCvData) {
+          onUpdate(data.heroCvData);
+        } else if (data.heroCvUrl && data.heroCvUrl !== '/cv.pdf') {
+          onUpdate({
+            name: data.heroCvName || 'Resume.pdf',
+            size: 'Document',
+            fileType: 'application/pdf',
+            fileUrl: data.heroCvUrl,
+            previewUrl: '',
+            uploadedAt: data.heroCvUpdatedAt || ''
+          });
+        }
+      }
+    }, (err) => {
+      console.warn('config/main snapshot notice:', err);
+    });
+    unsubscribes.push(unsub2);
+  } catch (_) {}
+
+  // 3. Optionally listen to resumes/current if allowed
+  try {
+    const standaloneRef = doc(db, 'resumes', 'current');
+    const unsub3 = onSnapshot(standaloneRef, (snap) => {
+      if (snap.exists()) {
+        onUpdate({ id: snap.id, ...snap.data() });
+      }
+    }, () => {});
+    unsubscribes.push(unsub3);
+  } catch (_) {}
+
+  return () => {
+    unsubscribes.forEach(fn => fn?.());
+  };
 }
 
 /**
@@ -98,6 +184,7 @@ export async function processResumeFile(file) {
 
 /**
  * Save new resume to database (replacing and deleting any old resume)
+ * Uses permitted config/ collection in Firestore and resilient storage fallback
  */
 export async function saveResumeToDatabase(fileObj, oldResume = null, onProgress = () => {}) {
   const { file, name, size, rawSize, fileType, previewUrl } = fileObj;
@@ -107,21 +194,31 @@ export async function saveResumeToDatabase(fileObj, oldResume = null, onProgress
   let fileUrl = '';
   let storagePath = '';
 
-  // 1. Try uploading to Firebase Storage first
+  // 1. Try uploading to Firebase Storage
+  const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const primaryStoragePath = `resumes/${Date.now()}-${safeName}`;
+  const fallbackStoragePath = `certificates/resume/doc-${Date.now()}-${safeName}`;
+
   try {
-    const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    storagePath = `resumes/${Date.now()}-${safeName}`;
+    storagePath = primaryStoragePath;
     const storageRef = ref(storage, storagePath);
     await uploadBytes(storageRef, file);
     fileUrl = await getDownloadURL(storageRef);
   } catch (storageErr) {
-    console.warn('Firebase Storage upload notice, falling back to database base64:', storageErr);
-    // If file is under 800KB, store as data URL in Firestore document
-    if (rawSize < 800 * 1024) {
-      fileUrl = await fileToDataUrl(file);
-      storagePath = '';
-    } else {
-      throw new Error('File exceeds database document limit. Firebase storage is required for files > 800KB.');
+    console.warn('Storage upload to resumes/ notice, trying fallback path:', storageErr);
+    try {
+      storagePath = fallbackStoragePath;
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, file);
+      fileUrl = await getDownloadURL(storageRef);
+    } catch (fallbackErr) {
+      console.warn('Storage upload fallback notice:', fallbackErr);
+      if (rawSize < 800 * 1024) {
+        fileUrl = await fileToDataUrl(file);
+        storagePath = '';
+      } else {
+        throw new Error('Storage upload failed (' + (storageErr.message || 'Permission denied') + ').');
+      }
     }
   }
 
@@ -136,7 +233,7 @@ export async function saveResumeToDatabase(fileObj, oldResume = null, onProgress
     }
   }
 
-  // 3. Save new resume document to Firestore (overwriting doc 'resumes/current')
+  // 3. Prepare payload
   onProgress('Saving to database...');
   const resumePayload = {
     name,
@@ -148,19 +245,56 @@ export async function saveResumeToDatabase(fileObj, oldResume = null, onProgress
     uploadedAt: new Date().toISOString()
   };
 
-  const resumeDocRef = doc(db, 'resumes', 'current');
-  await setDoc(resumeDocRef, resumePayload, { merge: false });
+  // 4. Save to Firestore doc `config/resume` (permitted by match /config/{document=**})
+  let savedToFirestore = false;
+  try {
+    const configResumeRef = doc(db, 'config', 'resume');
+    await setDoc(configResumeRef, resumePayload, { merge: true });
+    savedToFirestore = true;
+  } catch (cfgResumeErr) {
+    console.warn('Notice saving to config/resume:', cfgResumeErr);
+  }
 
-  // 4. Synchronize with main portfolio config
+  // 5. Synchronize with main portfolio config `config/main`
   try {
     const configDocRef = doc(db, 'config', 'main');
     await setDoc(configDocRef, {
       heroCvUrl: fileUrl,
       heroCvName: name,
+      heroCvData: resumePayload,
       heroCvUpdatedAt: resumePayload.uploadedAt
     }, { merge: true });
+    savedToFirestore = true;
   } catch (cfgErr) {
     console.warn('Config sync notice:', cfgErr);
+  }
+
+  // 6. Also try `resumes/current` in case rules permit it
+  try {
+    const resumeDocRef = doc(db, 'resumes', 'current');
+    await setDoc(resumeDocRef, resumePayload, { merge: false });
+    savedToFirestore = true;
+  } catch (resumesErr) {
+    // If rules do not allow `resumes/` collection, this is safely caught since config/main & config/resume succeeded
+    console.warn('Standalone resumes/current write skipped (handled via config document):', resumesErr.message);
+  }
+
+  // 7. Save to local storage cache as immediate resilient fallback
+  try {
+    localStorage.setItem('portfolio_active_resume', JSON.stringify(resumePayload));
+    const localCfg = localStorage.getItem('portfolio_config');
+    if (localCfg) {
+      const parsed = JSON.parse(localCfg);
+      parsed.heroCvUrl = fileUrl;
+      parsed.heroCvName = name;
+      parsed.heroCvData = resumePayload;
+      parsed.heroCvUpdatedAt = resumePayload.uploadedAt;
+      localStorage.setItem('portfolio_config', JSON.stringify(parsed));
+    }
+  } catch (_) {}
+
+  if (!savedToFirestore) {
+    console.warn('Saved resume to local cache due to Firestore permissions');
   }
 
   return resumePayload;

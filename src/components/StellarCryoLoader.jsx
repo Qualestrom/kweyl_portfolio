@@ -199,10 +199,9 @@ export default function StellarCryoLoader({
     setIsWarping(true);
 
     // Warp sequence:
-    // 1. Loader scales to 500% (CSS handles this via .is-warping)
-    // 2. Warp streaks happen in canvas and decelerate.
-    // 3. At 1500ms, warp streaks complete and canvas blooms white.
-    // 4. At 1700ms, fade out loader and trigger homepage zoom in (split-second delay).
+    // 1. Star streaks accelerate radially then smoothly decelerate to vanishing point.
+    // 2. Eye-friendly celestial dissolve eases in.
+    // 3. At 1700ms, smoothly fade out loader overlay and reveal homepage seamlessly.
     
     setTimeout(() => {
       setFadingOut(true);
@@ -650,21 +649,23 @@ export default function StellarCryoLoader({
         }
       }
 
-      // ── 7. Hyper-Space Warp Celestial Bloom / Flash (Theme-Aware) ──
+      // ── 7. Hyper-Space Warp Celestial Dissolve (Eye-Friendly, Theme-Aware) ──
       if (isWarpingRef.current && warp > 0.45) {
         const flashProgress = (warp - 0.45) / 0.55; // 0 to 1
         const maxR = Math.hypot(w, h) * 1.1;
         const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * flashProgress);
         
         if (theme === 'light') {
-          flashGrad.addColorStop(0, `rgba(255, 255, 255, ${Math.min(0.9, flashProgress * 1.2)})`);
-          flashGrad.addColorStop(0.5, `rgba(186, 230, 253, ${Math.min(0.75, flashProgress * 0.9)})`);
+          // Soft ambient daylight haze — no harsh white glare
+          flashGrad.addColorStop(0, `rgba(224, 242, 254, ${Math.min(0.45, flashProgress * 0.5)})`);
+          flashGrad.addColorStop(0.5, `rgba(241, 245, 249, ${Math.min(0.35, flashProgress * 0.4)})`);
           flashGrad.addColorStop(1, 'rgba(244, 247, 251, 0)');
         } else {
-          flashGrad.addColorStop(0, `rgba(103, 232, 249, ${Math.min(0.75, flashProgress * 1.1)})`);
-          flashGrad.addColorStop(0.35, `rgba(34, 211, 238, ${Math.min(0.5, flashProgress * 0.8)})`);
-          flashGrad.addColorStop(0.75, `rgba(11, 19, 43, ${Math.min(0.8, flashProgress * 1.0)})`);
-          flashGrad.addColorStop(1, 'rgba(5, 8, 17, 0)');
+          // Dark mode: soothing deep space nebula dissolve — zero blinding white flash to protect eyes
+          flashGrad.addColorStop(0, `rgba(14, 165, 233, ${Math.min(0.16, flashProgress * 0.2)})`);
+          flashGrad.addColorStop(0.4, `rgba(15, 23, 42, ${Math.min(0.45, flashProgress * 0.55)})`);
+          flashGrad.addColorStop(0.85, `rgba(5, 8, 22, ${Math.min(0.75, flashProgress * 0.85)})`);
+          flashGrad.addColorStop(1, 'rgba(5, 8, 22, 0)');
         }
 
         ctx.fillStyle = flashGrad;

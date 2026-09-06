@@ -33,9 +33,6 @@
 }
 
 .genshin-loader-overlay.is-warping {
-  transform: scale(5);
-  transform-origin: center 48%;
-  transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 

@@ -209,29 +209,21 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
               {/* Headline */}
               <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-3.5 font-['Outfit'] leading-tight">
-                {isAdmin ? (
-                  <EditableText
-                    text={headline}
-                    isAdmin={isAdmin}
-                    onSave={(v) => onUpdateConfig?.('aboutTitle', v)}
-                  />
-                ) : (
-                  headline
-                )}
+                <EditableText
+                  text={headline}
+                  isAdmin={isAdmin}
+                  onSave={(v) => onUpdateConfig?.('aboutTitle', v)}
+                />
               </h2>
 
               {/* Bio Paragraph */}
               <div className="text-slate-700 dark:text-slate-300/90 text-xs sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl font-normal">
-                {isAdmin ? (
-                  <EditableText
-                    text={paragraph}
-                    isAdmin={isAdmin}
-                    multiline={true}
-                    onSave={(v) => onUpdateConfig?.({ aboutText1: v, aboutText2: '' })}
-                  />
-                ) : (
-                  paragraph
-                )}
+                <EditableText
+                  text={paragraph}
+                  isAdmin={isAdmin}
+                  multiline={true}
+                  onSave={(v) => onUpdateConfig?.({ aboutText1: v, aboutText2: '' })}
+                />
               </div>
             </div>
 

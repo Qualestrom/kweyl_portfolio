@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Clock
 } from 'lucide-react';
+import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import './ContactSection.css';
 
 // Helper to determine icon based on URL
@@ -135,7 +136,7 @@ export default function ContactSection({ config, isAdmin }) {
                 {socials.map((social) => (
                   <a 
                     key={social.id || social.url}
-                    href={social.url} 
+                    href={ensureAbsoluteUrl(social.url)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="social-grid-item"

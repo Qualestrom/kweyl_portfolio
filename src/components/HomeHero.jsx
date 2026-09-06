@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, 
@@ -17,6 +17,9 @@ import EditableText from './EditableText';
 import ImageCropperModal, { FRAME_ANIMATIONS } from './ImageCropperModal';
 import HeadlineEditorModal from './HeadlineEditorModal';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
+import ResumeUploadModal from './ResumeUploadModal';
+import ResumeViewerOverlay from './ResumeViewerOverlay';
+import { subscribeToActiveResume } from '../utils/resumeDb';
 import { getLinkIconType, ensureAbsoluteUrl } from '../utils/imageUtils';
 import './HomeHero.css';
 
@@ -180,7 +183,17 @@ export default function HomeHero({
   const [tempImageSource, setTempImageSource] = useState(null);
   const [headlineModalOpen, setHeadlineModalOpen] = useState(false);
   const [linksModalOpen, setLinksModalOpen] = useState(false);
-  const [cvModalOpen, setCvModalOpen] = useState(false);
+  const [isResumeUploadOpen, setIsResumeUploadOpen] = useState(false);
+  const [isResumeViewerOpen, setIsResumeViewerOpen] = useState(false);
+  const [activeResumeData, setActiveResumeData] = useState(null);
+
+  // Real-time resume sync from Firestore
+  useEffect(() => {
+    const unsub = subscribeToActiveResume((data) => {
+      if (data) setActiveResumeData(data);
+    });
+    return () => unsub?.();
+  }, []);
 
   // Hidden File input ref for clicking avatar
   const avatarFileInputRef = useRef(null);
@@ -489,26 +502,25 @@ export default function HomeHero({
             )}
 
             <div className="home-hero-btn-secondary-wrapper">
-              <a 
-                href={cvUrl} 
-                download 
-                target="_blank" 
-                rel="noreferrer" 
+              <button 
+                type="button"
+                onClick={() => setIsResumeViewerOpen(true)}
                 className="home-hero-btn-secondary"
+                aria-label="View official resume"
               >
                 <EditableText 
                   text={btnSecondaryText} 
                   isAdmin={isAdmin} 
                   onSave={(v) => onUpdateConfig && onUpdateConfig('heroBtnSecondaryText', v)} 
                 />
-              </a>
+              </button>
 
               {isAdmin && (
                 <button 
                   type="button" 
-                  onClick={openCvModal}
+                  onClick={() => setIsResumeUploadOpen(true)}
                   className="home-hero-admin-btn-inline"
-                  title="Configure CV download link"
+                  title="Upload / Replace resume in database"
                 >
                   <FileText size={14} />
                 </button>
@@ -767,74 +779,28 @@ export default function HomeHero({
         )}
       </AnimatePresence>
 
-      {/* ─── MODAL 4: CV Download Link Editor ───────────────────────── */}
-      <AnimatePresence>
-        {cvModalOpen && (
-          <div className="stellar-modal-backdrop" onClick={() => setCvModalOpen(false)}>
-            <motion.div 
-              className="stellar-modal-panel"
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="stellar-modal-header">
-                <div className="stellar-modal-title">
-                  <FileText size={20} style={{ color: 'var(--cryo-accent)' }} />
-                  <span>Configure CV Download Link</span>
-                </div>
-                <button 
-                  className="stellar-modal-close" 
-                  onClick={() => setCvModalOpen(false)}
-                >
-                  <X size={18} />
-                </button>
-              </div>
+      {/* ─── RESUME DATABASE UPLOAD & REPLACEMENT MODAL (ADMIN) ─────── */}
+      <ResumeUploadModal 
+        isOpen={isResumeUploadOpen}
+        onClose={() => setIsResumeUploadOpen(false)}
+        onSaveSuccess={(newResume) => {
+          setActiveResumeData(newResume);
+          if (onUpdateConfig) {
+            onUpdateConfig({
+              heroCvUrl: newResume.fileUrl,
+              heroCvName: newResume.name,
+            });
+          }
+        }}
+      />
 
-              <form onSubmit={handleSaveCv}>
-                <div className="stellar-modal-body">
-                  <div className="stellar-modal-form-group">
-                    <label className="stellar-modal-label">CV / Resume File Path or URL</label>
-                    <div className="stellar-modal-input-wrapper">
-                      <LinkIcon size={16} className="stellar-modal-input-icon" />
-                      <input 
-                        type="text" 
-                        placeholder="/cv.pdf or https://drive.google.com/..." 
-                        value={cvUrlInput} 
-                        onChange={(e) => setCvUrlInput(e.target.value)} 
-                        className="stellar-modal-input" 
-                        required
-                      />
-                    </div>
-                    <span className="stellar-modal-hint">
-                      You can use a local path like <code>/cv.pdf</code> (located in the <code>public/</code> folder) or an external link like Google Drive or Dropbox.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="stellar-modal-footer">
-                  <div className="stellar-modal-footer-right" style={{ width: '100%', justifyContent: 'flex-end' }}>
-                    <button 
-                      type="button" 
-                      className="stellar-modal-btn-cancel" 
-                      onClick={() => setCvModalOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="stellar-modal-btn-primary"
-                    >
-                      <Check size={16} /> Save Link
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* ─── RESUME VIEWER OVERLAY (VISITOR & ADMIN) ─────────────────── */}
+      <ResumeViewerOverlay 
+        isOpen={isResumeViewerOpen}
+        onClose={() => setIsResumeViewerOpen(false)}
+        resumeData={activeResumeData}
+        defaultCvUrl={cvUrl}
+      />
 
     </section>
   );

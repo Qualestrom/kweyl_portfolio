@@ -62,8 +62,8 @@ export default function ContactSection({ config, isAdmin }) {
   };
 
   return (
-    <section className="section-viewport" id="contact-section">
-      <div className="section-content section-centered contact-section-inner">
+    <section className="section-viewport overflow-y-auto lg:overflow-hidden py-8 sm:py-10 lg:py-0" id="contact-section">
+      <div className="section-content w-full h-full flex items-center justify-center px-4 sm:px-8 lg:pl-36 xl:pl-48 lg:pr-10 xl:pr-16 max-w-[1440px]">
         
         <div className="contact-split-layout">
           {/* ─── Left Panel: Contact Details & Socials ─── */}

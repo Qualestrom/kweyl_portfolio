@@ -2,37 +2,37 @@
    ContactSection CSS — Refined, Balanced & Fully Responsive
    ============================================================ */
 
-.contact-section-inner {
-  width: 100%;
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 1.5rem 1.5rem 3rem 1.5rem;
-}
-
 .contact-split-layout {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
   width: 100%;
   align-items: stretch;
+  margin: auto 0;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
   .contact-split-layout {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 3.5rem;
+    gap: clamp(2rem, 4vw, 4rem);
   }
 }
 
 /* ─── Left Panel: Contact Details ──────────────────────────── */
 .contact-left-panel {
-  flex: 1 1 50%;
+  flex: 1 1 52%;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  max-width: 580px;
+  gap: 1rem;
+  max-width: 540px;
+}
+
+@media (max-width: 1023px) {
+  .contact-left-panel {
+    max-width: 100%;
+  }
 }
 
 .contact-badge {
@@ -309,9 +309,16 @@
 
 /* ─── Right Panel: Contact Form ────────────────────────────── */
 .contact-right-panel {
-  flex: 1 1 45%;
-  max-width: 480px;
+  flex: 1 1 48%;
+  max-width: 460px;
   width: 100%;
+}
+
+@media (max-width: 1023px) {
+  .contact-right-panel {
+    max-width: 100%;
+    margin-bottom: 2.5rem;
+  }
 }
 
 .contact-form-card {

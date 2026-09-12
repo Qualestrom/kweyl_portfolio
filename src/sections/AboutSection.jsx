@@ -157,8 +157,8 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <section className="section-viewport overflow-y-auto lg:overflow-hidden py-8 sm:py-10 lg:py-0" id="about-section">
-      <div className="section-content w-full h-full flex items-center justify-center px-4 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px]">
+    <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="about-section">
+      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px] pt-14 pb-28 lg:py-0 my-auto">
         
         {/* ─── 4-Column 2-Row Responsive Bento Grid ──────────────────────────── */}
         <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-3.5 xl:gap-4.5 h-auto lg:h-[460px] xl:h-[480px] my-auto">

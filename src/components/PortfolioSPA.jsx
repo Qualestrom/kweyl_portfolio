@@ -5,6 +5,7 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import SectionLabels from './SectionLabels';
+import MobileNav from './MobileNav';
 import KeyboardHints from './KeyboardHints';
 import MaintenanceOverlay from './MaintenanceOverlay';
 import SectionWarpFlash from './SectionWarpFlash';
@@ -150,7 +151,11 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     setCurrentSection(index);
   }, [currentSection]);
 
-  // ── Keyboard navigation & Konami code ──────────────────────────────────────────
+  // ── Touch swipe & wheel navigation refs ───────────────────────────────────────
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0, target: null });
+  const wheelCooldownRef = useRef(0);
+
+  // ── Keyboard, Touch Swipe & Wheel Navigation ──────────────────────────────────
   useEffect(() => {
     const konamiCode = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a', 'enter'];
 
@@ -190,8 +195,98 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
       }
     };
 
+    // Touch Swipe handling (horizontal section page switching)
+    const handleTouchStart = (e) => {
+      if (!e.touches || e.touches.length === 0) return;
+      const touch = e.touches[0];
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now(),
+        target: e.target,
+      };
+    };
+
+    const handleTouchEnd = (e) => {
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      const dt = Date.now() - touchStartRef.current.time;
+      const startTarget = touchStartRef.current.target;
+
+      // Ignore swipes inside inner carousels, inputs, buttons, modals, or mobile nav
+      const isInnerInteractive = startTarget && startTarget.closest && (
+        startTarget.closest('.project-media-slider') ||
+        startTarget.closest('.projects-carousel') ||
+        startTarget.closest('.certificates-carousel') ||
+        startTarget.closest('[data-no-swipe]') ||
+        startTarget.closest('input') ||
+        startTarget.closest('textarea') ||
+        startTarget.closest('.mobile-nav-root') ||
+        startTarget.closest('.stellar-modal-backdrop') ||
+        startTarget.closest('.admin-floating-toolbar')
+      );
+
+      if (isInnerInteractive) return;
+
+      // 80px horizontal travel threshold with horizontal dominance check
+      const isDeliberateSwipe = Math.abs(dx) >= 80 && Math.abs(dx) > Math.abs(dy) * 1.35;
+      const isFlick = Math.abs(dx) >= 45 && dt < 280 && Math.abs(dx) > Math.abs(dy) * 1.5;
+
+      if (isDeliberateSwipe || isFlick) {
+        if (dx < 0) {
+          // Swipe left -> advance to next section
+          navigateTo(Math.min(currentSection + 1, SECTION_COUNT - 1));
+        } else {
+          // Swipe right -> return to previous section
+          navigateTo(Math.max(currentSection - 1, 0));
+        }
+      }
+    };
+
+    // Wheel navigation (smooth section change with cooldown)
+    const handleWheel = (e) => {
+      if (Date.now() < wheelCooldownRef.current) return;
+      if (e.target.closest('input, textarea, .stellar-modal-backdrop, .mobile-nav-root, [data-prevent-wheel]')) return;
+
+      // Check if user is scrolling inside a vertically scrollable element
+      const scrollable = e.target.closest('.section-scrollable, .overflow-y-auto, [data-scrollable]');
+      if (scrollable) {
+        const isScrollingDown = e.deltaY > 0;
+        const isScrollingUp = e.deltaY < 0;
+        const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 8;
+        const atTop = scrollable.scrollTop <= 8;
+
+        if (isScrollingDown && !atBottom) return;
+        if (isScrollingUp && !atTop) return;
+      }
+
+      const absY = Math.abs(e.deltaY);
+      const absX = Math.abs(e.deltaX);
+      if (absY > 35 || absX > 35) {
+        const delta = absY >= absX ? e.deltaY : e.deltaX;
+        if (delta > 35) {
+          wheelCooldownRef.current = Date.now() + 650;
+          navigateTo(Math.min(currentSection + 1, SECTION_COUNT - 1));
+        } else if (delta < -35) {
+          wheelCooldownRef.current = Date.now() + 650;
+          navigateTo(Math.max(currentSection - 1, 0));
+        }
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, [currentSection, navigateTo, isAdmin, navigate]);
 
   // ── If Maintenance Mode is Active & Viewer is NOT Admin ───────────────────────
@@ -296,26 +391,35 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
 
         <KeyboardHints currentSection={currentSection} />
 
+        {/* ─── Mobile / Touch Bottom Navigation Bar ─────────────────────── */}
+        <MobileNav 
+          activeSection={currentSection} 
+          onNavigate={navigateTo} 
+        />
+
         {/* ─── Admin Floating Control Toolbar ─────────────────────────────── */}
         {isAdmin && (
-          <div style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--cryo-glass-border)',
-            borderRadius: '40px',
-            padding: '8px 18px',
-            boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3)',
-            fontFamily: 'Inter',
-            fontSize: '0.82rem',
-            color: 'var(--text-main)',
-            backdropFilter: 'blur(16px)',
-          }}>
+          <div 
+            className="admin-floating-toolbar"
+            style={{
+              position: 'fixed',
+              bottom: 'var(--admin-toolbar-bottom, 24px)',
+              right: '24px',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--cryo-glass-border)',
+              borderRadius: '40px',
+              padding: '8px 18px',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3)',
+              fontFamily: 'Inter',
+              fontSize: '0.82rem',
+              color: 'var(--text-main)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
             {/* Live Mode Indicator */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ 

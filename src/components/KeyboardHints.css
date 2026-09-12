@@ -20,6 +20,12 @@
   }
 }
 
+@media (max-width: 1023px), (hover: none) {
+  .keyboard-hints {
+    display: none !important;
+  }
+}
+
 .keyboard-hint {
   display: flex;
   align-items: center;

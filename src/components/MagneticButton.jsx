@@ -6,6 +6,11 @@ export default function MagneticButton({ children, className, onClick, href, as 
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
     const handleMouse = (e) => {
+        // Skip magnetic displacement on touch devices / coarse pointers
+        if (typeof window !== 'undefined' && window.matchMedia && !window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            return;
+        }
+
         const { clientX, clientY } = e;
         const { height, width, left, top } = ref.current.getBoundingClientRect();
         const middleX = clientX - (left + width / 2);

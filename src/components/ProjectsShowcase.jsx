@@ -990,7 +990,11 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       </div>
 
       {/* ─── Main Carousel Display ─── */}
-      <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-300/80 dark:border-white/[0.1] bg-slate-950/80 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.15)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]" ref={containerRef}>
+      <div 
+        className="projects-carousel relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-300/80 dark:border-white/[0.1] bg-slate-950/80 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.15)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]" 
+        ref={containerRef}
+        data-no-swipe="true"
+      >
         <motion.div
           className="flex cursor-grab active:cursor-grabbing"
           drag="x"

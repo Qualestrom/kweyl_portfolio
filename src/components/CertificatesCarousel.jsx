@@ -670,8 +670,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
       {/* ─── 3D PERSPECTIVE STAGE WITH FLANKING STAGE NAVIGATION ARROWS ─── */}
       <div 
-        className="w-full relative h-[360px] sm:h-[400px] md:h-[430px] lg:h-[450px] flex items-center justify-center"
+        className="certificates-carousel w-full relative h-[360px] sm:h-[400px] md:h-[430px] lg:h-[450px] flex items-center justify-center"
         style={{ perspective: '1400px' }}
+        data-no-swipe="true"
       >
         {/* Floating Left Stage Arrow Button (Theme-Adaptive) */}
         <button
@@ -685,12 +686,13 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
         {/* 3D Revolving Container */}
         <motion.div
-          className="relative w-[320px] sm:w-[460px] md:w-[520px] lg:w-[560px] h-[270px] sm:h-[310px] md:h-[335px] lg:h-[350px] cursor-grab active:cursor-grabbing"
+          className="certificates-carousel-stage relative w-[320px] sm:w-[460px] md:w-[520px] lg:w-[560px] h-[270px] sm:h-[310px] md:h-[335px] lg:h-[350px] cursor-grab active:cursor-grabbing"
           style={{
             transformStyle: 'preserve-3d',
             rotateY: rotation,
             z: -translateZ,
           }}
+          data-no-swipe="true"
           onPanStart={handlePanStart}
           onPan={handlePan}
           onPanEnd={handlePanEnd}

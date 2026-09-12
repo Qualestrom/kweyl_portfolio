@@ -127,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.15rem;
   border-radius: 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -146,24 +146,6 @@
 
 .contact-info-card.static {
   cursor: default;
-}
-
-.contact-info-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(14, 165, 233, 0.1);
-  color: var(--cryo-accent, #22d3ee);
-  shrink: 0;
-  margin-right: 0.85rem;
-}
-
-[data-theme='light'] .contact-info-icon-wrapper {
-  background: rgba(2, 132, 199, 0.1);
-  color: #0284c7;
 }
 
 .contact-info-text-group {
@@ -193,8 +175,8 @@
 .contact-copy-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
+  justify-content: center;
+  padding: 5px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   background: var(--bg-primary);
@@ -215,8 +197,8 @@
 .contact-tz-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
+  justify-content: center;
+  padding: 4px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
@@ -255,18 +237,19 @@
 .social-grid-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.6rem 0.85rem;
+  justify-content: center;
+  padding: 0.65rem 0.95rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   backdrop-filter: blur(10px);
+  text-align: center;
 }
 
 .social-grid-item:hover {
@@ -277,27 +260,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.social-grid-icon {
-  display: flex;
-  align-items: center;
-  color: var(--cryo-accent, #22d3ee);
-}
-
 .social-grid-name {
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.social-grid-ext {
-  opacity: 0.45;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.social-grid-item:hover .social-grid-ext {
-  opacity: 1;
-  transform: translate(1px, -1px);
 }
 
 .contact-admin-hint {
@@ -461,12 +427,4 @@
 .contact-submit-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
-}
-
-.contact-send-icon {
-  transition: transform 0.25s ease;
-}
-
-.contact-submit-btn:hover:not(:disabled) .contact-send-icon {
-  transform: translateX(3px) translateY(-2px);
 }

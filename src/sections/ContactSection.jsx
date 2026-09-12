@@ -1,31 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Mail, 
-  Send, 
-  MapPin, 
-  Copy, 
-  Check, 
-  Sparkles, 
-  Globe, 
-  Share2, 
-  MessageSquare, 
-  AtSign, 
-  ExternalLink,
-  Clock
-} from 'lucide-react';
 import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import './ContactSection.css';
-
-// Helper to determine icon based on URL
-const getSocialIcon = (url = '') => {
-  const lower = url.toLowerCase();
-  if (lower.includes('github.com')) return <Globe size={16} />;
-  if (lower.includes('linkedin.com')) return <Share2 size={16} />;
-  if (lower.includes('twitter.com') || lower.includes('x.com')) return <MessageSquare size={16} />;
-  if (lower.includes('instagram.com')) return <AtSign size={16} />;
-  return <Mail size={16} />;
-};
 
 export default function ContactSection({ config, isAdmin }) {
   const socials = config?.heroSocials || [];
@@ -65,8 +41,8 @@ export default function ContactSection({ config, isAdmin }) {
   };
 
   return (
-    <section className="section-viewport overflow-y-auto lg:overflow-hidden py-8 sm:py-10 lg:py-0" id="contact-section">
-      <div className="section-content w-full h-full flex items-center justify-center px-4 sm:px-8 lg:pl-36 xl:pl-48 lg:pr-10 xl:pr-16 max-w-[1440px]">
+    <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="contact-section">
+      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-36 xl:pl-48 lg:pr-10 xl:pr-16 max-w-[1440px] pt-14 pb-28 lg:py-0 my-auto">
         
         <div className="contact-split-layout">
           {/* ─── Left Panel: Contact Details & Socials ─── */}
@@ -77,8 +53,7 @@ export default function ContactSection({ config, isAdmin }) {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="contact-badge">
-              <Sparkles size={13} className="contact-badge-icon" />
-              <span>COMMUNICATION TERMINAL</span>
+              <span>Get In Touch</span>
             </div>
 
             <h2 className="contact-headline">
@@ -97,9 +72,6 @@ export default function ContactSection({ config, isAdmin }) {
             {/* Quick Contact Chips */}
             <div className="contact-info-cards">
               <div className="contact-info-card group" onClick={handleCopyEmail} title="Click to copy email address">
-                <div className="contact-info-icon-wrapper">
-                  <Mail size={16} className="contact-info-icon" />
-                </div>
                 <div className="contact-info-text-group">
                   <span className="contact-info-label">Direct Email</span>
                   <span className="contact-info-value">chrislamera0408@gmail.com</span>
@@ -109,21 +81,16 @@ export default function ContactSection({ config, isAdmin }) {
                   className="contact-copy-btn" 
                   aria-label="Copy email"
                 >
-                  {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                   <span className="copy-label">{copied ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
 
               <div className="contact-info-card static">
-                <div className="contact-info-icon-wrapper">
-                  <MapPin size={16} className="contact-info-icon" />
-                </div>
                 <div className="contact-info-text-group">
                   <span className="contact-info-label">Current Location</span>
                   <span className="contact-info-value">Philippines &bull; Remote Worldwide</span>
                 </div>
                 <div className="contact-tz-badge">
-                  <Clock size={11} />
                   <span>UTC+8</span>
                 </div>
               </div>
@@ -141,9 +108,7 @@ export default function ContactSection({ config, isAdmin }) {
                     rel="noopener noreferrer"
                     className="social-grid-item"
                   >
-                    <span className="social-grid-icon">{getSocialIcon(social.url)}</span>
                     <span className="social-grid-name">{social.label || 'Channel'}</span>
-                    <ExternalLink size={12} className="social-grid-ext" />
                   </a>
                 ))}
               </div>
@@ -217,7 +182,6 @@ export default function ContactSection({ config, isAdmin }) {
                   disabled={isSending}
                 >
                   <span>{isSending ? 'Opening Mail...' : 'Send Message'}</span>
-                  <Send size={16} className="contact-send-icon" />
                 </button>
               </form>
             </div>

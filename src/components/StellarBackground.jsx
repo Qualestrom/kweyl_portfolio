@@ -112,8 +112,12 @@ export default function StellarBackground({ isWarping = false }) {
     const resize = () => {
       w = canvas.width = window.innerWidth;
       h = canvas.height = window.innerHeight;
+      const isSmall = w < 768;
       const palette = PALETTES[getTheme()] || PALETTES.dark;
-      const count = Math.max(65, Math.floor((w * h) / 16000));
+      // On small screens, cut density in half (~50% particle reduction) for optimal battery and framerates
+      const density = isSmall ? 32000 : 16000;
+      const minCount = isSmall ? 30 : 65;
+      const count = Math.max(minCount, Math.floor((w * h) / density));
       particles = Array.from({ length: count }, () => createStaticParticle(w, h, palette));
       starIndices = particles.map((p, i) => p.isStar ? i : -1).filter(i => i >= 0);
       constellations = [];
@@ -136,8 +140,9 @@ export default function StellarBackground({ isWarping = false }) {
       const eligible = particles.filter(p => p.isStar && p.glowPhase === 'idle');
       if (eligible.length === 0) return;
 
+      const maxGlows = w < 768 ? 2 : MAX_SIMULTANEOUS_GLOWS;
       const currentGlowing = particles.filter(p => p.glowPhase !== 'idle').length;
-      if (currentGlowing >= MAX_SIMULTANEOUS_GLOWS) return;
+      if (currentGlowing >= maxGlows) return;
 
       const target = eligible[Math.floor(Math.random() * eligible.length)];
       target.glowPhase = 'rising';
@@ -145,7 +150,8 @@ export default function StellarBackground({ isWarping = false }) {
     };
 
     const spawnConstellation = () => {
-      if (isWarpingRef.current || constellations.length >= 3) return; // Max 3 at a time in background
+      const maxConstellations = w < 768 ? 1 : 3;
+      if (isWarpingRef.current || constellations.length >= maxConstellations) return;
       const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
       const c = spawnRealConstellation(w, h, rand, getStarColor);
       
@@ -183,7 +189,8 @@ export default function StellarBackground({ isWarping = false }) {
       // Spawn constellations
       if (frame >= nextConstellationFrame && !isWarpingRef.current) {
         spawnConstellation();
-        nextConstellationFrame = frame + rand(150, 400); // Between 2.5s and ~6.5s
+        const spawnDelay = w < 768 ? rand(240, 500) : rand(150, 400);
+        nextConstellationFrame = frame + spawnDelay;
       }
 
       // ── Update & draw constellation lines ──

@@ -27,6 +27,7 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import { isGitHubRepoUrl, fetchGitHubRepoMetadata } from '../utils/githubUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
+import useInputDevice from '../utils/useInputDevice';
 
 // Status badge configurations for projects (Deployed, In Progress, Confidential)
 const PROJECT_STATUS_CONFIG = {
@@ -405,6 +406,9 @@ const GAP_PX = 6;
 const MARGIN_PX = 2;
 
 export default function ProjectsShowcase({ isAdmin = false }) {
+  const { isTouch, isMobile } = useInputDevice();
+  const isTouchDevice = isTouch || isMobile;
+
   const [projects, setProjects] = useState(() => {
     try {
       const cached = localStorage.getItem('portfolio_projects');
@@ -1418,16 +1422,30 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       </div>
 
       {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
-      <div className="flex items-center justify-center gap-4 mt-2.5 text-[11px] font-mono text-slate-700 dark:text-slate-400/90 text-center flex-wrap px-2 font-medium">
-        <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
-          <span>Drag or arrows to explore projects</span>
-        </span>
-        <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
-        <span className="inline-flex items-center gap-1">
-          <span>Click thumbnail to view details</span>
-        </span>
+      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2.5 text-[11px] font-mono text-slate-700 dark:text-slate-400/90 text-center flex-wrap px-2 font-medium">
+        {isTouchDevice ? (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <span>Swipe to explore projects</span>
+            </span>
+            <span className="text-slate-400 dark:text-slate-600">•</span>
+            <span className="inline-flex items-center gap-1">
+              <span>Tap thumbnail to view details</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
+              <span>Drag or arrows to explore projects</span>
+            </span>
+            <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1">
+              <span>Click thumbnail to view details</span>
+            </span>
+          </>
+        )}
       </div>
 
       {/* Admin Seed Helper if only fallback projects */}

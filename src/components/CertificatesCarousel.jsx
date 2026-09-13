@@ -24,6 +24,7 @@ import { ensureAbsoluteUrl } from '../utils/imageUtils';
 import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } from '../utils/pdfUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
+import useInputDevice from '../utils/useInputDevice';
 
 const FALLBACK_CERTIFICATES = [
   {
@@ -337,6 +338,9 @@ const LandscapeCarouselCard = ({
 };
 
 export default function CertificatesCarousel({ isAdmin = false }) {
+  const { isTouch, isMobile } = useInputDevice();
+  const isTouchDevice = isTouch || isMobile;
+
   const [certificates, setCertificates] = useState(() => {
     try {
       const cached = localStorage.getItem('portfolio_certificates');
@@ -754,17 +758,31 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       </div>
 
       {/* ─── Navigation Legend Bar (Theme-Adaptive) ─── */}
-      <div className="flex items-center justify-center gap-4 mt-3 text-[11px] font-mono text-slate-700 dark:text-slate-400/90 text-center flex-wrap px-2 font-medium">
-        <span className="inline-flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
-          <span>Drag or arrows to rotate</span>
-        </span>
-        <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
-        <span className="inline-flex items-center gap-1">
-          <MousePointerClick size={12} className="text-sky-700 dark:text-cyan-400" />
-          <span>Click card to bring to front</span>
-        </span>
+      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-3 text-[11px] font-mono text-slate-700 dark:text-slate-400/90 text-center flex-wrap px-2 font-medium">
+        {isTouchDevice ? (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <span>Swipe to rotate</span>
+            </span>
+            <span className="text-slate-400 dark:text-slate-600">•</span>
+            <span className="inline-flex items-center gap-1">
+              <span>Tap card to bring to front</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
+              <span>Drag or arrows to rotate</span>
+            </span>
+            <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1">
+              <MousePointerClick size={12} className="text-sky-700 dark:text-cyan-400" />
+              <span>Click card to bring to front</span>
+            </span>
+          </>
+        )}
       </div>
 
       {/* Admin Template Helper */}

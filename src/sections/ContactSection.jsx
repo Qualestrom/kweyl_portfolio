@@ -42,7 +42,7 @@ export default function ContactSection({ config, isAdmin }) {
 
   return (
     <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="contact-section">
-      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-36 xl:pl-48 lg:pr-10 xl:pr-16 max-w-[1440px] pt-14 pb-28 lg:py-0 my-auto">
+      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-36 xl:pl-48 lg:pr-10 xl:pr-16 max-w-[1440px] pt-8 sm:pt-14 pb-24 sm:pb-28 lg:py-0 my-auto">
         
         <div className="contact-split-layout">
           {/* ─── Left Panel: Contact Details & Socials ─── */}

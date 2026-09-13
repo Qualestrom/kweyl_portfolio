@@ -62,11 +62,11 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Reusable skill tags renderer ───────────────────────────────────────
   const renderSkillTags = (skills, configKey) => (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1 sm:gap-1.5">
       {skills.map((skill) => (
         <span
           key={skill}
-          className={`px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1.5 transition-colors duration-200 ${
+          className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 ${
             isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/10' : 'hover:text-sky-700 dark:hover:text-slate-100 hover:border-sky-400 dark:hover:border-white/20'
           }`}
         >
@@ -89,9 +89,9 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
         <button
           type="button"
           onClick={() => { setAddingTo(configKey); setNewSkillText(''); }}
-          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-sky-200 dark:hover:bg-cyan-500/20 transition-colors cursor-pointer"
+          className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/30 border-dashed inline-flex items-center gap-1 hover:bg-sky-200 dark:hover:bg-cyan-500/20 transition-colors cursor-pointer"
         >
-          <Plus size={12} /> Add
+          <Plus size={11} /> Add
         </button>
       )}
 
@@ -108,11 +108,11 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
             onKeyDown={(e) => { if (e.key === 'Escape') { setAddingTo(null); setNewSkillText(''); } }}
             autoFocus
             placeholder="Skill name"
-            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-950/80 text-slate-900 dark:text-white border border-sky-500 outline-none w-28 placeholder:text-slate-400 shadow-sm"
+            className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-medium bg-white dark:bg-slate-950/80 text-slate-900 dark:text-white border border-sky-500 outline-none w-24 sm:w-28 placeholder:text-slate-400 shadow-sm"
           />
           <button
             type="submit"
-            className="px-2 py-1 rounded-lg text-[11px] bg-sky-600 dark:bg-cyan-500/20 text-white dark:text-cyan-300 border border-sky-600 dark:border-cyan-500/40 hover:bg-sky-700 cursor-pointer font-bold"
+            className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-[11px] bg-sky-600 dark:bg-cyan-500/20 text-white dark:text-cyan-300 border border-sky-600 dark:border-cyan-500/40 hover:bg-sky-700 cursor-pointer font-bold"
             title="Press Enter to add"
           >
             ↵
@@ -120,7 +120,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           <button
             type="button"
             onClick={() => { setAddingTo(null); setNewSkillText(''); }}
-            className="px-1.5 py-1 rounded-lg text-xs bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-white/[0.06] hover:text-slate-900 cursor-pointer"
+            className="px-1.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-xs bg-slate-100 dark:bg-white/[0.03] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-white/[0.06] hover:text-slate-900 cursor-pointer"
             title="Cancel"
           >
             <X size={10} />
@@ -132,17 +132,17 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Reusable skill card renderer ───────────────────────────────────────
   const renderSkillCard = (icon, title, number, skills, configKey) => (
-    <div className="md:col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 xl:p-5.5 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-none hover:border-sky-400 dark:hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(2,132,199,0.15)] dark:hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
+    <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-3.5 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-none hover:border-sky-400 dark:hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(2,132,199,0.15)] dark:hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm">
               {icon}
             </div>
-            <h3 className="font-bold text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit']">{title}</h3>
+            <h3 className="font-bold text-sm sm:text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit']">{title}</h3>
           </div>
-          <span className="text-[10px] font-mono text-sky-800 dark:text-cyan-400/80 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/20 px-2 py-0.5 rounded-md font-bold">
+          <span className="text-[9px] sm:text-[10px] font-mono text-sky-800 dark:text-cyan-400/80 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/20 px-1.5 sm:px-2 py-0.5 rounded-md font-bold">
             {number}
           </span>
         </div>
@@ -158,15 +158,15 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="about-section">
-      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px] pt-14 pb-28 lg:py-0 my-auto">
+      <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px] pt-8 sm:pt-14 pb-24 sm:pb-28 lg:py-0 my-auto">
         
         {/* ─── 4-Column 2-Row Responsive Bento Grid ──────────────────────────── */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-3.5 xl:gap-4.5 h-auto lg:h-[460px] xl:h-[480px] my-auto">
+        <div className="w-full grid grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-2.5 sm:gap-3.5 xl:gap-4.5 h-auto lg:h-[460px] xl:h-[480px] my-auto">
           
           {/* ─────────────────────────────────────────────────────────────
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="md:col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-6 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
             {/* Ambient Glow */}
             <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />
             
@@ -208,7 +208,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               </div>
 
               {/* Headline */}
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-3.5 font-['Outfit'] leading-tight">
+              <h2 className="text-2xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-2.5 sm:mb-3.5 font-['Outfit'] leading-tight">
                 <EditableText
                   text={headline}
                   isAdmin={isAdmin}

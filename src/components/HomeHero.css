@@ -919,74 +919,98 @@
     height: 100%;
     height: 100vh;
     height: 100dvh;
-    padding: 24px 16px calc(var(--mobile-nav-height, 72px) + 20px) 16px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 18px calc(var(--mobile-nav-height, 72px) + 14px) 18px;
+    overflow: hidden;
     box-sizing: border-box;
   }
 
   .home-hero-container {
-    gap: 8px;
-    margin: auto 0;
-    padding-bottom: 8px;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 440px;
+    gap: 10px;
+    margin: auto;
+    padding-bottom: 0;
+  }
+
+  .home-hero-text {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 440px;
   }
 
   .home-hero-avatar-glass {
-    width: 120px;
-    height: 120px;
-    padding: 5px;
+    width: 88px;
+    height: 88px;
+    padding: 3px;
   }
 
   .home-hero-glow-sphere {
-    width: 145px;
-    height: 145px;
+    width: 110px;
+    height: 110px;
+  }
+
+  .home-hero-orbit-ring {
+    width: calc(100% + 20px);
+    height: calc(100% + 20px);
+  }
+
+  .home-hero-quantum-ring-1 {
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
   }
 
   .home-hero-greeting {
-    font-size: 0.7rem;
-    margin-bottom: 0.2rem;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    margin-bottom: 0.45rem;
+    letter-spacing: 0.08em;
   }
 
   .home-hero-headline {
-    font-size: clamp(1.3rem, 5.2vw, 1.65rem);
-    line-height: 1.15;
-    margin-bottom: 0.15rem;
+    font-size: clamp(1.35rem, 5.2vw, 1.7rem);
+    line-height: 1.18;
+    margin-bottom: 0.2rem;
   }
 
   .home-hero-headline-wrapper {
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.55rem;
   }
 
   .home-hero-subheadline {
-    font-size: 0.78rem;
-    line-height: 1.4;
-    margin-bottom: 0.6rem;
-    max-width: 360px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-bottom: 0.95rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .home-hero-actions {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 380px;
-    gap: 8px;
-    margin-bottom: 0.5rem;
+    max-width: 360px;
+    gap: 10px;
+    margin-bottom: 0.85rem;
   }
 
   .home-hero-btn-primary,
   .home-hero-btn-secondary-wrapper {
-    flex: 1 1 130px;
+    flex: 1 1 50%;
     min-width: 120px;
-    max-width: 170px;
+    max-width: 175px;
   }
 
   .home-hero-btn-primary {
     width: 100%;
-    padding: 10px 16px;
+    padding: 9px 16px;
     font-size: 0.84rem;
     box-sizing: border-box;
     text-align: center;
@@ -1003,7 +1027,7 @@
   .home-hero-btn-secondary {
     width: 100%;
     flex: 1;
-    padding: 10px 16px;
+    padding: 9px 16px;
     font-size: 0.84rem;
     box-sizing: border-box;
     text-align: center;
@@ -1019,13 +1043,13 @@
   }
 
   .home-hero-socials {
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
   }
 
   .home-hero-social-link {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .stellar-modal-add-row {

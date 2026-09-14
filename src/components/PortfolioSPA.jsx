@@ -9,6 +9,7 @@ import MobileNav from './MobileNav';
 import KeyboardHints from './KeyboardHints';
 import MaintenanceOverlay from './MaintenanceOverlay';
 import SectionWarpFlash from './SectionWarpFlash';
+import PullToRefresh from './PullToRefresh';
 
 // Sections
 import HomeHero from './HomeHero';
@@ -390,6 +391,9 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         </AnimatePresence>
 
         <KeyboardHints currentSection={currentSection} />
+
+        {/* ─── Pull Down to Refresh (Mobile / Touch) ───────────────────── */}
+        <PullToRefresh />
 
         {/* ─── Mobile / Touch Bottom Navigation Bar ─────────────────────── */}
         <MobileNav 

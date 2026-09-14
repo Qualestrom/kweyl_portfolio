@@ -545,7 +545,13 @@
   }
 
   .contact-intro-text {
-    display: none;
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    text-align: center;
+    color: var(--text-muted);
+    margin: 0 auto 10px auto;
+    max-width: 380px;
   }
 
   .contact-info-cards {

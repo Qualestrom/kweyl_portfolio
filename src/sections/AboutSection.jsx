@@ -166,7 +166,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           {/* ─────────────────────────────────────────────────────────────
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-3.5 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
             {/* Ambient Glow */}
             <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />
             
@@ -208,7 +208,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               </div>
 
               {/* Headline */}
-              <h2 className="text-lg sm:text-3xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-1.5 sm:mb-3.5 font-['Outfit'] leading-tight">
+              <h2 className="text-xl sm:text-3xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 sm:mb-3.5 font-['Outfit'] leading-tight">
                 <EditableText
                   text={headline}
                   isAdmin={isAdmin}
@@ -216,8 +216,8 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                 />
               </h2>
 
-              {/* Bio Paragraph */}
-              <div className="text-slate-700 dark:text-slate-300/90 text-[11px] sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl font-normal line-clamp-3 sm:line-clamp-none">
+              {/* Bio Paragraph (Full text displayed, no clamping) */}
+              <div className="text-slate-700 dark:text-slate-300/90 text-xs sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl font-normal">
                 <EditableText
                   text={paragraph}
                   isAdmin={isAdmin}

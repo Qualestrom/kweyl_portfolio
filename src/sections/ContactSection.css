@@ -11,31 +11,39 @@
   margin: auto 0;
 }
 
-/* ─── Laptop Screen View (≥ 1024px) ───────────────────────── */
+/* ─── Desktop & Laptop Viewports (≥ 1024px) ─────────────────── */
 @media (min-width: 1024px) {
+  #contact-section {
+    /* Offset by sidebar so content centers symmetrically in the visible canvas */
+    padding-left: clamp(190px, 15vw, 210px);
+    box-sizing: border-box;
+  }
+
   #contact-section .section-content {
-    padding-left: clamp(240px, 18vw, 300px) !important;
-    padding-right: clamp(32px, 4vw, 64px) !important;
-    max-width: 1540px !important;
+    max-width: 1140px !important;
+    padding-left: clamp(16px, 2vw, 32px) !important;
+    padding-right: clamp(16px, 2vw, 32px) !important;
+    margin: 0 auto !important;
+    width: 100% !important;
   }
 
   .contact-split-layout {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    gap: clamp(2rem, 3.5vw, 3.5rem);
+    justify-content: center;
+    gap: clamp(2rem, 3.5vw, 3.75rem);
     width: 100%;
   }
 
   .contact-left-panel {
-    flex: 1 1 50%;
-    max-width: 500px;
-    margin-left: clamp(2rem, 3.2vw, 3.5rem);
+    flex: 1 1 52%;
+    max-width: 490px;
+    margin-left: 0;
   }
 
   .contact-right-panel {
     flex: 1 1 48%;
-    max-width: 450px;
+    max-width: 440px;
     margin-bottom: 0;
   }
 }

@@ -43,7 +43,7 @@ export default function ContactSection({ config, isAdmin }) {
 
   return (
     <section className="section-viewport overflow-hidden" id="contact-section">
-      <div className="section-content w-full flex flex-col justify-center items-center px-4 sm:px-8 lg:pl-64 xl:pl-72 lg:pr-10 xl:pr-16 max-w-[1540px] my-auto">
+      <div className="section-content contact-section-content w-full flex flex-col justify-center items-center px-4 sm:px-6 max-w-[1220px] my-auto">
 
         {/* Mobile Segmented Mode Switcher (Visible only on phone) */}
         <div className="contact-mobile-tabs" role="tablist">

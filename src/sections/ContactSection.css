@@ -15,7 +15,7 @@
 @media (min-width: 1024px) {
   #contact-section {
     /* Offset by sidebar so content centers symmetrically in the visible canvas */
-    padding-left: clamp(190px, 15vw, 210px);
+    padding-left: clamp(150px, 11vw, 175px);
     box-sizing: border-box;
   }
 

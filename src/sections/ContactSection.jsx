@@ -5,7 +5,7 @@ import './ContactSection.css';
 
 export default function ContactSection({ config, isAdmin }) {
   const socials = config?.heroSocials || [];
-  
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +14,7 @@ export default function ContactSection({ config, isAdmin }) {
   });
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [mobileTab, setMobileTab] = useState('info'); // 'info' | 'message'
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,12 +43,34 @@ export default function ContactSection({ config, isAdmin }) {
 
   return (
     <section className="section-viewport overflow-hidden" id="contact-section">
-      <div className="section-content w-full flex flex-col justify-center items-center px-4 sm:px-8 max-w-[1240px] my-auto">
-        
+      <div className="section-content w-full flex flex-col justify-center items-center px-4 sm:px-8 lg:pl-64 xl:pl-72 lg:pr-10 xl:pr-16 max-w-[1540px] my-auto">
+
+        {/* Mobile Segmented Mode Switcher (Visible only on phone) */}
+        <div className="contact-mobile-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'info'}
+            className={`contact-mobile-tab-btn ${mobileTab === 'info' ? 'is-active' : ''}`}
+            onClick={() => setMobileTab('info')}
+          >
+            <span>Direct Info</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === 'message'}
+            className={`contact-mobile-tab-btn ${mobileTab === 'message' ? 'is-active' : ''}`}
+            onClick={() => setMobileTab('message')}
+          >
+            <span>Send Message</span>
+          </button>
+        </div>
+
         <div className="contact-split-layout">
           {/* ─── Left Panel: Contact Details & Socials ─── */}
-          <motion.div 
-            className="contact-left-panel"
+          <motion.div
+            className={`contact-left-panel ${mobileTab !== 'info' ? 'contact-panel-mobile-hidden' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -78,9 +101,9 @@ export default function ContactSection({ config, isAdmin }) {
                   <span className="contact-info-label">Direct Email</span>
                   <span className="contact-info-value">chrislamera0408@gmail.com</span>
                 </div>
-                <button 
-                  type="button" 
-                  className="contact-copy-btn" 
+                <button
+                  type="button"
+                  className="contact-copy-btn"
                   aria-label="Copy email"
                 >
                   <span className="copy-label">{copied ? 'Copied' : 'Copy'}</span>
@@ -103,11 +126,11 @@ export default function ContactSection({ config, isAdmin }) {
               <span className="contact-social-heading">Verified Profiles</span>
               <div className="social-links-grid">
                 {socials.map((social) => (
-                  <a 
+                  <a
                     key={social.id || social.url}
-                    href={ensureAbsoluteUrl(social.url)} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                    href={ensureAbsoluteUrl(social.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="social-grid-item"
                   >
                     <span className="social-grid-name">{social.label || 'Channel'}</span>
@@ -120,11 +143,22 @@ export default function ContactSection({ config, isAdmin }) {
                 </div>
               )}
             </div>
+
+            {/* Mobile Switch to Form Row */}
+            <div className="contact-mobile-switch-row">
+              <button
+                type="button"
+                className="contact-mobile-switch-btn"
+                onClick={() => setMobileTab('message')}
+              >
+                <span>Prefer to write a message? Send Message &rarr;</span>
+              </button>
+            </div>
           </motion.div>
 
           {/* ─── Right Panel: Interactive Message Form ─── */}
-          <motion.div 
-            className="contact-right-panel"
+          <motion.div
+            className={`contact-right-panel ${mobileTab !== 'message' ? 'contact-panel-mobile-hidden' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -139,11 +173,11 @@ export default function ContactSection({ config, isAdmin }) {
                 <div className="contact-form-row">
                   <div className="contact-form-group">
                     <label htmlFor="contact-name">Your Name</label>
-                    <input 
+                    <input
                       id="contact-name"
-                      type="text" 
+                      type="text"
                       name="name"
-                      className="contact-input" 
+                      className="contact-input"
                       placeholder="e.g. Alex Morgan"
                       required
                       value={formData.name}
@@ -153,11 +187,11 @@ export default function ContactSection({ config, isAdmin }) {
 
                   <div className="contact-form-group">
                     <label htmlFor="contact-email">Email Address</label>
-                    <input 
+                    <input
                       id="contact-email"
-                      type="email" 
+                      type="email"
                       name="email"
-                      className="contact-input" 
+                      className="contact-input"
                       placeholder="alex@example.com"
                       required
                       value={formData.email}
@@ -168,10 +202,10 @@ export default function ContactSection({ config, isAdmin }) {
 
                 <div className="contact-form-group">
                   <label htmlFor="contact-message">Your Message</label>
-                  <textarea 
+                  <textarea
                     id="contact-message"
                     name="message"
-                    className="contact-textarea" 
+                    className="contact-textarea"
                     placeholder="Tell me about your project, timeline, or inquiries..."
                     required
                     rows={4}
@@ -180,14 +214,25 @@ export default function ContactSection({ config, isAdmin }) {
                   />
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className={`contact-submit-btn ${isSending ? 'is-sending' : ''}`}
                   disabled={isSending}
                 >
                   <span>{isSending ? 'Opening Mail...' : 'Send Message'}</span>
                 </button>
               </form>
+
+              {/* Mobile Switch to Info Row */}
+              <div className="contact-mobile-switch-row">
+                <button
+                  type="button"
+                  className="contact-mobile-switch-btn"
+                  onClick={() => setMobileTab('info')}
+                >
+                  <span>&larr; View email & verified profiles</span>
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

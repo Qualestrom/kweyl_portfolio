@@ -20,7 +20,8 @@ import {
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
-import { ensureAbsoluteUrl } from '../utils/imageUtils';
+import { supabase, isSupabaseConfigured, uploadToSupabaseStorage } from '../supabase';
+import { ensureAbsoluteUrl, resolveAssetUrl } from '../utils/imageUtils';
 import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } from '../utils/pdfUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
@@ -29,57 +30,30 @@ import useInputDevice from '../utils/useInputDevice';
 const FALLBACK_CERTIFICATES = [
   {
     id: '1',
-    title: 'AWS Certified Solutions Architect',
-    issuer: 'Amazon Web Services',
-    date: '2023',
+    title: 'CCNA: Switching, Routing, and Wireless',
+    issuer: 'Cisco Networking Academy',
+    date: '28 May 2025',
     imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://aws.amazon.com/certification/'
+    pdfUrl: '/assets/recovered/certificates/CCNA Switching Routing Wireless Essentials.pdf',
+    verifyUrl: ''
   },
   {
     id: '2',
-    title: 'Google Professional Cloud Developer',
-    issuer: 'Google Cloud',
-    date: '2023',
+    title: 'Python Essentials 1',
+    issuer: 'Cisco Networking Academy',
+    date: '04 Aug 2026',
     imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://cloud.google.com/certification'
+    pdfUrl: '/assets/recovered/certificates/Python Essentials 1.pdf',
+    verifyUrl: ''
   },
   {
     id: '3',
-    title: 'Meta Front-End Developer',
-    issuer: 'Meta',
-    date: '2022',
+    title: 'Introduction to IoT and Digital Transformation',
+    issuer: 'Cisco Networking Academy',
+    date: '04 Aug 2026',
     imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://www.coursera.org/professional-certificates/meta-front-end-developer'
-  },
-  {
-    id: '4',
-    title: 'Certified Kubernetes Administrator',
-    issuer: 'CNCF',
-    date: '2024',
-    imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://www.cncf.io/certification/cka/'
-  },
-  {
-    id: '5',
-    title: 'Advanced React Patterns',
-    issuer: 'Frontend Masters',
-    date: '2022',
-    imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://frontendmasters.com'
-  },
-  {
-    id: '6',
-    title: 'Full Stack Open',
-    issuer: 'University of Helsinki',
-    date: '2021',
-    imageUrl: '',
-    pdfUrl: '',
-    verifyUrl: 'https://fullstackopen.com'
+    pdfUrl: '/assets/recovered/certificates/Introduction to IOT and Digital Transformation.pdf',
+    verifyUrl: ''
   }
 ];
 
@@ -370,14 +344,49 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch certificates from Firestore
+  // Fetch certificates from Supabase or Firestore
   useEffect(() => {
     let isMounted = true;
     const fetchCertificates = async () => {
       try {
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('certificates')
+              .select('*')
+              .order('sort_order', { ascending: true });
+
+            if (!error && data && data.length > 0) {
+              const list = data.map(d => ({
+                ...d,
+                imageUrl: resolveAssetUrl(d.imageUrl),
+                pdfUrl: resolveAssetUrl(d.pdfUrl)
+              }));
+              if (isMounted) {
+                setCertificates(list);
+                try {
+                  localStorage.setItem('portfolio_certificates', JSON.stringify(list));
+                } catch (_) {}
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (supErr) {
+            console.warn('Supabase fetch certificates notice:', supErr);
+          }
+        }
+
         const snapshot = await getDocs(collection(db, 'certificates'));
         if (!snapshot.empty) {
-          const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const list = snapshot.docs.map(d => {
+            const data = d.data();
+            return {
+              id: d.id,
+              ...data,
+              imageUrl: resolveAssetUrl(data.imageUrl),
+              pdfUrl: resolveAssetUrl(data.pdfUrl)
+            };
+          });
           if (isMounted) {
             setCertificates(list);
             try {
@@ -388,7 +397,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           if (isMounted) setCertificates(FALLBACK_CERTIFICATES);
         }
       } catch (err) {
-        console.warn('Firestore fetch certificates fallback:', err);
+        console.warn('Fetch certificates fallback:', err);
         if (isMounted) setCertificates(FALLBACK_CERTIFICATES);
       } finally {
         if (isMounted) setLoading(false);
@@ -512,6 +521,16 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     setCertificates(prev => prev.map(c =>
       c.id === id ? { ...c, [field]: value } : c
     ));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('certificates').update({ [field]: value }).eq('id', id);
+      } catch (err) {
+        console.warn('Certificate update Supabase fallback:', err);
+      }
+      return;
+    }
+
     try {
       await updateDoc(doc(db, 'certificates', id), { [field]: value });
     } catch (err) {
@@ -528,11 +547,21 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   const handleDeleteCert = async (id, e) => {
     e?.stopPropagation?.();
     if (!window.confirm('Delete this certificate?')) return;
-    try {
-      await deleteDoc(doc(db, 'certificates', id));
-    } catch (err) {
-      console.warn('Delete cert local fallback:', err);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('certificates').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Delete certificate Supabase fallback:', err);
+      }
+    } else {
+      try {
+        await deleteDoc(doc(db, 'certificates', id));
+      } catch (err) {
+        console.warn('Delete cert local fallback:', err);
+      }
     }
+
     setCertificates(prev => prev.filter(c => c.id !== id));
   };
 
@@ -547,6 +576,40 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     }));
 
     try {
+      // 1. Supabase Upload Pipeline
+      if (isSupabaseConfigured && supabase) {
+        if (isPdf) {
+          const metadata = await extractPdfCertificateMetadata(file);
+          setUploading(prev => ({ ...prev, [certId]: 'Rendering preview...' }));
+          const { blob: imageBlob } = await renderPdfFirstPageToImage(file, 2.0);
+
+          setUploading(prev => ({ ...prev, [certId]: 'Saving to Supabase...' }));
+          const { publicUrl: imgUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, imageBlob, `thumb-${Date.now()}.webp`);
+          const { publicUrl: pdfUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, file);
+
+          const currentCert = certificates.find(c => c.id === certId);
+          const updatePayload = {
+            imageUrl: imgUrl,
+            pdfUrl: pdfUrl,
+            ...(metadata.title ? { title: metadata.title } : {}),
+            ...(metadata.issuer ? { issuer: metadata.issuer } : {}),
+            ...(metadata.date ? { date: metadata.date } : {}),
+            ...(currentCert && !currentCert.verifyUrl ? { verifyUrl: pdfUrl } : {})
+          };
+
+          await supabase.from('certificates').upsert({ id: certId, ...updatePayload });
+          setCertificates(prev => prev.map(c => c.id === certId ? { ...c, ...updatePayload } : c));
+          return;
+        } else {
+          setUploading(prev => ({ ...prev, [certId]: 'Saving image to Supabase...' }));
+          const { publicUrl: imgUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, file);
+          await supabase.from('certificates').upsert({ id: certId, imageUrl: imgUrl });
+          setCertificates(prev => prev.map(c => c.id === certId ? { ...c, imageUrl: imgUrl } : c));
+          return;
+        }
+      }
+
+      // 2. Firebase Fallback Pipeline
       if (['1', '2', '3', '4', '5', '6'].includes(certId)) {
         const fc = FALLBACK_CERTIFICATES.find(c => c.id === certId);
         if (fc) {

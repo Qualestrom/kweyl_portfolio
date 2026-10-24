@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { supabase, isSupabaseConfigured } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PortfolioSPA from '../components/PortfolioSPA';
@@ -45,6 +46,20 @@ function AdminDashboard() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (isSupabaseConfigured && supabase) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                setUser(session?.user || null);
+                setLoading(false);
+            });
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                setUser(session?.user || null);
+                setLoading(false);
+            });
+
+            return () => subscription.unsubscribe();
+        }
+
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             setLoading(false);
@@ -55,6 +70,19 @@ function AdminDashboard() {
     const handleAuthSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        if (isSupabaseConfigured && supabase) {
+            try {
+                const { error: supError } = await supabase.auth.signInWithPassword({ email, password });
+                if (supError) {
+                    setError(supError.message || 'Authentication failed. Please verify credentials.');
+                }
+            } catch (err) {
+                setError(err.message || 'Supabase authentication failed.');
+            }
+            return;
+        }
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (err) {
@@ -72,7 +100,11 @@ function AdminDashboard() {
     const handleLogout = () => {
         setIsLoggingOut(true);
         setTimeout(async () => {
-            await signOut(auth);
+            if (isSupabaseConfigured && supabase) {
+                await supabase.auth.signOut();
+            } else {
+                await signOut(auth);
+            }
             setIsLoggingOut(false);
             navigate('/');
         }, 800);

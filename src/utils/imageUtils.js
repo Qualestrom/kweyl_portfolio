@@ -159,3 +159,35 @@ export function detectImageOrientation(imageUrl) {
     img.src = imageUrl;
   });
 }
+
+/**
+ * Resolves an asset URL. If it's a locked Firebase Storage URL,
+ * gracefully routes to the recovered local asset.
+ */
+export function resolveAssetUrl(url = '') {
+  if (!url || typeof url !== 'string') return url;
+
+  if (url.includes('firebasestorage.googleapis.com')) {
+    const decoded = decodeURIComponent(url);
+    if (decoded.includes('Screenshot 2026-09-06 112431.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112431.png';
+    if (decoded.includes('Screenshot 2026-09-06 112550.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112550.png';
+    if (decoded.includes('Screenshot 2026-09-06 112739.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112739.png';
+    if (decoded.includes('Screenshot 2026-08-29 213630.png')) return '/assets/recovered/projects/Screenshot 2026-08-29 213630.png';
+    if (decoded.includes('Screenshot 2026-09-06 101759.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 101759.png';
+    if (decoded.includes('Screenshot 2026-09-06 101834.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 101834.png';
+    if (decoded.includes('image (1).png')) return '/assets/recovered/projects/image (1).png';
+    if (decoded.includes('image (2).png')) return '/assets/recovered/projects/image (2).png';
+    if (decoded.includes('image.png')) return '/assets/recovered/projects/image.png';
+
+    // Certificates
+    if (decoded.includes('CCNA') || decoded.includes('Switching')) return '/assets/recovered/certificates/CCNA Switching Routing Wireless Essentials.pdf';
+    if (decoded.includes('Python')) return '/assets/recovered/certificates/Python Essentials 1.pdf';
+    if (decoded.includes('IOT') || decoded.includes('Digital Transformation')) return '/assets/recovered/certificates/Introduction to IOT and Digital Transformation.pdf';
+
+    // Resume
+    if (decoded.includes('Lamera_Resume') || decoded.includes('Resume.pdf')) return '/assets/recovered/resumes/Lamera_Resume.pdf';
+  }
+
+  return url;
+}
+

@@ -23,7 +23,8 @@ import {
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
-import { ensureAbsoluteUrl } from '../utils/imageUtils';
+import { supabase, isSupabaseConfigured, uploadToSupabaseStorage } from '../supabase';
+import { ensureAbsoluteUrl, resolveAssetUrl } from '../utils/imageUtils';
 import { isGitHubRepoUrl, fetchGitHubRepoMetadata } from '../utils/githubUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
@@ -108,7 +109,8 @@ const ProjectMediaSlider = ({
   };
 
   const hasPhotos = photos && photos.length > 0;
-  const currentImageUrl = hasPhotos ? photos[photoIndex] : fallbackImage;
+  const rawImageUrl = hasPhotos ? photos[photoIndex] : fallbackImage;
+  const currentImageUrl = resolveAssetUrl(rawImageUrl);
   const totalPhotos = photos.length;
 
   const handleNextPhoto = (e) => {
@@ -344,59 +346,76 @@ const DEFAULT_PROJECT_IMAGES = [
 
 const FALLBACK_PROJECTS = [
   {
-    id: '1',
-    title: 'E-Commerce Platform',
-    category: 'Full Stack Web App',
-    description: 'Modern full-stack online shopping experience built with Next.js, Stripe checkout integration, and real-time inventory management.',
-    skills: ['Next.js', 'TypeScript', 'Tailwind', 'Stripe', 'PostgreSQL'],
-    demoUrl: 'https://demo-ecommerce.example.com',
-    githubUrl: 'https://github.com/example/ecommerce',
+    id: 'm7-grand-prix',
+    title: 'M7 Grand Prix RSVP',
+    tag: '3D Interactive Web Experience',
+    category: 'Web Graphics & Event Platform',
+    description: 'High-octane interactive Formula 1 event portal featuring a real-time Three.js 3D race circuit viewer, dynamic telemetry HUD, custom audio controller, driver registration, and Supabase backend.',
+    skills: ['React', 'TypeScript', 'Three.js', 'React Three Fiber', 'Supabase', 'Framer Motion', 'Tailwind CSS', 'Canvas Confetti', 'Web Audio API'],
+    demoUrl: 'https://m7-grand-prix.vercel.app',
+    githubUrl: 'https://github.com/Qualestrom/m7-grand-prix-rsvp',
     status: 'deployed',
     photos: []
   },
   {
-    id: '2',
-    title: 'AI Analytics Dashboard',
-    category: 'Data & Visualization',
-    description: 'Interactive analytics cockpit with predictive metrics, dynamic data charts, real-time telemetry, and exportable business reports.',
-    skills: ['React', 'D3.js', 'Python', 'FastAPI', 'Tailwind'],
-    demoUrl: 'https://demo-analytics.example.com',
-    githubUrl: 'https://github.com/example/ai-dashboard',
+    id: 'the-pickle',
+    title: 'The Pickle',
+    tag: 'Mobile Platform & Booking Engine',
+    category: 'Full-Stack Mobile Architecture',
+    description: 'Enterprise-grade cross-platform community and venue management application engineered with React Native, Expo, and Supabase, featuring interactive court scheduling, real-time booking engines, push notifications, and geolocation.',
+    skills: ['React Native', 'Expo', 'TypeScript', 'Supabase', 'PostgreSQL', 'RLS', 'Real-Time Subscriptions', 'Push Notifications', 'Geospatial Queries'],
+    demoUrl: '',
+    githubUrl: 'https://github.com/Qualestrom/the-pickle',
     status: 'deployed',
     photos: []
   },
   {
-    id: '3',
-    title: 'Health & Fitness Tracker',
-    category: 'Cross-Platform Mobile',
-    description: 'Comprehensive cross-platform wellness application featuring real-time biometric synchronization, workout planner, and nutritional logging.',
-    skills: ['Flutter', 'Dart', 'Firebase', 'HealthKit', 'Bloc'],
-    demoUrl: 'https://demo-fitness.example.com',
-    githubUrl: 'https://github.com/example/fitness-tracker',
+    id: '4qZN2lGENZnbe2gBZtNy',
+    title: 'Stellar-Cryo CMS',
+    tag: 'Personal Portfolio System',
+    category: 'Web Application',
+    description: 'An interactive portfolio and custom content management system built with React, featuring in-place administrative editing, dynamic asset pipelines, and canvas visual effects.',
+    skills: ['JavaScript', 'CSS', 'TypeScript', 'HTML', 'React', 'Tailwind CSS', 'Vite', 'Framer Motion', 'Supabase'],
+    demoUrl: 'https://kweyl-portfolio.me/',
+    githubUrl: 'https://github.com/Qualestrom/kweyl_portfolio',
     status: 'deployed',
-    photos: []
-  },
-  {
-    id: '4',
-    title: 'Task & Workspace Flow',
-    category: 'Productivity Tool',
-    description: 'Collaborative task and sprint tracking board with real-time websocket synchronization, rich markdown editing, and workflow automation.',
-    skills: ['React', 'Node.js', 'Socket.io', 'MongoDB', 'Redis'],
-    demoUrl: 'https://demo-taskflow.example.com',
-    githubUrl: 'https://github.com/example/taskflow',
-    status: 'in-progress',
-    photos: []
+    photos: [
+      '/assets/recovered/projects/Screenshot 2026-09-06 112431.png',
+      '/assets/recovered/projects/Screenshot 2026-09-06 112550.png',
+      '/assets/recovered/projects/Screenshot 2026-09-06 112739.png'
+    ]
   },
   {
     id: '5',
-    title: 'Cloud DevOps Pipeline',
+    title: 'CREOSIM-MECHA',
+    tag: 'TESDA MECHATRONICS NC II TRAINER',
     category: 'Cloud & Infrastructure',
-    description: 'Automated multi-environment continuous integration and deployment pipeline configured with infrastructure-as-code and container orchestration.',
-    skills: ['Docker', 'Kubernetes', 'Terraform', 'AWS', 'GitHub Actions'],
-    demoUrl: '',
-    githubUrl: 'https://github.com/example/devops-pipeline',
+    description: 'Modular e-learning platform integrating React, Konva.js, and Supabase to simulate complex mechatronics training boards with real-time state validation and circuit logic verification.',
+    skills: ['TypeScript', 'React', 'Konva.js', 'Supabase', 'Tailwind CSS', 'HTML5 Canvas'],
+    demoUrl: 'https://creotec-mechalab-x.vercel.app',
+    githubUrl: 'https://github.com/Qualestrom/creotec-mechalab-x',
     status: 'confidential',
-    photos: []
+    photos: [
+      '/assets/recovered/projects/Screenshot 2026-08-29 213630.png',
+      '/assets/recovered/projects/image (1).png',
+      '/assets/recovered/projects/image (2).png',
+      '/assets/recovered/projects/image.png'
+    ]
+  },
+  {
+    id: '8WwyyZQN51XRGUEiJiAC',
+    title: 'CRADLE',
+    tag: 'MOBILE APPLICATION DORMITORY FINDER',
+    category: 'Mobile Application',
+    description: 'Cross-platform mobile accommodation portal engineered with Flutter and Supabase/Firebase, featuring dedicated onboarding flows, role-based access for tenants and landlords, and real-time listing queries.',
+    skills: ['Dart', 'Flutter', 'Firebase', 'Supabase', 'Cross-Platform (Android / iOS)', 'Scrumban', 'UI/UX Design'],
+    demoUrl: '',
+    githubUrl: 'https://github.com/Qualestrom/CRADLE_PROJECT',
+    status: 'confidential',
+    photos: [
+      '/assets/recovered/projects/Screenshot 2026-09-06 101759.png',
+      '/assets/recovered/projects/Screenshot 2026-09-06 101834.png'
+    ]
   }
 ];
 
@@ -412,7 +431,16 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const [projects, setProjects] = useState(() => {
     try {
       const cached = localStorage.getItem('portfolio_projects');
-      return cached ? JSON.parse(cached) : FALLBACK_PROJECTS;
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.length > 0) {
+          return parsed.map(p => ({
+            ...p,
+            photos: (p.photos || []).map(resolveAssetUrl)
+          }));
+        }
+      }
+      return FALLBACK_PROJECTS;
     } catch (_) {
       return FALLBACK_PROJECTS;
     }
@@ -436,18 +464,58 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const thumbnailsRef = useRef(null);
   const x = useMotionValue(0);
 
-  // Fetch projects from Firestore
+  // Fetch projects from Supabase or Firestore
   useEffect(() => {
     let isMounted = true;
     const fetchProjects = async () => {
       try {
+        // 1. Try Supabase first if configured
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data, error } = await supabase
+              .from('projects')
+              .select('*')
+              .order('sort_order', { ascending: true });
+
+            if (!error && data && data.length > 0) {
+              const list = data.map(item => ({
+                ...item,
+                photos: (item.photos || []).map(resolveAssetUrl)
+              }));
+              if (isMounted) {
+                setProjects(list);
+                try { localStorage.setItem('portfolio_projects', JSON.stringify(list)); } catch (_) {}
+                setIndex(0);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (supErr) {
+            console.warn('Supabase fetch projects notice:', supErr);
+          }
+        }
+
+        // 2. Fallback to Firestore
         const snapshot = await getDocs(collection(db, 'projects'));
         if (!snapshot.empty) {
-          const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          const list = snapshot.docs.map(d => {
+            const data = d.data();
+            return {
+              id: d.id,
+              ...data,
+              photos: (data.photos || []).map(resolveAssetUrl)
+            };
+          });
+
+          // Merge with any offline highlights (e.g. M7 Grand Prix, The Pickle)
+          const existingTitles = new Set(list.map(p => (p.title || '').toLowerCase()));
+          const additions = FALLBACK_PROJECTS.filter(fp => !existingTitles.has((fp.title || '').toLowerCase()));
+          const mergedList = [...additions, ...list];
+
           if (isMounted) {
-            setProjects(list);
+            setProjects(mergedList);
             try {
-              localStorage.setItem('portfolio_projects', JSON.stringify(list));
+              localStorage.setItem('portfolio_projects', JSON.stringify(mergedList));
             } catch (_) {}
             setIndex(0);
           }
@@ -458,7 +526,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           }
         }
       } catch (err) {
-        console.warn('Firestore fetch projects fallback:', err);
+        console.warn('Fetch projects fallback:', err);
         if (isMounted) {
           setProjects(FALLBACK_PROJECTS);
           setIndex(0);
@@ -527,7 +595,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
   // Helper to get image for a project
   const getProjectImage = (p, idx) => {
-    if (p.photos && p.photos.length > 0) return p.photos[0];
+    if (p.photos && p.photos.length > 0) return resolveAssetUrl(p.photos[0]);
     if (p.id && ['1', '2', '3', '4', '5'].includes(p.id)) {
       return DEFAULT_PROJECT_IMAGES[idx % DEFAULT_PROJECT_IMAGES.length];
     }
@@ -552,6 +620,23 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       isInferred: false,
       createdAt: new Date().toISOString(),
     };
+
+    if (isSupabaseConfigured && supabase) {
+      const newId = `proj-${Date.now()}`;
+      try {
+        await supabase.from('projects').insert({ id: newId, ...newProject });
+      } catch (err) {
+        console.warn('Add project Supabase fallback:', err);
+      }
+      const created = { id: newId, ...newProject };
+      setProjects(prev => {
+        const next = [...prev, created];
+        setIndex(next.length - 1);
+        return next;
+      });
+      return;
+    }
+
     try {
       const docRef = await addDoc(collection(db, 'projects'), newProject);
       const created = { id: docRef.id, ...newProject };
@@ -687,6 +772,16 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     setProjects(prev => prev.map(p =>
       p.id === projectId ? { ...p, [field]: value } : p
     ));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('projects').update({ [field]: value }).eq('id', projectId);
+      } catch (err) {
+        console.warn('Field update Supabase fallback:', err);
+      }
+      return;
+    }
+
     try {
       await updateDoc(doc(db, 'projects', projectId), { [field]: value });
     } catch (err) {
@@ -771,11 +866,21 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const handleDeleteProject = async (id, e) => {
     e?.stopPropagation?.();
     if (!window.confirm('Delete this project?')) return;
-    try {
-      await deleteDoc(doc(db, 'projects', id));
-    } catch (err) {
-      console.warn('Delete project local fallback:', err);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('projects').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Delete project Supabase fallback:', err);
+      }
+    } else {
+      try {
+        await deleteDoc(doc(db, 'projects', id));
+      } catch (err) {
+        console.warn('Delete project local fallback:', err);
+      }
     }
+
     setProjects(prev => {
       const filtered = prev.filter(p => p.id !== id);
       setIndex(prevIndex => Math.max(0, Math.min(filtered.length - 1, prevIndex)));
@@ -791,6 +896,34 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     try {
       const currentProj = projects.find(p => p.id === projectId);
 
+      // Supabase upload path
+      if (isSupabaseConfigured && supabase) {
+        const uploadedUrls = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          setUploading(prev => ({ ...prev, [projectId]: `Uploading photo ${i + 1}/${files.length} to Supabase...` }));
+          const { publicUrl } = await uploadToSupabaseStorage(`projects/${projectId}`, file);
+          uploadedUrls.push(publicUrl);
+        }
+
+        const currentPhotos = (currentProj && Array.isArray(currentProj.photos)) ? [...currentProj.photos] : [];
+        const updatedPhotos = [...currentPhotos, ...uploadedUrls];
+
+        await supabase
+          .from('projects')
+          .update({ photos: updatedPhotos })
+          .eq('id', projectId);
+
+        setProjects(prev => prev.map(p => {
+          if (p.id === projectId) {
+            return { ...p, photos: updatedPhotos };
+          }
+          return p;
+        }));
+        return;
+      }
+
+      // Firebase upload path fallback
       const uploadedUrls = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -831,7 +964,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       }));
     } catch (err) {
       console.error('Error uploading photo(s):', err);
-      alert('Photo upload failed: ' + (err.message || 'Check Firebase storage configuration.'));
+      alert('Photo upload notice: ' + (err.message || 'Check storage configuration.'));
     } finally {
       setUploading(prev => ({ ...prev, [projectId]: false }));
     }

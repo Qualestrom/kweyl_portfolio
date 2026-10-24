@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { supabase, isSupabaseConfigured } from '../supabase';
 import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import SectionLabels from './SectionLabels';
 import MobileNav from './MobileNav';
@@ -47,26 +48,26 @@ export const DEFAULT_CONFIG = {
   heroHeadline1: 'PRECISION IN EVERY PIXEL.',
   heroHeadline2: 'PERFORMANCE IN EVERY DEPLOYMENT.',
   heroHighlightedWords: ['PRECISION', 'PERFORMANCE'],
-  heroSub: 'Cross-platform developer specializing in React and Flutter. I deliver rapid, pixel-perfect web and mobile solutions while building scalable architectures that anticipate future needs.',
+  heroSub: 'Full-stack developer specializing in React, React Native, and Supabase. I deliver rapid, pixel-perfect web and mobile solutions with 3D interactive graphics and robust cloud architectures.',
   heroProfileImage: '',
   heroFrameAnimation: 'orbit',
   heroBtnPrimaryText: 'View Projects',
   heroBtnSecondaryText: 'Download CV',
-  heroCvUrl: '/cv.pdf',
+  heroCvUrl: '/assets/recovered/resumes/Lamera_Resume.pdf',
   heroCvData: null,
   isMaintenanceMode: false,
   heroSocials: [
-    { id: '1', url: 'https://github.com', label: 'GitHub Profile' },
+    { id: '1', url: 'https://github.com/Qualestrom', label: 'GitHub Profile' },
     { id: '2', url: 'https://linkedin.com', label: 'LinkedIn Profile' }
   ],
-  aboutTitle: 'Software Developer',
-  aboutText1: 'I am a Computer Engineering graduate specializing in Software Development. I work with React for web front-ends and Flutter for cross-platform mobile applications.',
+  aboutTitle: 'Software Developer & Architect',
+  aboutText1: 'I am a Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile Development. I architect high-performance React front-ends with Three.js graphics, React Native mobile apps, and scalable Supabase backends.',
   aboutText2: '',
   aboutStatus: 'Open to Work',
-  aboutSoftwareSkills: ['React', 'TypeScript', 'C#'],
-  aboutMobileSkills: ['Flutter', 'Dart', 'React Native', 'PWA'],
-  aboutCloudSkills: ['Firebase', 'Supabase', 'Vercel'],
-  aboutDesignSkills: ['Figma', 'UI/UX', 'Git / CI/CD'],
+  aboutSoftwareSkills: ['React', 'TypeScript', 'Three.js', 'React Three Fiber', 'Tailwind CSS', 'Vite', 'Konva.js', 'C#'],
+  aboutMobileSkills: ['React Native', 'Expo', 'Flutter', 'Dart', 'Cross-Platform Architecture', 'PWA'],
+  aboutCloudSkills: ['Supabase', 'PostgreSQL', 'Firebase', 'Row Level Security', 'Vercel', 'Realtime Sync'],
+  aboutDesignSkills: ['Figma', 'UI/UX Design', '3D Graphics', 'Framer Motion', 'Canvas Confetti', 'Git / CI/CD'],
 };
 
 // ─── Portfolio SPA (state-based navigation) ──────────────────────────────────────
@@ -86,8 +87,28 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
   const konamiIndexRef = useRef(0);
   const navigate = useNavigate();
 
-  // Real-time Firestore sync with onSnapshot
+  // Real-time Supabase / Firestore sync
   useEffect(() => {
+    if (isSupabaseConfigured && supabase) {
+      supabase
+        .from('config')
+        .select('data')
+        .eq('id', 'main')
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data?.data) {
+            setConfig((prev) => {
+              const merged = { ...prev, ...data.data };
+              try {
+                localStorage.setItem('portfolio_config', JSON.stringify(merged));
+              } catch (_) {}
+              return merged;
+            });
+          }
+        });
+      return;
+    }
+
     const docRef = doc(db, 'config', 'main');
     const unsubscribe = onSnapshot(
       docRef,
@@ -111,7 +132,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     return () => unsubscribe();
   }, []);
 
-  // Update config in state, local cache, and Firestore
+  // Update config in state, local cache, and Supabase / Firestore
   const handleUpdateConfig = useCallback(async (updatesOrKey, value) => {
     let patch = {};
     if (typeof updatesOrKey === 'string') {
@@ -131,7 +152,21 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
 
     setSaveStatus('Saving changes...');
 
-    // 2. Persist to Firestore
+    // 2. Persist to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: current } = await supabase.from('config').select('data').eq('id', 'main').single();
+        const mergedData = { ...(current?.data || {}), ...patch };
+        await supabase.from('config').upsert({ id: 'main', data: mergedData });
+        setSaveStatus('Saved to Supabase');
+        setTimeout(() => setSaveStatus(''), 2500);
+        return;
+      } catch (supErr) {
+        console.warn('Supabase config update error:', supErr);
+      }
+    }
+
+    // 3. Fallback to Firestore
     try {
       const docRef = doc(db, 'config', 'main');
       await setDoc(docRef, patch, { merge: true });

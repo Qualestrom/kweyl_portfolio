@@ -52,54 +52,6 @@ const PROJECT_STATUS_CONFIG = {
   }
 };
 
-// ─── Genshin Oculus Category Tabs & Filter Logic ──────────────────────────────
-export const CATEGORY_TABS = [
-  { id: 'all', label: 'All Projects' },
-  { id: 'web', label: 'Web & 3D' },
-  { id: 'mobile', label: 'Mobile / Expo' },
-  { id: 'systems', label: 'Systems & IoT' },
-];
-
-export const matchesCategory = (project, category) => {
-  if (category === 'all') return true;
-  const textToSearch = [
-    project.tag || '',
-    project.title || '',
-    ...(Array.isArray(project.skills) ? project.skills : []),
-    project.description || ''
-  ].join(' ').toLowerCase();
-
-  if (category === 'web') {
-    return textToSearch.includes('web') || 
-           textToSearch.includes('three') || 
-           (textToSearch.includes('react') && !textToSearch.includes('react native')) || 
-           textToSearch.includes('vite') ||
-           textToSearch.includes('frontend') ||
-           textToSearch.includes('fullstack') ||
-           textToSearch.includes('portfolio') ||
-           textToSearch.includes('grand prix');
-  }
-  if (category === 'mobile') {
-    return textToSearch.includes('mobile') || 
-           textToSearch.includes('react native') || 
-           textToSearch.includes('expo') || 
-           textToSearch.includes('flutter') || 
-           textToSearch.includes('pickle') ||
-           textToSearch.includes('dart');
-  }
-  if (category === 'systems') {
-    return textToSearch.includes('hardware') || 
-           textToSearch.includes('iot') || 
-           textToSearch.includes('cisco') || 
-           textToSearch.includes('ccna') || 
-           textToSearch.includes('c#') || 
-           textToSearch.includes('network') || 
-           textToSearch.includes('embedded') || 
-           textToSearch.includes('simulation') || 
-           textToSearch.includes('system');
-  }
-  return true;
-};
 
 const getEffectiveStatus = (project) => {
   if (project?.status && PROJECT_STATUS_CONFIG[project.status]) {
@@ -209,19 +161,16 @@ const ProjectMediaSlider = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 text-center select-none"
+            className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex flex-col items-end justify-start p-6 sm:p-8 pt-10 sm:pt-12 select-none"
             style={{ zIndex: 1 }}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
-            <div className="relative z-10 flex flex-col items-center gap-3 max-w-sm">
-              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 dark:bg-cyan-500/10 border border-sky-500/30 dark:border-cyan-400/30 flex items-center justify-center text-sky-400 dark:text-cyan-300 shadow-[0_0_24px_rgba(2,132,199,0.2)]">
-                <ImageIcon size={28} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_35%,rgba(34,211,238,0.08),transparent_70%)] pointer-events-none" />
+            <div className="relative z-10 flex flex-col items-end gap-2 max-w-xs text-right opacity-60 group-hover:opacity-90 transition-opacity">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/25 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
+                <ImageIcon size={24} />
               </div>
-              <span className="text-sm font-bold text-white font-['Outfit'] tracking-wide">
-                {title || 'Blank Project'}
-              </span>
-              <span className="text-xs font-mono text-slate-400 tracking-wide">
-                {isAdmin ? 'Upload project screenshots using "Add Photos"' : 'Project preview coming soon'}
+              <span className="text-[11px] font-mono text-cyan-300/80 tracking-wider uppercase font-semibold">
+                {isAdmin ? 'Upload Screenshots' : 'Preview In Progress'}
               </span>
             </div>
           </motion.div>
@@ -496,7 +445,6 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   });
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
-  const [activeCategory, setActiveCategory] = useState('all');
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState({});
 
@@ -514,17 +462,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const thumbnailsRef = useRef(null);
   const x = useMotionValue(0);
 
-  // Derived filtered list of projects based on active Oculus category tab
-  const displayedProjects = useMemo(() => {
-    if (activeCategory === 'all') return projects;
-    const filtered = projects.filter(p => matchesCategory(p, activeCategory));
-    return filtered.length > 0 ? filtered : projects;
-  }, [projects, activeCategory]);
-
-  const handleCategoryChange = (catId) => {
-    setActiveCategory(catId);
-    setIndex(0);
-  };
+  const displayedProjects = projects;
 
   // Fetch projects from Supabase or Firestore
   useEffect(() => {
@@ -1187,45 +1125,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           )}
         </div>
 
-        {/* ─── Genshin Cryo Oculus Floating Filter Dock ─── */}
-        <motion.div
-          animate={{ y: [-4, 4, -4] }}
-          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="cryo-oculus-dock shrink-0 ml-auto"
-          role="tablist"
-          aria-label="Filter projects by category"
-        >
-          {CATEGORY_TABS.map((tab) => {
-            const isActive = activeCategory === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => handleCategoryChange(tab.id)}
-                className={`cryo-oculus-tab ${isActive ? 'is-active' : ''}`}
-                title={`Filter by ${tab.label}`}
-              >
-                <span className="cryo-oculus-diamond" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </motion.div>
       </div>
 
-      {/* ─── Main Carousel Display with Genshin Cryo HUD ─── */}
+      {/* ─── Main Carousel Display ─── */}
       <div 
         className="projects-carousel relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-300/80 dark:border-white/[0.1] bg-slate-950/80 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.15)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]" 
         ref={containerRef}
         data-no-swipe="true"
       >
-        {/* Genshin Cryo HUD Corner Brackets */}
-        <div className="cryo-hud-corner corner-tl" />
-        <div className="cryo-hud-corner corner-tr" />
-        <div className="cryo-hud-corner corner-bl" />
-        <div className="cryo-hud-corner corner-br" />
 
         <motion.div
           className="flex cursor-grab active:cursor-grabbing"

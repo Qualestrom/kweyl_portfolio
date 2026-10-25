@@ -102,11 +102,6 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
         exit={{ opacity: 0, scale: 0.94, y: 16 }}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Genshin Cryo HUD Corner Brackets */}
-        <div className="cryo-hud-corner corner-tl" />
-        <div className="cryo-hud-corner corner-tr" />
-        <div className="cryo-hud-corner corner-bl" />
-        <div className="cryo-hud-corner corner-br" />
 
         {/* Top Control Bar */}
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 shrink-0">
@@ -339,16 +334,6 @@ const LandscapeCarouselCard = ({
         textRendering: 'optimizeLegibility',
       }}
     >
-      {/* Genshin Cryo HUD Corner Brackets */}
-      {isActive && (
-        <>
-          <div className="cryo-hud-corner corner-tl" />
-          <div className="cryo-hud-corner corner-tr" />
-          <div className="cryo-hud-corner corner-bl" />
-          <div className="cryo-hud-corner corner-br" />
-        </>
-      )}
-
       {/* ─── Top Landscape Certificate Frame (Seamless Edge-to-Edge Display) ─── */}
       <div 
         onClick={(e) => {

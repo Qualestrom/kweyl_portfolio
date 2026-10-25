@@ -136,11 +136,6 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
   // ── Reusable skill card renderer ───────────────────────────────────────
   const renderSkillCard = (icon, title, number, skills, configKey) => (
     <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-3 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-xs dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(103,232,249,0.15)] transition-all duration-300 group">
-      {/* Genshin Cryo HUD Corner Brackets */}
-      <div className="cryo-hud-corner corner-tl" />
-      <div className="cryo-hud-corner corner-tr" />
-      <div className="cryo-hud-corner corner-bl" />
-      <div className="cryo-hud-corner corner-br" />
 
       <div>
         {/* Header */}
@@ -168,7 +163,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <section className="section-viewport overflow-hidden" id="about-section">
-      <div className="section-content w-full flex flex-col justify-center items-center px-3.5 sm:px-8 lg:pl-32 xl:pl-44 lg:pr-12 xl:pr-16 max-w-[1480px] my-auto">
+      <div className="section-content w-full flex flex-col justify-center items-center px-3.5 sm:px-8 lg:pl-[190px] xl:pl-[240px] lg:pr-8 xl:pr-14 max-w-[1480px] my-auto">
         
         {/* ─── 4-Column 2-Row Responsive Bento Grid ──────────────────────────── */}
         <div className="w-full grid grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-2 sm:gap-3.5 xl:gap-4.5 h-auto lg:h-[460px] xl:h-[480px] my-auto">
@@ -177,11 +172,6 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
           <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 transition-all duration-300 group">
-            {/* Genshin Cryo HUD Corner Brackets */}
-            <div className="cryo-hud-corner corner-tl" />
-            <div className="cryo-hud-corner corner-tr" />
-            <div className="cryo-hud-corner corner-bl" />
-            <div className="cryo-hud-corner corner-br" />
 
             {/* Ambient Glow */}
             <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />

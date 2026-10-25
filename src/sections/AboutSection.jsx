@@ -66,16 +66,19 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
       {skills.map((skill) => (
         <span
           key={skill}
-          className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded sm:rounded-lg text-[10px] sm:text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1 sm:gap-1.5 transition-colors duration-200 ${
-            isAdmin ? 'hover:border-red-400/40 hover:bg-red-500/10' : 'hover:text-sky-700 dark:hover:text-slate-100 hover:border-sky-400 dark:hover:border-white/20'
+          className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded sm:rounded-lg text-[10px] sm:text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1 sm:gap-1.5 transition-all duration-200 ${
+            isAdmin 
+              ? 'hover:border-red-400/40 hover:bg-red-500/10' 
+              : 'hover:text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15 hover:shadow-[0_0_12px_rgba(103,232,249,0.2)] hover:scale-[1.03]'
           }`}
         >
-          {skill}
+          <span className="text-[8px] text-cyan-500 dark:text-cyan-400 font-bold select-none">◇</span>
+          <span>{skill}</span>
           {isAdmin && (
             <button
               type="button"
               onClick={() => handleRemoveSkill(configKey, skills, skill)}
-              className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all duration-150 cursor-pointer flex-shrink-0"
+              className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all duration-150 cursor-pointer flex-shrink-0 ml-0.5"
               title={`Remove ${skill}`}
             >
               <X size={8} />
@@ -132,18 +135,25 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Reusable skill card renderer ───────────────────────────────────────
   const renderSkillCard = (icon, title, number, skills, configKey) => (
-    <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-2.5 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-xs dark:shadow-none hover:border-sky-400 dark:hover:border-cyan-400/40 hover:shadow-[0_0_24px_rgba(2,132,199,0.15)] dark:hover:shadow-[0_0_24px_rgba(103,232,249,0.12)] transition-all duration-300 group">
+    <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-3 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-xs dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(103,232,249,0.15)] transition-all duration-300 group">
+      {/* Genshin Cryo HUD Corner Brackets */}
+      <div className="cryo-hud-corner corner-tl" />
+      <div className="cryo-hud-corner corner-tr" />
+      <div className="cryo-hud-corner corner-bl" />
+      <div className="cryo-hud-corner corner-br" />
+
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between mb-1.5 sm:mb-3">
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm">
-              {React.cloneElement(icon, { size: 14 })}
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.2)]">
+              {React.cloneElement(icon, { size: 15 })}
             </div>
             <h3 className="font-bold text-xs sm:text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit'] truncate">{title}</h3>
           </div>
-          <span className="text-[8px] sm:text-[10px] font-mono text-sky-800 dark:text-cyan-400/80 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/20 px-1.5 sm:px-2 py-0.5 rounded-md font-bold">
-            {number}
+          <span className="text-[9px] sm:text-[10px] font-mono text-cyan-700 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 shadow-xs">
+            <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 inline-block" />
+            <span>{number}</span>
           </span>
         </div>
       </div>
@@ -166,16 +176,22 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           {/* ─────────────────────────────────────────────────────────────
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-sky-400 dark:hover:border-cyan-400/40 transition-all duration-300 group">
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 transition-all duration-300 group">
+            {/* Genshin Cryo HUD Corner Brackets */}
+            <div className="cryo-hud-corner corner-tl" />
+            <div className="cryo-hud-corner corner-tr" />
+            <div className="cryo-hud-corner corner-bl" />
+            <div className="cryo-hud-corner corner-br" />
+
             {/* Ambient Glow */}
             <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />
             
             {/* Top Bar: Eyebrow + Status Badge */}
             <div>
               <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3.5">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 w-fit shadow-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-cyan-400 animate-pulse" />
-                  About Me
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 w-fit shadow-xs">
+                  <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
+                  <span>About Me</span>
                 </div>
 
                 {/* Status Badge — admin clicks to cycle, visitors see static */}
@@ -184,25 +200,25 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                     type="button"
                     onClick={cycleStatus}
                     title={`Click to change status • Current: ${status}`}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border transition-all cursor-pointer backdrop-blur-md ${
                       isAvailable
-                        ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20 hover:bg-emerald-200'
-                        : 'text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20 hover:bg-amber-200'
+                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                        : 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 hover:bg-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-600 dark:bg-emerald-400 animate-pulse' : 'bg-amber-600 dark:bg-amber-400'}`} />
-                    {status}
+                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span>{status}</span>
                   </button>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border ${
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border backdrop-blur-md ${
                       isAvailable
-                        ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/20'
-                        : 'text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/20'
+                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                        : 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-600 dark:bg-emerald-400 animate-pulse' : 'bg-amber-600 dark:bg-amber-400'}`} />
-                    {status}
+                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span>{status}</span>
                   </span>
                 )}
               </div>

@@ -34,22 +34,71 @@ import useInputDevice from '../utils/useInputDevice';
 const PROJECT_STATUS_CONFIG = {
   'deployed': {
     label: 'Deployed',
-    colorClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]',
-    dotClass: 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]',
+    colorClass: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(16,185,129,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-2 h-2 rotate-45 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.9)] shrink-0',
     icon: Globe,
   },
   'in-progress': {
     label: 'In Progress',
-    colorClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.15)]',
-    dotClass: 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]',
+    colorClass: 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(6,182,212,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-2 h-2 rotate-45 bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.9)] animate-pulse shrink-0',
     icon: Sparkles,
   },
   'confidential': {
     label: 'Confidential',
-    colorClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]',
-    dotClass: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]',
+    colorClass: 'bg-amber-500/10 text-amber-300 border border-amber-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(245,158,11,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-2 h-2 rotate-45 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.9)] shrink-0',
     icon: Lock,
   }
+};
+
+// ─── Genshin Oculus Category Tabs & Filter Logic ──────────────────────────────
+export const CATEGORY_TABS = [
+  { id: 'all', label: 'All Projects' },
+  { id: 'web', label: 'Web & 3D' },
+  { id: 'mobile', label: 'Mobile / Expo' },
+  { id: 'systems', label: 'Systems & IoT' },
+];
+
+export const matchesCategory = (project, category) => {
+  if (category === 'all') return true;
+  const textToSearch = [
+    project.tag || '',
+    project.title || '',
+    ...(Array.isArray(project.skills) ? project.skills : []),
+    project.description || ''
+  ].join(' ').toLowerCase();
+
+  if (category === 'web') {
+    return textToSearch.includes('web') || 
+           textToSearch.includes('three') || 
+           (textToSearch.includes('react') && !textToSearch.includes('react native')) || 
+           textToSearch.includes('vite') ||
+           textToSearch.includes('frontend') ||
+           textToSearch.includes('fullstack') ||
+           textToSearch.includes('portfolio') ||
+           textToSearch.includes('grand prix');
+  }
+  if (category === 'mobile') {
+    return textToSearch.includes('mobile') || 
+           textToSearch.includes('react native') || 
+           textToSearch.includes('expo') || 
+           textToSearch.includes('flutter') || 
+           textToSearch.includes('pickle') ||
+           textToSearch.includes('dart');
+  }
+  if (category === 'systems') {
+    return textToSearch.includes('hardware') || 
+           textToSearch.includes('iot') || 
+           textToSearch.includes('cisco') || 
+           textToSearch.includes('ccna') || 
+           textToSearch.includes('c#') || 
+           textToSearch.includes('network') || 
+           textToSearch.includes('embedded') || 
+           textToSearch.includes('simulation') || 
+           textToSearch.includes('system');
+  }
+  return true;
 };
 
 const getEffectiveStatus = (project) => {
@@ -447,6 +496,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   });
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState({});
 
@@ -463,6 +513,18 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   const containerRef = useRef(null);
   const thumbnailsRef = useRef(null);
   const x = useMotionValue(0);
+
+  // Derived filtered list of projects based on active Oculus category tab
+  const displayedProjects = useMemo(() => {
+    if (activeCategory === 'all') return projects;
+    const filtered = projects.filter(p => matchesCategory(p, activeCategory));
+    return filtered.length > 0 ? filtered : projects;
+  }, [projects, activeCategory]);
+
+  const handleCategoryChange = (catId) => {
+    setActiveCategory(catId);
+    setIndex(0);
+  };
 
   // Fetch projects from Supabase or Firestore
   useEffect(() => {
@@ -549,15 +611,15 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   }, [projects]);
 
-  // Currently active project
+  // Currently active project from displayed list
   const activeProject = useMemo(() => {
-    return projects[index] || projects[0] || null;
-  }, [projects, index]);
+    return displayedProjects[index] || displayedProjects[0] || null;
+  }, [displayedProjects, index]);
 
   // Project index string (01, 02, etc.)
   const activeIndexNumber = useMemo(() => {
-    return String(index + 1).padStart(2, '0');
-  }, [index]);
+    return String(Math.min(index + 1, displayedProjects.length)).padStart(2, '0');
+  }, [index, displayedProjects.length]);
 
   // Main Carousel Animation
   useEffect(() => {
@@ -1047,7 +1109,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
             Selected Work
           </div>
           <span className="text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
-            {activeIndexNumber} / {String(projects.length).padStart(2, '0')}
+            {activeIndexNumber} / {String(displayedProjects.length).padStart(2, '0')}
           </span>
 
           {isAdmin && (
@@ -1124,14 +1186,47 @@ export default function ProjectsShowcase({ isAdmin = false }) {
             )
           )}
         </div>
+
+        {/* ─── Genshin Cryo Oculus Floating Filter Dock ─── */}
+        <motion.div
+          animate={{ y: [-4, 4, -4] }}
+          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+          className="cryo-oculus-dock shrink-0 ml-auto"
+          role="tablist"
+          aria-label="Filter projects by category"
+        >
+          {CATEGORY_TABS.map((tab) => {
+            const isActive = activeCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handleCategoryChange(tab.id)}
+                className={`cryo-oculus-tab ${isActive ? 'is-active' : ''}`}
+                title={`Filter by ${tab.label}`}
+              >
+                <span className="cryo-oculus-diamond" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </motion.div>
       </div>
 
-      {/* ─── Main Carousel Display ─── */}
+      {/* ─── Main Carousel Display with Genshin Cryo HUD ─── */}
       <div 
         className="projects-carousel relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-300/80 dark:border-white/[0.1] bg-slate-950/80 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.15)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]" 
         ref={containerRef}
         data-no-swipe="true"
       >
+        {/* Genshin Cryo HUD Corner Brackets */}
+        <div className="cryo-hud-corner corner-tl" />
+        <div className="cryo-hud-corner corner-tr" />
+        <div className="cryo-hud-corner corner-bl" />
+        <div className="cryo-hud-corner corner-br" />
+
         <motion.div
           className="flex cursor-grab active:cursor-grabbing"
           drag="x"
@@ -1151,12 +1246,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
               newIndex = offset > 0 ? index - 1 : index + 1;
             }
 
-            newIndex = Math.max(0, Math.min(projects.length - 1, newIndex));
+            newIndex = Math.max(0, Math.min(displayedProjects.length - 1, newIndex));
             setIndex(newIndex);
           }}
           style={{ x }}
         >
-          {projects.map((project, idx) => {
+          {displayedProjects.map((project, idx) => {
             const isCurrent = idx === index;
             const hasLink = Boolean(project.demoUrl || project.githubUrl);
 
@@ -1465,10 +1560,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         </motion.button>
 
         <motion.button
-          disabled={index === projects.length - 1}
-          onClick={() => setIndex((i) => Math.min(projects.length - 1, i + 1))}
+          disabled={index === displayedProjects.length - 1}
+          onClick={() => setIndex((i) => Math.min(displayedProjects.length - 1, i + 1))}
           className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
-            index === projects.length - 1
+            index === displayedProjects.length - 1
               ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
               : 'bg-white dark:bg-slate-950/70 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-white/20 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-400 shadow-xl hover:scale-105 active:scale-95 cursor-pointer'
           }`}
@@ -1490,7 +1585,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           }
         `}</style>
         <div className="flex items-center gap-1.5 h-16 sm:h-20" style={{ width: 'fit-content' }}>
-          {projects.map((project, i) => {
+          {displayedProjects.map((project, i) => {
             const thumbUrl = getProjectImage(project, i);
             const isCurrent = i === index;
 

@@ -59,38 +59,27 @@ graph LR
 4. **Enhanced Gallery Crossfades**:
    - Refine the multi-image gallery with smooth opacity/scale crossfades, thumbnail preview strip, and touch swipe.
 
-### ❓ Questions for User Feedback on Phase 2
-* **Question 2.1 (Filter Tabs Placement)**:
-  * **Option A (Recommended)**: Floating pill bar positioned directly beneath the section title with animated diamond active pill.
-  * **Option B**: Integrated into the header row alongside the project navigation counter (`01 / 05`).
-* **Question 2.2 (View Mode Toggle)**:
-  * **Option A (Recommended)**: Retain the sleek horizontal carousel as the primary view, with smooth left/right drag and keyboard navigation.
-  * **Option B**: Add a toggle icon in the top right to switch between **Carousel View** and **Grid Overview**.
-* **Question 2.3 (Project Badging & Rarity)**:
-  * Would you like featured projects (*M7 Grand Prix* and *The Pickle*) marked with a **5-Star Cryo Vision crest** or a subtle **"FEATURED ARCHITECTURE"** pill badge?
+### ❓ Locked Decisions for Phase 2 (User Approved)
+* **Filter Tabs Placement**: Floating side-aligned tabs with the feel of a floating Genshin Oculus (gentle hovering levitation physics, diamond rhombus markers, non-rotating).
+* **View Mode**: Option A — retain the sleek horizontal carousel with left/right drag and keyboard navigation.
+* **Project Badging**: Kept as-is for future automation feature; no artificial rarity crests.
 
 ---
 
 ## 4. Phase 3: About & Skills
 
 ### Implementation Scope
-1. **Cryo Talent / Constellation Node Architecture**:
-   - Transform the 4 skill groups (*Software*, *Mobile*, *Cloud*, *Design*) into Genshin talent-style crystalline nodes.
-   - Subtle connecting ice-circuit lines linking related skills (e.g., `React` $\leftrightarrow$ `TypeScript` $\leftrightarrow$ `Three.js`).
+1. **Cryo Talent Cards**:
+   - 4 frosted crystalline Talent Cards with diamond accents (Software, Mobile, Cloud, Design).
+   - Clean, professional styling with zero gimmicky AI embellishments.
 2. **Interactive Project-Skill Linking**:
-   - Hovering or clicking a skill tag (e.g., `Supabase`) subtly highlights the cards in Projects that utilize it (*The Pickle*, *Portfolio*).
-3. **Milestone Bento Counter**:
-   - A clean frosted glass mini-bento card displaying key architectural metrics:
-     - `13+` Production Repositories & Certifications
-     - `100%` Recovered & Cloud-Synchronized Assets
-     - `Cross-Platform` Web & Mobile Architecture
+   - Hovering or clicking a skill subtly illuminates matching project cards in the showcase.
+3. **Status Badge**:
+   - Clean standard professional status (`Open to Work`, `Open to Freelance`) with Cryo gemstone indicator.
 
-### ❓ Questions for User Feedback on Phase 3
-* **Question 3.1 (Skill Presentation)**:
-  * **Option A (Recommended)**: Grouped into 4 frosted crystalline Talent Cards with diamond icons (Software, Mobile, Cloud, Design).
-  * **Option B**: An interconnected Constellation Node Map where skills are arranged as interconnected star points.
-* **Question 3.2 (Status Badge)**:
-  * The current status is `Open to Work`. Would you like a Genshin character-card style status pill (e.g. `AVAILABLE // ADVENTURER'S GUILD` or standard professional `AVAILABLE FOR HIRE`)?
+### ❓ Locked Decisions for Phase 3 (User Approved)
+* **Skill Presentation**: Option A — 4 frosted crystalline Talent Cards.
+* **Status Badge**: Standard professional format, clean and authentic.
 
 ---
 
@@ -98,32 +87,25 @@ graph LR
 
 ### Implementation Scope
 1. **Prismatic Crystal Display**:
-   - Refine the 3D rotating carousel cards with frosted ice borders, silver-blue bevels, and Cisco / Python accreditation badges.
+   - Refine the cylindrical carousel cards with frosted ice borders and Cisco / Python accreditation badges.
 2. **High-Fidelity PDF Viewer Modal**:
-   - Upgrade the in-modal certificate view with crisp zoom controls, page flip animation, and a one-click credential ID copy button.
-3. **Direct Verification Quick-Chips**:
-   - Direct link to official Cisco Networking Academy validation URLs with a security seal indicator.
+   - Fast PDF modal preview with zoom and direct verification links.
 
-### ❓ Questions for User Feedback on Phase 4
-* **Question 4.1 (Carousel Motion vs. Fan Deck)**:
-  * **Option A (Recommended)**: Retain the current smooth 3D cylindrical rotation with arrow buttons and wheel controls.
-  * **Option B**: Switch to an overlapping horizontal card fan deck with active card elevation on hover.
+### ❓ Locked Decisions for Phase 4 (User Approved)
+* **Carousel Format**: Option A — retain the smooth cylindrical rotation with keyboard and navigation arrow controls.
 
 ---
 
 ## 6. Phase 5: Mobile Ergonomics & Overall Polish
 
 ### Implementation Scope
-1. **Bottom Navigation Enhancements**:
-   - Add haptic-style visual pulse on tab tap.
-   - Adjust safe-area insets (`env(safe-area-inset-bottom)`) for iPhone notch/home bar and Android gesture nav.
+1. **Full-Width Frosted Bottom Bar**:
+   - Convert mobile navigation from floating dock into a sleek, full-width frosted glass bottom bar with `env(safe-area-inset-bottom)` support.
 2. **Zero-Layout Shift & Contrast Verification**:
-   - Test every section across breakpoints: Desktop (1440px), Laptop (1024px), Tablet (768px), and Mobile (375px).
-   - Ensure complete light-theme compatibility for all newly added Cryo elements.
+   - Complete audit across desktop, laptop, tablet, and mobile viewports.
 
-### ❓ Questions for User Feedback on Phase 5
-* **Question 5.1 (Mobile Nav Style)**:
-  * Keep the floating rounded bottom dock, or convert to a full-width frosted bottom bar on small mobile screens?
+### ❓ Locked Decisions for Phase 5 (User Approved)
+* **Mobile Nav Style**: Full-width frosted glass bottom bar.
 
 ---
 

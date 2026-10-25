@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, animate, useTransform } from 'framer-motion';
+import { motion, useMotionValue, animate, useTransform, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -15,7 +15,11 @@ import {
   Upload,
   MousePointerClick,
   FileText,
-  Sparkles
+  Sparkles,
+  Download,
+  ZoomIn,
+  ZoomOut,
+  Maximize2
 } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -57,6 +61,223 @@ const FALLBACK_CERTIFICATES = [
   }
 ];
 
+// ─── Crystalline High-Fidelity Certificate Inspector Modal ───
+const CertificateModal = ({ cert, isOpen, onClose }) => {
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const { isTouch, isMobile } = useInputDevice();
+  const isTouchDevice = isTouch || isMobile;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) setZoomLevel(1);
+  }, [isOpen]);
+
+  if (!isOpen || !cert) return null;
+
+  const fileUrl = cert.pdfUrl || cert.imageUrl || '';
+  const isPdf = Boolean(cert.pdfUrl && (cert.pdfUrl.toLowerCase().endsWith('.pdf') || cert.pdfUrl.includes('.pdf?')));
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <motion.div
+        className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-cyan-500/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 16 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* Genshin Cryo HUD Corner Brackets */}
+        <div className="cryo-hud-corner corner-tl" />
+        <div className="cryo-hud-corner corner-tr" />
+        <div className="cryo-hud-corner corner-bl" />
+        <div className="cryo-hud-corner corner-br" />
+
+        {/* Top Control Bar */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/60 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/30 shrink-0">
+              <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400" />
+              <span>OFFICIAL ACCREDITATION</span>
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate font-['Outfit']">
+                {cert.title}
+              </h3>
+              <p className="text-xs font-mono text-sky-700 dark:text-cyan-400 truncate font-semibold">
+                {cert.issuer} {cert.date ? `• ${cert.date}` : ''}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Direct Verification Link (if provided) */}
+            {cert.verifyUrl && (
+              <a
+                href={ensureAbsoluteUrl(cert.verifyUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                title="Verify on official issuer portal"
+              >
+                <ShieldCheck size={13} />
+                <span>Verify Credential</span>
+                <ExternalLink size={11} />
+              </a>
+            )}
+
+            {/* Download / Open File Button */}
+            {fileUrl && (
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={cert.title ? `${cert.title.replace(/\s+/g, '_')}.pdf` : undefined}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                title="Open or download original document"
+              >
+                <Download size={13} />
+                <span className="hidden xs:inline">Download</span>
+              </a>
+            )}
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Viewport Body */}
+        <div className="flex-1 min-h-[300px] max-h-[calc(90vh-140px)] bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center overflow-auto p-2 sm:p-4 relative">
+          {cert.imageUrl ? (
+            <div className="relative w-full h-full flex items-center justify-center overflow-auto">
+              <img
+                src={cert.imageUrl}
+                alt={cert.title}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-md transition-transform duration-200"
+                style={{ transform: `scale(${zoomLevel})` }}
+              />
+              <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 text-white text-xs font-mono">
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(z => Math.max(0.7, z - 0.15))}
+                  className="p-1 hover:text-cyan-300 cursor-pointer"
+                  title="Zoom Out"
+                >
+                  <ZoomOut size={13} />
+                </button>
+                <span className="px-1 text-[11px]">{Math.round(zoomLevel * 100)}%</span>
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(z => Math.min(1.8, z + 0.15))}
+                  className="p-1 hover:text-cyan-300 cursor-pointer"
+                  title="Zoom In"
+                >
+                  <ZoomIn size={13} />
+                </button>
+              </div>
+            </div>
+          ) : isPdf ? (
+            <div className="w-full h-full min-h-[420px] flex flex-col">
+              {isTouchDevice ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 flex items-center justify-center text-sky-700 dark:text-cyan-400">
+                    <FileText size={28} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white font-['Outfit']">
+                      Official PDF Certificate Available
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mt-1">
+                      Touch screens handle PDFs best in full window mode. Tap below to view or save the verified document.
+                    </p>
+                  </div>
+                  <a
+                    href={cert.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold font-mono text-sm text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40 shadow-lg"
+                  >
+                    <ExternalLink size={15} />
+                    <span>Open PDF in Full Screen</span>
+                  </a>
+                </div>
+              ) : (
+                <iframe
+                  src={`${cert.pdfUrl}#toolbar=0`}
+                  title={cert.title}
+                  className="w-full h-full min-h-[450px] rounded-lg border border-slate-200 dark:border-white/10"
+                />
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
+              <div className="w-16 h-16 rounded-3xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 flex items-center justify-center text-sky-700 dark:text-cyan-400">
+                <Award size={32} />
+              </div>
+              <h4 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
+                {cert.title}
+              </h4>
+              <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+                Issued by <span className="font-bold text-sky-700 dark:text-cyan-400">{cert.issuer}</span>
+              </p>
+              {cert.verifyUrl && (
+                <a
+                  href={ensureAbsoluteUrl(cert.verifyUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40"
+                >
+                  <ShieldCheck size={14} />
+                  <span>Verify on Official Portal</span>
+                  <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile footer bar if verifyUrl exists */}
+        {cert.verifyUrl && (
+          <div className="sm:hidden p-3 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-white/10 flex justify-center">
+            <a
+              href={ensureAbsoluteUrl(cert.verifyUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40"
+            >
+              <ShieldCheck size={14} />
+              <span>Verify on Official Portal</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+};
+
 // Individual High-Resolution Landscape 3D Certificate Card (Theme-Adaptive)
 const LandscapeCarouselCard = ({
   cert,
@@ -77,6 +298,7 @@ const LandscapeCarouselCard = ({
   handleUploadDocument,
   handleRemoveDocument,
   onClickCard,
+  onInspect,
 }) => {
   const angle = (360 / Math.max(total, 1)) * idx;
   const isEditingUrl = editingUrlId === cert.id;
@@ -104,10 +326,10 @@ const LandscapeCarouselCard = ({
       onClick={() => {
         if (!isActive) onClickCard(idx);
       }}
-      className={`absolute inset-0 rounded-2xl border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
+      className={`absolute inset-0 rounded-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
         isActive
-          ? 'border-2 border-sky-500 dark:border-cyan-400/90 bg-white dark:bg-slate-900 shadow-[0_20px_50px_-10px_rgba(2,132,199,0.25),0_0_24px_rgba(2,132,199,0.15)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(34,211,238,0.25)] z-20 ring-2 ring-sky-400/40 dark:ring-cyan-400/40'
-          : 'border border-slate-200 dark:border-white/12 bg-white/95 dark:bg-slate-900/95 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.6)] hover:border-slate-300 dark:hover:border-white/25 z-10'
+          ? 'border-2 border-sky-400 dark:border-cyan-400/90 bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_50px_-10px_rgba(2,132,199,0.3),0_0_24px_rgba(56,189,248,0.2)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.85),0_0_32px_rgba(34,211,238,0.32)] z-20 ring-1 ring-sky-400/50 dark:ring-cyan-400/50'
+          : 'border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-slate-300 dark:hover:border-cyan-400/30 z-10'
       }`}
       style={{
         transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
@@ -117,8 +339,26 @@ const LandscapeCarouselCard = ({
         textRendering: 'optimizeLegibility',
       }}
     >
+      {/* Genshin Cryo HUD Corner Brackets */}
+      {isActive && (
+        <>
+          <div className="cryo-hud-corner corner-tl" />
+          <div className="cryo-hud-corner corner-tr" />
+          <div className="cryo-hud-corner corner-bl" />
+          <div className="cryo-hud-corner corner-br" />
+        </>
+      )}
+
       {/* ─── Top Landscape Certificate Frame (Seamless Edge-to-Edge Display) ─── */}
-      <div className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-100 dark:bg-slate-950 rounded-t-2xl overflow-hidden border-b border-slate-200/80 dark:border-white/[0.1] group/img shrink-0 flex items-center justify-center">
+      <div 
+        onClick={(e) => {
+          if (isActive && onInspect) {
+            e.stopPropagation();
+            onInspect(cert);
+          }
+        }}
+        className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-100 dark:bg-slate-950 rounded-t-2xl overflow-hidden border-b border-slate-200/80 dark:border-white/[0.1] group/img shrink-0 flex items-center justify-center cursor-pointer"
+      >
         {cert.imageUrl ? (
           <ImageWithPlaceholder
             src={cert.imageUrl}
@@ -143,6 +383,14 @@ const LandscapeCarouselCard = ({
                 {cert.issuer || 'Official Accreditation'}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Hover inspect banner on active card */}
+        {isActive && (
+          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-mono text-xs font-bold backdrop-blur-[2px] pointer-events-none z-20">
+            <Maximize2 size={14} className="text-cyan-300" />
+            <span>Inspect Credential</span>
           </div>
         )}
 
@@ -183,9 +431,10 @@ const LandscapeCarouselCard = ({
         )}
 
         {/* Top Left Verified Badge */}
-        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-sky-100 dark:bg-slate-950/90 border border-sky-300 dark:border-cyan-400/50 text-sky-800 dark:text-cyan-300 text-[10px] font-mono shadow-xs backdrop-blur-md font-bold">
+        <div className="absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-slate-950/90 border border-sky-300 dark:border-cyan-400/50 text-sky-800 dark:text-cyan-300 text-[10px] font-mono shadow-xs backdrop-blur-md font-bold">
+          <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 inline-block" />
           <ShieldCheck size={11} className="text-sky-700 dark:text-cyan-400" />
-          <span>{cert.pdfUrl ? 'Verified PDF' : 'Verified'}</span>
+          <span>{cert.pdfUrl ? 'Verified PDF' : cert.verifyUrl ? 'Verified Online' : 'Verified'}</span>
         </div>
 
         {/* Uploading / Scanning Status Overlay */}
@@ -207,12 +456,15 @@ const LandscapeCarouselCard = ({
         <div>
           {/* Issuer & Date Row */}
           <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="text-[11px] sm:text-xs font-mono text-sky-700 dark:text-cyan-400 font-bold min-w-0 flex-1 truncate tracking-wide">
-              <EditableText
-                text={cert.issuer}
-                isAdmin={isAdmin && isActive}
-                onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
-              />
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="w-1 h-1 rotate-45 bg-sky-500 dark:bg-cyan-400 shrink-0" />
+              <div className="text-[11px] sm:text-xs font-mono text-sky-700 dark:text-cyan-400 font-bold min-w-0 flex-1 truncate tracking-wide">
+                <EditableText
+                  text={cert.issuer}
+                  isAdmin={isAdmin && isActive}
+                  onSave={(v) => handleUpdateField(cert.id, 'issuer', v)}
+                />
+              </div>
             </div>
 
             <div className="text-[10px] sm:text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-300 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-bold">
@@ -278,32 +530,62 @@ const LandscapeCarouselCard = ({
                 </button>
               </div>
             )
-          ) : targetLink ? (
+          ) : cert.verifyUrl && (cert.pdfUrl || cert.imageUrl) ? (
+            <div className="w-full flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => onInspect && onInspect(cert)}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 transition-all cursor-pointer shadow-xs active:scale-95"
+                title="Preview Certificate Document"
+              >
+                <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
+                <span>Document</span>
+              </button>
+              <a
+                href={ensureAbsoluteUrl(cert.verifyUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-cyan-500 dark:to-blue-600 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 dark:border-cyan-400/50 transition-all cursor-pointer shadow-sm active:scale-95"
+                title="Verify on official portal"
+              >
+                <ShieldCheck size={13} />
+                <span>Verify</span>
+                <ExternalLink size={11} />
+              </a>
+            </div>
+          ) : (cert.pdfUrl || cert.imageUrl) ? (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onInspect && onInspect(cert); }}
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 hover:border-sky-400 transition-all cursor-pointer shadow-xs active:scale-95"
+              title="Inspect Certificate Document"
+            >
+              <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
+              <span>View Certificate Document</span>
+              <Maximize2 size={11} className="opacity-80" />
+            </button>
+          ) : cert.verifyUrl ? (
             <a
-              href={ensureAbsoluteUrl(targetLink)}
+              href={ensureAbsoluteUrl(cert.verifyUrl)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 hover:border-sky-400 transition-all cursor-pointer shadow-xs active:scale-95"
-              title="Open Certificate Document / Credential Verification"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-cyan-500 dark:to-blue-600 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 dark:border-cyan-400/50 transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Verify on official portal"
             >
-              {cert.pdfUrl && !cert.verifyUrl ? (
-                <>
-                  <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
-                  <span>View PDF Certificate</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck size={13} className="text-sky-700 dark:text-cyan-400" />
-                  <span>Verify Credential</span>
-                </>
-              )}
+              <ShieldCheck size={13} />
+              <span>Verify Credential</span>
               <ExternalLink size={11} />
             </a>
           ) : (
-            <div className="w-full text-center text-xs font-mono text-slate-500 dark:text-slate-400 py-0.5 font-medium">
-              Credential on Record
-            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onInspect && onInspect(cert); }}
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/10 hover:border-cyan-400/50 transition-all cursor-pointer shadow-xs"
+            >
+              <FileText size={13} className="text-slate-500 dark:text-slate-400" />
+              <span>Credential Record Details</span>
+            </button>
           )}
         </div>
       </div>
@@ -332,6 +614,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   // Admin inline URL edit state
   const [editingUrlId, setEditingUrlId] = useState(null);
   const [urlDraft, setUrlDraft] = useState('');
+
+  // Crystalline Document Inspector Modal state
+  const [inspectingCert, setInspectingCert] = useState(null);
 
   const rotation = useMotionValue(0);
   const dragStartX = useRef(0);
@@ -715,8 +1000,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       <div className="flex items-center justify-between gap-3 mb-4 px-1 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 shadow-xs">
+            <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
             <Award size={13} className="text-sky-700 dark:text-cyan-400" />
-            <span>Certifications</span>
+            <span>Verified Credentials</span>
           </div>
           <span className="text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
             {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
@@ -785,6 +1071,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               handleUploadDocument={handleUploadDocument}
               handleRemoveDocument={handleRemoveDocument}
               onClickCard={handleSelectCard}
+              onInspect={setInspectingCert}
             />
           ))}
         </motion.div>
@@ -861,6 +1148,17 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           </button>
         </div>
       )}
+
+      {/* ─── Crystalline High-Fidelity Certificate Inspector Modal ─── */}
+      <AnimatePresence>
+        {inspectingCert && (
+          <CertificateModal
+            cert={inspectingCert}
+            isOpen={Boolean(inspectingCert)}
+            onClose={() => setInspectingCert(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

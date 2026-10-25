@@ -266,7 +266,8 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 1023px) {
   :root {
-    --admin-toolbar-bottom: calc(var(--mobile-nav-height, 72px) + 16px);
+    --mobile-nav-height: calc(60px + env(safe-area-inset-bottom, 10px));
+    --admin-toolbar-bottom: calc(var(--mobile-nav-height) + 16px);
   }
 
   .section-viewport {

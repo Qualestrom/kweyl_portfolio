@@ -12,56 +12,64 @@ import './MobileNav.css';
 export const SECTIONS = [
   { id: 0, label: 'Home', icon: Home, shortLabel: 'Home' },
   { id: 1, label: 'About', icon: User, shortLabel: 'About' },
-  { id: 2, label: 'Projects', icon: FolderGit2, shortLabel: 'Works' },
+  { id: 2, label: 'Projects', icon: FolderGit2, shortLabel: 'Projects' },
   { id: 3, label: 'Certifications', icon: Award, shortLabel: 'Certs' },
   { id: 4, label: 'Contact', icon: Mail, shortLabel: 'Contact' },
 ];
 
 /**
- * MobileNav — Touch-friendly floating pill bottom navigation (Stellar-Cryo Glass)
+ * MobileNav — Full-Width Edge-to-Edge Frosted Glass Bottom Navigation Bar
+ * Built with Genshin Cryo HUD aesthetics, responsive touch targets (>= 48px),
+ * and dynamic safe-area-inset-bottom support.
  */
 export default function MobileNav({ activeSection, onNavigate }) {
   return (
-    <div className="mobile-nav-root">
-      <nav className="mobile-nav-pill" aria-label="Mobile Navigation">
-        <div className="mobile-nav-pill-inner">
-          {SECTIONS.map((sec) => {
-            const Icon = sec.icon;
-            const isActive = activeSection === sec.id;
-            return (
-              <button
-                key={sec.id}
-                type="button"
-                onClick={() => onNavigate(sec.id)}
-                className={`mobile-nav-pill-btn ${isActive ? 'is-active' : ''}`}
-                aria-label={sec.label}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="mobile-nav-pill-active"
-                    className="mobile-nav-pill-highlight"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                  />
-                )}
-                <span className="mobile-nav-icon-wrap">
-                  <Icon size={17} className="mobile-nav-icon" />
-                </span>
-                {isActive && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="mobile-nav-pill-label"
-                  >
-                    {sec.shortLabel}
-                  </motion.span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-    </div>
+    <nav className="mobile-nav-root" aria-label="Mobile Navigation">
+      {/* Top Ambient Cryo Horizon Glow Line */}
+      <div className="mobile-nav-top-rim" />
+
+      <div className="mobile-nav-grid">
+        {SECTIONS.map((sec) => {
+          const Icon = sec.icon;
+          const isActive = activeSection === sec.id;
+          return (
+            <button
+              key={sec.id}
+              type="button"
+              onClick={() => onNavigate(sec.id)}
+              className={`mobile-nav-item ${isActive ? 'is-active' : ''}`}
+              aria-label={sec.label}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {/* Active Crystalline Glow Bloom */}
+              {isActive && (
+                <motion.div
+                  layoutId="mobile-nav-active-bloom"
+                  className="mobile-nav-item-bloom"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+
+              {/* Active Diamond Gem Pip */}
+              {isActive && (
+                <motion.span
+                  layoutId="mobile-nav-active-gem"
+                  className="mobile-nav-active-gem"
+                  transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+                />
+              )}
+
+              <span className="mobile-nav-icon-container">
+                <Icon size={19} className="mobile-nav-icon" />
+              </span>
+
+              <span className="mobile-nav-item-label">
+                {sec.shortLabel}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }

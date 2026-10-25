@@ -414,6 +414,18 @@ export default function HomeHero({
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="home-hero-text"
         >
+          {/* Genshin Cryo Vision Tag */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="home-hero-vision-badge"
+          >
+            <span className="home-hero-vision-badge-star">✦</span>
+            <span>CRYO // VISION: ARCHITECT</span>
+            <span className="home-hero-vision-badge-star">✦</span>
+          </motion.div>
+
           {/* Greeting */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
@@ -583,7 +595,15 @@ export default function HomeHero({
             title={isAdmin ? "Click to choose photo from device and crop" : undefined}
           >
             {/* Animation Rings */}
-            {frameAnimation === 'orbit' && <div className="home-hero-orbit-ring" />}
+            {frameAnimation === 'orbit' && (
+              <>
+                <div className="home-hero-orbit-ring" />
+                <div className="cryo-vision-crystal crystal-top" />
+                <div className="cryo-vision-crystal crystal-right" />
+                <div className="cryo-vision-crystal crystal-bottom" />
+                <div className="cryo-vision-crystal crystal-left" />
+              </>
+            )}
             {frameAnimation === 'quantum' && (
               <>
                 <div className="home-hero-quantum-ring-1" />

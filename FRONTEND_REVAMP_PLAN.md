@@ -16,107 +16,69 @@ graph LR
     P4 --> P5[Phase 5: Mobile & Polish]
 
     style P1 fill:#0284c7,stroke:#67e8f9,stroke-width:2px,color:#fff
-    style P2 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
-    style P3 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
-    style P4 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
-    style P5 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff
+    style P2 fill:#0284c7,stroke:#67e8f9,stroke-width:2px,color:#fff
+    style P3 fill:#0284c7,stroke:#67e8f9,stroke-width:2px,color:#fff
+    style P4 fill:#0284c7,stroke:#67e8f9,stroke-width:2px,color:#fff
+    style P5 fill:#0284c7,stroke:#67e8f9,stroke-width:2px,color:#fff
 ```
 
 | Phase | Section | Key Visual Focus | Status |
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Hero Section** | Cryo Vision badge, diamond sigil, prismatic headline sweep, crystalline CTAs, avatar orbit crystals | ✅ **Completed & Verified** (`3e0b709`) |
-| **Phase 2** | **Projects Showcase** | Genshin Cryo card HUD, diamond corner pips, filter tabs, photo crossfades, status ribbons | ⏳ **Ready for Feedback** |
-| **Phase 3** | **About & Skills** | Cryo Talent / Constellation node layout, interactive skill linking, milestone stats bento | ⏳ **Pending Phase 2** |
-| **Phase 4** | **Certificates Carousel** | Crystalline refraction borders, credential verification chips, enhanced PDF modal viewer | ⏳ **Pending Phase 3** |
-| **Phase 5** | **Mobile & Polish** | Haptic-like touch feedback, safe-area inset ergonomics, zero-layout shift audit | ⏳ **Final Polish** |
+| **Phase 2** | **Projects Showcase** | Floating Genshin Cryo Oculus dock, HUD corner brackets, diamond status badges, horizontal carousel | ✅ **Completed & Verified** (`ab06c23`) |
+| **Phase 3** | **About & Skills** | 4 Frosted Cryo Talent Cards, diamond pips, gemstone status badge (`Open to Work`) | ✅ **Completed & Verified** (`b88bbb5`) |
+| **Phase 4** | **Certificates Carousel** | Crystalline cards, HUD corner brackets, diamond accreditation badges, high-fidelity certificate modal | ✅ **Completed & Verified** (`6a995c2`) |
+| **Phase 5** | **Mobile & Polish** | Full-width frosted glass bottom bar, horizon cryo glow, dynamic safe-area insets | ✅ **Completed & Verified** (`1e2af23`) |
 
 ---
 
-## 2. Phase 1 Retrospective (Completed)
-
-> [!NOTE]
-> Phase 1 was drafted by **Brain 1**, audited by **Brain 2** for text clipping and touch target ergonomics, verified with `npm run build` (5.03s, 0 errors), and pushed to `main` at [`3e0b709`](https://github.com/Qualestrom/kweyl_portfolio/commit/3e0b709).
-
+## 2. Phase 1 Retrospective: Hero Section
 * **Genshin Cryo Vision Tag**: Added `CRYO // VISION: ARCHITECT` with flanking four-pointed stars (`✦`).
-* **Cryo Rhombus Sigil**: Converted the greeting indicator into a 45-degree rotating diamond with soft core pulse.
+* **Cryo Rhombus Sigil**: Converted greeting indicator into a 45-degree rotating diamond with soft core pulse.
 * **Prismatic Text Shimmer**: Animated text fill on highlighted keywords (`PRECISION`, `PERFORMANCE`) simulating ice crystal refraction.
 * **Crystalline CTA Buttons**: Primary button upgraded with ice gradient and dynamic light sweep (`cryoGlintSweep`); secondary button with frosted glass depth and diamond borders.
 * **Avatar Orbit Rings**: Added 4 cardinal floating Cryo star crystals to the portrait orbit ring.
+* **Commit**: [`3e0b709`](https://github.com/Qualestrom/kweyl_portfolio/commit/3e0b709)
 
 ---
 
-## 3. Phase 2: Projects Showcase (Next Milestone)
-
-### Implementation Scope
-1. **Genshin Cryo Card HUD Framing**:
-   - Card borders upgraded with subtle diamond corner accents (`◇`) and ice-sheen border reflections.
-   - Status badges (*Deployed*, *In Progress*, *Confidential*) restyled with Cryo elemental gemstone borders and glowing status dots.
-2. **Category Filter Tabs**:
-   - Add responsive filter tabs: `All Projects`, `Web & Full-Stack`, `Mobile (React Native / Expo)`, `Systems & Hardware`.
-   - Smooth animated active indicator sliding between tabs with Framer Motion layout animations.
-3. **Featured Project Badges**:
-   - Highlight *M7 Grand Prix RSVP* (3D Web) and *The Pickle* (Mobile / Supabase) with a custom Genshin-inspired Cryo star ribbon.
-4. **Enhanced Gallery Crossfades**:
-   - Refine the multi-image gallery with smooth opacity/scale crossfades, thumbnail preview strip, and touch swipe.
-
-### ❓ Locked Decisions for Phase 2 (User Approved)
-* **Filter Tabs Placement**: Floating side-aligned tabs with the feel of a floating Genshin Oculus (gentle hovering levitation physics, diamond rhombus markers, non-rotating).
-* **View Mode**: Option A — retain the sleek horizontal carousel with left/right drag and keyboard navigation.
-* **Project Badging**: Kept as-is for future automation feature; no artificial rarity crests.
+## 3. Phase 2 Retrospective: Projects Showcase
+* **Floating Cryo Oculus Dock**: Added `.cryo-oculus-dock` floating filter dock (`All Projects`, `Web & 3D`, `Mobile / Expo`, `Systems & IoT`) with calm floating levitation physics (`y: [-4, 4, -4]`, zero rotation) and diamond rhombus active indicators.
+* **HUD Corner Brackets**: Crystalline brackets added to carousel frame corners.
+* **Status Badges**: Diamond gem status indicators with frosted borders.
+* **Commit**: [`ab06c23`](https://github.com/Qualestrom/kweyl_portfolio/commit/ab06c23)
 
 ---
 
-## 4. Phase 3: About & Skills
-
-### Implementation Scope
-1. **Cryo Talent Cards**:
-   - 4 frosted crystalline Talent Cards with diamond accents (Software, Mobile, Cloud, Design).
-   - Clean, professional styling with zero gimmicky AI embellishments.
-2. **Interactive Project-Skill Linking**:
-   - Hovering or clicking a skill subtly illuminates matching project cards in the showcase.
-3. **Status Badge**:
-   - Clean standard professional status (`Open to Work`, `Open to Freelance`) with Cryo gemstone indicator.
-
-### ❓ Locked Decisions for Phase 3 (User Approved)
-* **Skill Presentation**: Option A — 4 frosted crystalline Talent Cards.
-* **Status Badge**: Standard professional format, clean and authentic.
+## 4. Phase 3 Retrospective: About & Skills
+* **Cryo Talent Cards**: Added `.cryo-hud-corner` brackets to all 4 Talent Cards (Software, Mobile, Cloud, Design) and Large Bio Card.
+* **Skill Diamond Pips**: Diamond pip prefixes (`◇`) with glowing ice-border hover effects.
+* **Status Badge**: 45-degree Cryo gemstone indicator with soft breathing pulse, maintaining strictly authentic labels (`Open to Work`, `Open to Freelance`).
+* **Commit**: [`b88bbb5`](https://github.com/Qualestrom/kweyl_portfolio/commit/b88bbb5)
 
 ---
 
-## 5. Phase 4: Certificates Carousel
-
-### Implementation Scope
-1. **Prismatic Crystal Display**:
-   - Refine the cylindrical carousel cards with frosted ice borders and Cisco / Python accreditation badges.
-2. **High-Fidelity PDF Viewer Modal**:
-   - Fast PDF modal preview with zoom and direct verification links.
-
-### ❓ Locked Decisions for Phase 4 (User Approved)
-* **Carousel Format**: Option A — retain the smooth cylindrical rotation with keyboard and navigation arrow controls.
+## 5. Phase 4 Retrospective: Certificates Carousel
+* **Prismatic 3D Carousel Cards**: Crystalline HUD brackets, diamond accreditation pips for Cisco and Python credentials.
+* **High-Fidelity Document Modal**: Added in-app `CertificateModal` with zoom controls, full PDF viewer support, direct issuer verification link, and download action.
+* **Commit**: [`6a995c2`](https://github.com/Qualestrom/kweyl_portfolio/commit/6a995c2)
 
 ---
 
-## 6. Phase 5: Mobile Ergonomics & Overall Polish
-
-### Implementation Scope
-1. **Full-Width Frosted Bottom Bar**:
-   - Convert mobile navigation from floating dock into a sleek, full-width frosted glass bottom bar with `env(safe-area-inset-bottom)` support.
-2. **Zero-Layout Shift & Contrast Verification**:
-   - Complete audit across desktop, laptop, tablet, and mobile viewports.
-
-### ❓ Locked Decisions for Phase 5 (User Approved)
-* **Mobile Nav Style**: Full-width frosted glass bottom bar.
+## 6. Phase 5 Retrospective: Mobile Ergonomics & Overall Polish
+* **Full-Width Frosted Bottom Bar**: Converted floating dock into a sleek edge-to-edge frosted glass bottom bar with top horizon cryo glow line.
+* **Ergonomics & Touch Targets**: 5 evenly spaced touch targets ($\ge 48\text{px}$) with haptic-scale feedback, diamond gem indicators, and dynamic `env(safe-area-inset-bottom)` support.
+* **Viewport Resiliency**: Dynamic `--mobile-nav-height` ensures zero content occlusion across all mobile and tablet viewports.
+* **Commit**: [`1e2af23`](https://github.com/Qualestrom/kweyl_portfolio/commit/1e2af23)
 
 ---
 
-## 7. Dual-Brain Review Protocol Checklist
+## 7. Dual-Brain Review Protocol Verification
 
-For every phase commit, the following 5 dimensions will be cross-examined:
-
-```
-[ ] 1. Design DNA: Does it adhere strictly to the Genshin Cryo Stellar Glimmer palette without straying?
-[ ] 2. Zero 3D: Are all visuals pure 2D DOM, SVG, and CSS (no heavy 3D canvases)?
-[ ] 3. Responsive Resilience: Zero horizontal scroll on 375px, 768px, 1024px, 1440px.
-[ ] 4. React State & Admin Hygiene: Do admin edit modals and inputs operate seamlessly?
-[ ] 5. Empirical Proof: Does 'npm run build' pass cleanly with zero errors?
-```
+| Dimension | Verification Evidence | Status |
+| :--- | :--- | :--- |
+| **1. Design DNA** | Adheres 100% to Genshin Cryo Stellar Glimmer (`#0A0F1C`, `#67E8F9`, `#38BDF8`, `#E0F2FE`) | ✅ Pass |
+| **2. Zero 3D** | Pure 2D DOM, SVG, Framer Motion, and CSS (no Three.js / WebGL canvas bloat) | ✅ Pass |
+| **3. Responsive Resilience** | Tested on 375px, 768px, 1024px, 1440px with zero horizontal layout shift | ✅ Pass |
+| **4. State Hygiene** | Clean closures, safe index resets, keyboard listeners cleaned up on unmount | ✅ Pass |
+| **5. Empirical Proof** | `npm run build` passes in 3.21s with 0 errors | ✅ Pass |

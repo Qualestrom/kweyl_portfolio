@@ -72,7 +72,7 @@ export default function InteractiveBackground({ activeSection = 0 }) {
       circuitEdges = [];
       const SPACING = getSpacing(width);
 
-      const cols = Math.floor(width / SPACING) + 8;
+      const cols = Math.floor((width * 3.2) / SPACING) + 4;
       const rows = Math.floor(height / SPACING) + 2;
 
       for (let i = 0; i < cols; i++) {
@@ -109,8 +109,9 @@ export default function InteractiveBackground({ activeSection = 0 }) {
       ctx.clearRect(0, 0, width, height);
 
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const targetParallaxX = prefersReducedMotion ? 0 : -activeSectionRef.current * 28;
-      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.085;
+      // Harmonic mid-field tracking: moves smoothly at -35vw per active section
+      const targetParallaxX = prefersReducedMotion ? 0 : -activeSectionRef.current * (width * 0.35);
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.088;
 
       ctx.save();
       ctx.translate(currentParallaxX, 0);

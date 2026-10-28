@@ -49,7 +49,7 @@ export const DEFAULT_CONFIG = {
 };
 
 // ─── Portfolio SPA (continuous spatial camera navigation) ────────────────────────
-export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited = true, onSectionChange }) {
+export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited = true, isWarping = false, onSectionChange }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [direction, setDirection] = useState(0);
   const [config, setConfig] = useState(() => {
@@ -373,13 +373,45 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         onLogout={onLogout}
       />
 
-      <motion.div 
-        className="stellar-main stellar-main--full" 
-        style={{ overflow: 'hidden' }}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={loaderExited ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+      <div 
+        className="stellar-viewport-stage"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          perspective: 1200,
+          perspectiveOrigin: '50% 50%',
+          overflow: 'hidden',
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: loaderExited ? 'auto' : 'none',
+        }}
       >
+        <motion.div 
+          className="stellar-main stellar-main--full" 
+          style={{ 
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            transformStyle: 'preserve-3d',
+            transformOrigin: '50% 50%',
+          }}
+          initial={false}
+          animate={
+            loaderExited
+              ? { opacity: 1, scale: 1, z: 0, filter: 'blur(0px)' }
+              : isWarping
+              ? { opacity: 1, scale: 1, z: 0, filter: 'blur(0px)' }
+              : { opacity: 0, scale: 0.18, z: -2500, filter: 'blur(10px)' }
+          }
+          transition={
+            isWarping
+              ? {
+                  duration: 1.45,
+                  ease: [0.16, 1, 0.3, 1],
+                }
+              : { duration: 0.5, ease: 'easeOut' }
+          }
+        >
         <motion.div
           className="stellar-camera-track"
           animate={{ x: `${-currentSection * 100}vw` }}
@@ -496,6 +528,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
           </div>
         )}
       </motion.div>
+      </div>
     </>
   );
 }

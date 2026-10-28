@@ -48,6 +48,7 @@ export default function App() {
               element={
                 <PortfolioSPA
                   loaderExited={loaderExited}
+                  isWarping={isWarping}
                   onSectionChange={setActiveSection}
                 />
               }

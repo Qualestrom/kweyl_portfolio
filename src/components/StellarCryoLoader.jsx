@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Compass, User, FolderGit2, Award, Send, Sparkles } from 'lucide-react';
+import { Compass, User, FolderGit2, Award, Send, Sparkles, Moon } from 'lucide-react';
 import { spawnRealConstellation } from '../utils/constellations';
 import './StellarCryoLoader.css';
 
@@ -193,25 +193,26 @@ export default function StellarCryoLoader({
     return matching ? matching.text : STATUS_PHASES[0].text;
   }, [percent]);
 
-  // ─── Warp Zoom Handler (Click Anywhere To Enter) ───────────────────────────
+  // ─── True 3D Forward Hyperspace Flight Handler ─────────────────────────────
   const handleEnter = useCallback(() => {
     if (!isReadyToEnter || isWarpingRef.current) return;
     isWarpingRef.current = true;
     setIsWarping(true);
     onWarpStart?.();
 
-    // Seamless Warp Handoff Sequence:
-    // 1. 0ms–750ms: Star streaks accelerate radially past the camera while HUD zooms into vanishing point.
-    // 2. At 750ms (peak warp -> deceleration phase): Begin dissolving the loader backdrop while triggering
-    //    the Hero view underneath to scale & emerge directly out of the decelerating star-streaks.
-    // 3. At 1850ms: Unmount loader canvas once deceleration handoff is 100% complete.
+    // True 3D Forward Hyperspace Flight Sequence:
+    // 0ms–400ms: Camera plunges forward; HUD scales UP past the viewer.
+    // 400ms–1150ms: Relativistic 3D star tunnel roars past; Hero Section hurtles forward from Z: -2500px to Z: 0px.
+    // 1150ms–1650ms: Camera drops out of warp, inertial braking locks Hero at Z: 0px, crystalline frost wave disperses.
+    // 1650ms: Unmount loader canvas once full 3D arrival is 100% complete.
     setTimeout(() => {
       setFadingOut(true);
+    }, 1150);
+
+    setTimeout(() => {
       onExited?.();
-      setTimeout(() => {
-        setExited(true);
-      }, 1100);
-    }, 750);
+      setExited(true);
+    }, 1650);
   }, [isReadyToEnter, onExited, onWarpStart]);
 
   // Global keydown listener for "Press any key to enter"
@@ -658,27 +659,22 @@ export default function StellarCryoLoader({
         }
       }
 
-      // ── 7. Hyper-Space Warp Celestial Dissolve (Eye-Friendly, Theme-Aware) ──
-      if (isWarpingRef.current && warp > 0.45) {
-        const flashProgress = (warp - 0.45) / 0.55; // 0 to 1
-        const maxR = Math.hypot(w, h) * 1.1;
-        const flashGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * flashProgress);
-        
-        if (theme === 'light') {
-          // Soft ambient daylight haze — no harsh white glare
-          flashGrad.addColorStop(0, `rgba(224, 242, 254, ${Math.min(0.45, flashProgress * 0.5)})`);
-          flashGrad.addColorStop(0.5, `rgba(241, 245, 249, ${Math.min(0.35, flashProgress * 0.4)})`);
-          flashGrad.addColorStop(1, 'rgba(244, 247, 251, 0)');
-        } else {
-          // Dark mode: soothing deep space nebula dissolve — zero blinding white flash to protect eyes
-          flashGrad.addColorStop(0, `rgba(14, 165, 233, ${Math.min(0.16, flashProgress * 0.2)})`);
-          flashGrad.addColorStop(0.4, `rgba(15, 23, 42, ${Math.min(0.45, flashProgress * 0.55)})`);
-          flashGrad.addColorStop(0.85, `rgba(5, 8, 22, ${Math.min(0.75, flashProgress * 0.85)})`);
-          flashGrad.addColorStop(1, 'rgba(5, 8, 22, 0)');
-        }
+      // ── 7. Crystalline Frost Shockwave upon Arrival (100% Clear Center Tunnel) ──
+      if (isWarpingRef.current && warp > 0.50) {
+        const shockProgress = (warp - 0.50) / 0.50; // 0 to 1
+        const maxR = Math.hypot(w, h) * 0.95;
+        const shockRadius = maxR * Math.pow(shockProgress, 0.8);
+        const shockAlpha = Math.sin(shockProgress * Math.PI) * 0.5;
 
-        ctx.fillStyle = flashGrad;
-        ctx.fillRect(0, 0, w, h);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, shockRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = theme === 'light'
+          ? `rgba(2, 132, 199, ${shockAlpha.toFixed(3)})`
+          : `rgba(56, 189, 248, ${shockAlpha.toFixed(3)})`;
+        ctx.lineWidth = Math.max(1.5, 4.5 * (1 - shockProgress));
+        ctx.stroke();
+        ctx.restore();
       }
 
       raf = requestAnimationFrame(animate);
@@ -747,9 +743,9 @@ export default function StellarCryoLoader({
           ) : (
             <div className="genshin-enter-prompt" onClick={handleEnter} id="hud-click-prompt">
               <div className="genshin-enter-banner">
-                <Sparkles size={15} className="genshin-enter-star left" />
+                <Moon size={14} className="genshin-enter-star left" />
                 <span className="genshin-enter-text">CLICK ANYWHERE TO ENTER</span>
-                <Sparkles size={15} className="genshin-enter-star right" />
+                <Sparkles size={14} className="genshin-enter-star right" />
               </div>
             </div>
           )}

@@ -78,3 +78,27 @@ During empirical headless browser inspection of the live application against [`s
 7. **Zero Background Text Clutter**:
    - All text labels (`✦ STELLA GLACIALIS`, subtitle) have been completely removed from the canvas per user request, preserving a pure, atmospheric, uncluttered night sky.
 
+---
+
+## 4. Procedural Constellation & Spatial Hitbox Engine
+
+### Remediation Details:
+1. **Elimination of Repeating Point Tracing**:
+   - Replaced looping `energyPulses` with a clean 3-stage lifecycle:
+     - `'drawing'`: Traces each edge exactly **once slowly** (`drawSpeed: 0.018–0.026`) led by the comet head.
+     - `'glowing'`: Once all edges connect, the entire constellation radiates with a cohesive breathing starlight glow (`glowPulse: Math.sin(...)`) for 3–4 seconds. No re-tracing or looping pulses.
+     - `'fading'`: Gently fades out over ~1.8 seconds (`fadeAlpha -= 0.009`) and is removed.
+2. **Spatial Hitbox & Collision Avoidance**:
+   - Enforces minimum radial distance between active constellations:
+     $$\text{dist} \ge \text{boundRadius}_{\text{new}} + \text{boundRadius}_{\text{existing}} + 65\text{px}$$
+   - Guarantees clearance from Columbina's Crescent Moon corridor:
+     $$\text{distToMoon} \ge \text{boundRadius} + 115\text{px}$$
+   - Prevents constellations from ever spawning over or colliding with an existing constellation.
+3. **Procedural Random Generation (Strictly 4–7 Stars)**:
+   - Dynamic star count: `4, 5, 6, or 7` stars per constellation.
+   - Organic Minimum Spanning Tree (MST) connection algorithm:
+     - Computes shortest natural Euclidean connections using Kruskal's algorithm.
+     - Adds up to 1 non-intersecting planar cross-facet if `starCount >= 5`.
+     - Orders edges via breadth-first search (BFS) from the primary apex star so the trace flows outward like a celestial brushstroke.
+
+

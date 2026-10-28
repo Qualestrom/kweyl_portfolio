@@ -398,22 +398,21 @@ export default function StellarCryoLoader({
         ctx.restore();
       }
 
-      // Render the Nod-Krai Crescent Frostmoon (Distant Beacon -> Hyperspace Approach)
+      // Render the Genshin Impact Full Frostmoon (Distant Beacon -> Hyperspace Low-Orbit Approach)
       const { radius: targetRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
 
-      const distantRadius = Math.max(18, Math.min(26, w * 0.016)); // ~0.13x scale: distant celestial beacon
+      const distantRadius = Math.max(24, Math.min(36, w * 0.024)); // Distant Full Moon beacon in deep space
       const distantX = w * 0.58;
-      const distantY = h * 0.14;
+      const distantY = h * 0.16;
 
       const approachT = isWarpingRef.current ? easeInOutQuad(warp) : 0;
       const curX = distantX + (targetX - distantX) * approachT;
       const curY = distantY + (targetY - distantY) * approachT;
       const curRadius = distantRadius + (targetRadius - distantRadius) * approachT;
-      const curRotation = -0.48 + frame * 0.0004;
 
       ctx.save();
       ctx.globalAlpha = 1;
-      drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, curRotation);
+      drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
       ctx.restore();
 
       // ── 1. Draw Nebula Background Clouds ──

@@ -56,11 +56,11 @@ class DSU {
  */
 export function spawnRealConstellation(w, h, rand, getStarColor, existingConstellations = [], moonInfo = null) {
   const isSmall = w < 768;
-  const boundRadius = isSmall ? rand(50, 70) : rand(75, 110);
-  const moonX = moonInfo?.x ?? (w * 0.70);
-  const moonY = moonInfo?.y ?? (h * 0.22);
-  const moonRadius = moonInfo?.radius ?? (isSmall ? 80 : 180);
-  const moonClearance = moonRadius * 1.32;
+  const boundRadius = isSmall ? rand(50, 70) : rand(75, 105);
+  const moonX = moonInfo?.x ?? (w * 0.65);
+  const moonY = moonInfo?.y ?? (h * 0.34);
+  const moonRadius = moonInfo?.radius ?? (isSmall ? 160 : 380);
+  const moonClearance = moonRadius * 1.14;
 
   // Active constellations currently visible or holding
   const activeExisting = existingConstellations.filter(
@@ -74,21 +74,17 @@ export function spawnRealConstellation(w, h, rand, getStarColor, existingConstel
   }
 
   // ── 1. Spatial Hitbox & Clearance Placement ──
-  // Candidate pockets in the upper sky canopy:
-  // Pocket 0: Far Left (w * 0.08 - 0.26)
-  // Pocket 1: Mid Left (w * 0.28 - 0.50)
-  // Pocket 2: Lower Horizon / Mid-Sky below the moon corridor
-  // Pocket 3: Far Right Horizon (if space allows past the colossal moon)
+  // Candidate pockets in the open sky around the colossal Full Moon:
   const candidatePockets = isSmall
     ? [
-        { minX: w * 0.10, maxX: w * 0.38, minY: h * 0.09, maxY: h * 0.18 },
-        { minX: w * 0.15, maxX: w * 0.55, minY: h * 0.22, maxY: h * 0.35 }
+        { minX: w * 0.10, maxX: w * 0.36, minY: h * 0.08, maxY: h * 0.22 },
+        { minX: w * 0.12, maxX: w * 0.52, minY: h * 0.55, maxY: h * 0.78 }
       ]
     : [
-        { minX: w * 0.08 + boundRadius, maxX: w * 0.26, minY: h * 0.09, maxY: h * 0.20 },
-        { minX: w * 0.28, maxX: w * 0.50, minY: h * 0.08, maxY: h * 0.22 },
-        { minX: w * 0.14, maxX: w * 0.48, minY: h * 0.24, maxY: h * 0.38 },
-        { minX: Math.max(w * 0.88, moonX + moonClearance + boundRadius), maxX: w * 0.94, minY: h * 0.10, maxY: h * 0.24 }
+        { minX: w * 0.07 + boundRadius, maxX: w * 0.26, minY: h * 0.08, maxY: h * 0.24 },
+        { minX: w * 0.08 + boundRadius, maxX: w * 0.28, minY: h * 0.28, maxY: h * 0.50 },
+        { minX: w * 0.12, maxX: w * 0.42, minY: h * 0.64, maxY: h * 0.84 },
+        { minX: w * 0.76, maxX: w * 0.92 - boundRadius, minY: h * 0.10, maxY: h * 0.36 }
       ];
 
   // Shuffle pockets to distribute variety

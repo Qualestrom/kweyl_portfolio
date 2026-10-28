@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, useMotionValue, animate, useTransform, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Trash2, 
@@ -64,6 +64,7 @@ const FALLBACK_CERTIFICATES = [
 // ─── Crystalline High-Fidelity Certificate Inspector Modal ───
 const CertificateModal = ({ cert, isOpen, onClose }) => {
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [modalImgError, setModalImgError] = useState(false);
   const { isTouch, isMobile } = useInputDevice();
   const isTouchDevice = isTouch || isMobile;
 
@@ -81,13 +82,21 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    if (isOpen) setZoomLevel(1);
-  }, [isOpen]);
+    if (isOpen) {
+      setZoomLevel(1);
+      setModalImgError(false);
+    }
+  }, [isOpen, cert?.imageUrl]);
 
   if (!isOpen || !cert) return null;
 
   const fileUrl = cert.pdfUrl || cert.imageUrl || '';
   const isPdf = Boolean(cert.pdfUrl && (cert.pdfUrl.toLowerCase().endsWith('.pdf') || cert.pdfUrl.includes('.pdf?')));
+  const hasModalImage = Boolean(
+    cert.imageUrl &&
+    !cert.imageUrl.includes('firebasestorage.googleapis.com') &&
+    !modalImgError
+  );
 
   return (
     <div 
@@ -127,7 +136,7 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
                 href={ensureAbsoluteUrl(cert.verifyUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 shadow-xs cursor-pointer active:scale-95 transition-colors"
                 title="Verify on official issuer portal"
               >
                 <ShieldCheck size={13} />
@@ -165,11 +174,12 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
 
         {/* Modal Viewport Body */}
         <div className="flex-1 min-h-[300px] max-h-[calc(90vh-140px)] bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center overflow-auto p-2 sm:p-4 relative">
-          {cert.imageUrl ? (
+          {hasModalImage ? (
             <div className="relative w-full h-full flex items-center justify-center overflow-auto">
               <img
                 src={cert.imageUrl}
                 alt={cert.title}
+                onError={() => setModalImgError(true)}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-md transition-transform duration-200"
                 style={{ transform: `scale(${zoomLevel})` }}
               />
@@ -212,7 +222,7 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
                     href={cert.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold font-mono text-sm text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40 shadow-lg"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold font-mono text-sm text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 shadow-lg transition-colors"
                   >
                     <ExternalLink size={15} />
                     <span>Open PDF in Full Screen</span>
@@ -228,21 +238,21 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
-              <div className="w-16 h-16 rounded-3xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 flex items-center justify-center text-sky-700 dark:text-cyan-400">
+              <div className="w-16 h-16 rounded-3xl bg-sky-100 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-500/30 flex items-center justify-center text-sky-700 dark:text-sky-400">
                 <Award size={32} />
               </div>
               <h4 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
                 {cert.title}
               </h4>
               <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                Issued by <span className="font-bold text-sky-700 dark:text-cyan-400">{cert.issuer}</span>
+                Issued by <span className="font-bold text-sky-700 dark:text-sky-400">{cert.issuer}</span>
               </p>
               {cert.verifyUrl && (
                 <a
                   href={ensureAbsoluteUrl(cert.verifyUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40"
+                  className="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold font-mono text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 transition-colors"
                 >
                   <ShieldCheck size={14} />
                   <span>Verify on Official Portal</span>
@@ -260,7 +270,7 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
               href={ensureAbsoluteUrl(cert.verifyUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 border border-sky-400/40"
+              className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold font-mono text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 transition-colors"
             >
               <ShieldCheck size={14} />
               <span>Verify on Official Portal</span>
@@ -273,13 +283,13 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
   );
 };
 
-// Individual High-Resolution Landscape 3D Certificate Card (Theme-Adaptive)
+// Individual High-Resolution Landscape Stacked Deck Certificate Card (Theme-Adaptive)
 const LandscapeCarouselCard = ({
   cert,
   idx,
   total,
-  rotation,
-  translateZ,
+  activeIndex,
+  windowWidth,
   isActive,
   isAdmin,
   editingUrlId,
@@ -295,40 +305,92 @@ const LandscapeCarouselCard = ({
   onClickCard,
   onInspect,
 }) => {
-  const angle = (360 / Math.max(total, 1)) * idx;
   const isEditingUrl = editingUrlId === cert.id;
   const isUploading = Boolean(uploading[cert.id]);
   const uploadStatus = typeof uploading[cert.id] === 'string' ? uploading[cert.id] : 'Uploading...';
 
-  // Effective destination URL (verify link or PDF URL)
-  const targetLink = cert.verifyUrl || cert.pdfUrl || '';
+  // Self-healing preview: if imageUrl is missing or broken, render Page 1 of pdfUrl automatically
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState('');
+  const [imgFailed, setImgFailed] = useState(false);
 
-  // Calculate dynamic front-facing angle and opacity
-  const opacity = useTransform(rotation, (r) => {
-    let currentGlobalAngle = (angle + r) % 360;
-    if (currentGlobalAngle < 0) currentGlobalAngle += 360;
-    if (currentGlobalAngle < 75 || currentGlobalAngle > 285) {
-      return 1;
-    }
-    if (currentGlobalAngle < 120 || currentGlobalAngle > 240) {
-      return 0.45;
-    }
-    return 0.18;
-  });
+  const hasValidDirectImage = Boolean(
+    cert.imageUrl &&
+    !cert.imageUrl.includes('firebasestorage.googleapis.com') &&
+    !imgFailed
+  );
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [cert.imageUrl]);
+
+  useEffect(() => {
+    if (hasValidDirectImage || !cert.pdfUrl) return;
+    let cancelled = false;
+    renderPdfFirstPageToImage(cert.pdfUrl, 1.8)
+      .then((res) => {
+        if (!cancelled && res?.dataUrl) {
+          setPdfPreviewUrl(res.dataUrl);
+        }
+      })
+      .catch((err) => {
+        console.warn('Certificate PDF preview render notice:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasValidDirectImage, cert.pdfUrl]);
+
+  const displayImageUrl = hasValidDirectImage ? cert.imageUrl : pdfPreviewUrl;
+
+  // Compute signed circular offset from activeIndex for Stacked / Layered Deck positioning
+  let offset = idx - activeIndex;
+  if (total > 2) {
+    const half = Math.floor(total / 2);
+    if (offset > half) offset -= total;
+    if (offset < -half) offset += total;
+  }
+
+  const absOffset = Math.abs(offset);
+  const peekSpreadPx = windowWidth < 640 ? 28 : windowWidth < 1024 ? 96 : 140;
+
+  const deckX =
+    offset === 0
+      ? 0
+      : absOffset === 1
+      ? offset * peekSpreadPx
+      : Math.sign(offset) * (peekSpreadPx * 1.35);
+
+  const deckY = offset === 0 ? 0 : absOffset === 1 ? 10 : 20;
+  const deckScale = offset === 0 ? 1 : absOffset === 1 ? 0.9 : 0.82;
+  const deckOpacity = offset === 0 ? 1 : absOffset === 1 ? 0.62 : 0;
+  const deckZIndex = offset === 0 ? 30 : absOffset === 1 ? 20 : 10;
 
   return (
     <motion.div
       onClick={() => {
         if (!isActive) onClickCard(idx);
       }}
-      className={`absolute inset-0 rounded-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
+      initial={false}
+      animate={{
+        x: deckX,
+        y: deckY,
+        scale: deckScale,
+        opacity: deckOpacity,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 260,
+        damping: 28,
+        mass: 0.9,
+      }}
+      className={`absolute inset-0 rounded-2xl transition-colors duration-300 flex flex-col justify-between cursor-pointer ${
         isActive
-          ? 'border-2 border-sky-400 dark:border-cyan-400/90 bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_50px_-10px_rgba(2,132,199,0.3),0_0_24px_rgba(56,189,248,0.2)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.85),0_0_32px_rgba(34,211,238,0.32)] z-20 ring-1 ring-sky-400/50 dark:ring-cyan-400/50'
-          : 'border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.06)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-slate-300 dark:hover:border-cyan-400/30 z-10'
+          ? 'border-2 border-sky-500 dark:border-sky-400/90 bg-white/95 dark:bg-slate-900/95 shadow-[0_20px_50px_-10px_rgba(2,132,199,0.22)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.8)] ring-1 ring-sky-400/40 dark:ring-sky-400/40'
+          : 'border border-slate-300/90 dark:border-white/15 bg-white/90 dark:bg-slate-900/90 shadow-[0_10px_30px_-5px_rgba(15,23,42,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-sky-400/60 dark:hover:border-sky-400/40'
       }`}
       style={{
-        transform: `rotateY(${angle}deg) translateZ(${translateZ}px)`,
-        opacity,
+        zIndex: deckZIndex,
+        pointerEvents: absOffset > 1 ? 'none' : 'auto',
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         textRendering: 'optimizeLegibility',
@@ -344,28 +406,28 @@ const LandscapeCarouselCard = ({
         }}
         className="relative w-full h-[145px] sm:h-[170px] md:h-[190px] lg:h-[200px] bg-slate-100 dark:bg-slate-950 rounded-t-2xl overflow-hidden border-b border-slate-200/80 dark:border-white/[0.1] group/img shrink-0 flex items-center justify-center cursor-pointer"
       >
-        {cert.imageUrl ? (
-          <ImageWithPlaceholder
-            src={cert.imageUrl}
+        {displayImageUrl ? (
+          <img
+            src={displayImageUrl}
             alt={cert.title}
+            onError={() => {
+              if (!imgFailed && cert.imageUrl && displayImageUrl === cert.imageUrl) {
+                setImgFailed(true);
+              }
+            }}
             className="w-full h-full object-cover object-top select-none pointer-events-none transition-transform duration-500 group-hover/img:scale-102 bg-white"
-            containerClassName="w-full h-full"
-            showSpinner={true}
             draggable={false}
           />
         ) : (
-          /* Stellar Credential Emblem Plate (Theme-Adaptive) */
+          /* Clean Architectural Credential Emblem Plate (No Duplicate Title/Issuer) */
           <div className="w-full h-full bg-gradient-to-b from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden group/plate select-none">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.12),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.12),transparent_70%)] pointer-events-none" />
-            <div className="relative z-10 flex flex-col items-center gap-2 max-w-[85%]">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-sm transition-transform duration-300 group-hover/plate:scale-110">
-                <Award size={24} className="text-sky-700 dark:text-cyan-400" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(2,132,199,0.12),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none" />
+            <div className="relative z-10 flex flex-col items-center gap-2">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-sky-100 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-400/30 flex items-center justify-center text-sky-700 dark:text-sky-300 shadow-sm transition-transform duration-300 group-hover/plate:scale-105">
+                <Award size={24} className="text-sky-700 dark:text-sky-400" />
               </div>
-              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-['Outfit'] line-clamp-1 tracking-tight">
-                {cert.title || 'Verified Credential'}
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-mono text-sky-800 dark:text-cyan-400/90 tracking-wide uppercase truncate max-w-full font-bold">
-                {cert.issuer || 'Official Accreditation'}
+              <span className="text-[11px] font-mono text-sky-800 dark:text-sky-300/90 tracking-wider uppercase font-semibold">
+                Official Accreditation Preview
               </span>
             </div>
           </div>
@@ -452,7 +514,7 @@ const LandscapeCarouselCard = ({
               </div>
             </div>
 
-            <div className="text-[10px] sm:text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-300 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-bold">
+            <div className="text-[10px] sm:text-xs font-mono tabular-nums text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.08] border border-slate-300 dark:border-white/[0.12] px-2.5 py-0.5 rounded-full shrink-0 font-bold">
               <EditableText
                 text={cert.date}
                 isAdmin={isAdmin && isActive}
@@ -497,7 +559,7 @@ const LandscapeCarouselCard = ({
                 <button
                   type="button"
                   onClick={() => { setEditingUrlId(cert.id); setUrlDraft(cert.verifyUrl || cert.pdfUrl || ''); }}
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-700 dark:text-cyan-300 hover:underline cursor-pointer font-bold"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-700 dark:text-sky-300 hover:underline cursor-pointer font-bold"
                   title="Edit verification link"
                 >
                   <Globe size={13} />
@@ -520,17 +582,17 @@ const LandscapeCarouselCard = ({
               <button
                 type="button"
                 onClick={() => onInspect && onInspect(cert)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 transition-all cursor-pointer shadow-xs active:scale-95"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-500/30 hover:bg-sky-200 dark:hover:bg-sky-500/20 transition-colors cursor-pointer shadow-xs active:scale-95"
                 title="Preview Certificate Document"
               >
-                <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
+                <FileText size={13} className="text-sky-700 dark:text-sky-400" />
                 <span>Document</span>
               </button>
               <a
                 href={ensureAbsoluteUrl(cert.verifyUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-cyan-500 dark:to-blue-600 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 dark:border-cyan-400/50 transition-all cursor-pointer shadow-sm active:scale-95"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-bold font-mono text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 transition-colors cursor-pointer shadow-sm active:scale-95"
                 title="Verify on official portal"
               >
                 <ShieldCheck size={13} />
@@ -542,10 +604,10 @@ const LandscapeCarouselCard = ({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onInspect && onInspect(cert); }}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 hover:bg-sky-200 dark:hover:bg-cyan-500/20 hover:border-sky-400 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-sky-800 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-500/30 hover:bg-sky-200 dark:hover:bg-sky-500/20 hover:border-sky-400 transition-colors cursor-pointer shadow-xs active:scale-95"
               title="Inspect Certificate Document"
             >
-              <FileText size={13} className="text-sky-700 dark:text-cyan-400" />
+              <FileText size={13} className="text-sky-700 dark:text-sky-400" />
               <span>View Certificate Document</span>
               <Maximize2 size={11} className="opacity-80" />
             </button>
@@ -555,7 +617,7 @@ const LandscapeCarouselCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-white bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-cyan-500 dark:to-blue-600 hover:from-sky-500 hover:to-cyan-400 border border-sky-400/40 dark:border-cyan-400/50 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-white dark:text-slate-950 bg-sky-600 hover:bg-sky-500 dark:bg-sky-400 dark:hover:bg-sky-300 border border-sky-500/40 transition-colors cursor-pointer shadow-sm active:scale-95"
               title="Verify on official portal"
             >
               <ShieldCheck size={13} />
@@ -566,7 +628,7 @@ const LandscapeCarouselCard = ({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onInspect && onInspect(cert); }}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/10 hover:border-cyan-400/50 transition-all cursor-pointer shadow-xs"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-4 rounded-xl text-xs font-bold font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/10 hover:border-sky-400/50 transition-colors cursor-pointer shadow-xs"
             >
               <FileText size={13} className="text-slate-500 dark:text-slate-400" />
               <span>Credential Record Details</span>
@@ -591,8 +653,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     }
   });
   const [loading, setLoading] = useState(true);
-  const [targetAngle, setTargetAngle] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [uploading, setUploading] = useState({});
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
@@ -602,10 +663,6 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
   // Crystalline Document Inspector Modal state
   const [inspectingCert, setInspectingCert] = useState(null);
-
-  const rotation = useMotionValue(0);
-  const dragStartX = useRef(0);
-  const dragStartRotation = useRef(0);
 
   // Window resize handler
   useEffect(() => {
@@ -678,91 +735,41 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     return () => { isMounted = false; };
   }, []);
 
-  // Dynamic continuous active index calculation (never wraps/reverses rotation)
-  const activeIndex = useMemo(() => {
-    if (certificates.length === 0) return 0;
-    const stepAngle = 360 / certificates.length;
-    const rawIdx = Math.round(-targetAngle / stepAngle);
-    return ((rawIdx % certificates.length) + certificates.length) % certificates.length;
-  }, [targetAngle, certificates.length]);
-
-  // Smooth continuous spring animation to targetAngle
+  // Keep activeIndex in bounds when certificates list changes
   useEffect(() => {
-    if (certificates.length === 0 || isDragging) return;
+    if (certificates.length > 0 && activeIndex >= certificates.length) {
+      setActiveIndex(0);
+    }
+  }, [certificates.length, activeIndex]);
 
-    animate(rotation, targetAngle, {
-      type: 'spring',
-      stiffness: 240,
-      damping: 28,
-    });
-  }, [targetAngle, certificates.length, isDragging, rotation]);
-
-  // Continuous 1-Way Infinite Step Navigation
+  // Circular Deck Step Navigation
   const handlePrev = () => {
     if (certificates.length === 0) return;
-    const stepAngle = 360 / certificates.length;
-    setTargetAngle(prev => prev + stepAngle);
+    setActiveIndex((prev) => (prev - 1 + certificates.length) % certificates.length);
   };
 
   const handleNext = () => {
     if (certificates.length === 0) return;
-    const stepAngle = 360 / certificates.length;
-    setTargetAngle(prev => prev - stepAngle);
+    setActiveIndex((prev) => (prev + 1) % certificates.length);
   };
 
-  // Click adjacent card or indicator dot to rotate via shortest angular path
+  // Click adjacent card or indicator dot to bring to front
   const handleSelectCard = (clickedIdx) => {
     if (certificates.length === 0) return;
-    const total = certificates.length;
-    const stepAngle = 360 / total;
-    
-    const currentFrontIdx = (((Math.round(-targetAngle / stepAngle) % total) + total) % total);
-    
-    let diff = clickedIdx - currentFrontIdx;
-    if (diff > total / 2) diff -= total;
-    if (diff < -total / 2) diff += total;
-
-    setTargetAngle(prev => prev - diff * stepAngle);
+    setActiveIndex(clickedIdx);
   };
 
-  // Continuous Pan / Drag with momentum snap
-  const handlePanStart = (e, info) => {
-    setIsDragging(true);
-    dragStartX.current = info.point.x;
-    dragStartRotation.current = rotation.get();
-  };
-
-  const handlePan = (e, info) => {
-    const deltaX = info.point.x - dragStartX.current;
-    rotation.set(dragStartRotation.current + deltaX * 0.35);
-  };
-
+  // Swipe / Pan gesture on deck
   const handlePanEnd = (e, info) => {
-    setIsDragging(false);
-    if (certificates.length === 0) return;
-
-    const stepAngle = 360 / certificates.length;
-    const currentRot = rotation.get();
-    
-    let targetSteps = Math.round(currentRot / stepAngle);
-    
-    if (info.velocity.x > 250) {
-      targetSteps = Math.ceil(currentRot / stepAngle);
-    } else if (info.velocity.x < -250) {
-      targetSteps = Math.floor(currentRot / stepAngle);
+    if (certificates.length <= 1) return;
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+    if (offset > 45 || velocity > 250) {
+      handlePrev();
+    } else if (offset < -45 || velocity < -250) {
+      handleNext();
     }
-
-    setTargetAngle(targetSteps * stepAngle);
   };
-
-  // Dynamic 3D radius calculation for balanced landscape cards
-  const translateZ = useMemo(() => {
-    const total = Math.max(certificates.length, 3);
-    const cardWidth = windowWidth > 1024 ? 540 : windowWidth > 768 ? 480 : windowWidth > 640 ? 420 : 310;
-    const angleRad = Math.PI / total;
-    const computedRadius = Math.round((cardWidth / 2) / Math.tan(angleRad));
-    return Math.max(windowWidth > 768 ? 400 : 280, computedRadius + 30);
-  }, [certificates.length, windowWidth]);
 
   // ─── Admin Handlers ────────────────────────────────────────────────────────
   const handleOpenAdd = async () => {
@@ -848,6 +855,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     try {
       // 1. Supabase Upload Pipeline
       if (isSupabaseConfigured && supabase) {
+        const currentCert = certificates.find(c => c.id === certId);
         if (isPdf) {
           const metadata = await extractPdfCertificateMetadata(file);
           setUploading(prev => ({ ...prev, [certId]: 'Rendering preview...' }));
@@ -857,24 +865,43 @@ export default function CertificatesCarousel({ isAdmin = false }) {
           const { publicUrl: imgUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, imageBlob, `thumb-${Date.now()}.webp`);
           const { publicUrl: pdfUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, file);
 
-          const currentCert = certificates.find(c => c.id === certId);
           const updatePayload = {
+            title: metadata.title || currentCert?.title || 'Verified Credential',
+            issuer: metadata.issuer || currentCert?.issuer || 'Official Accreditation',
+            date: metadata.date || currentCert?.date || '',
             imageUrl: imgUrl,
             pdfUrl: pdfUrl,
-            ...(metadata.title ? { title: metadata.title } : {}),
-            ...(metadata.issuer ? { issuer: metadata.issuer } : {}),
-            ...(metadata.date ? { date: metadata.date } : {}),
             ...(currentCert && !currentCert.verifyUrl ? { verifyUrl: pdfUrl } : {})
           };
 
-          await supabase.from('certificates').upsert({ id: certId, ...updatePayload });
-          setCertificates(prev => prev.map(c => c.id === certId ? { ...c, ...updatePayload } : c));
+          const { error: updateErr } = await supabase.from('certificates').update(updatePayload).eq('id', certId);
+          if (updateErr) {
+            await supabase.from('certificates').upsert({ id: certId, ...updatePayload });
+          }
+          setCertificates(prev => {
+            const next = prev.map(c => c.id === certId ? { ...c, ...updatePayload } : c);
+            try { localStorage.setItem('portfolio_certificates', JSON.stringify(next)); } catch (_) {}
+            return next;
+          });
           return;
         } else {
           setUploading(prev => ({ ...prev, [certId]: 'Saving image to Supabase...' }));
           const { publicUrl: imgUrl } = await uploadToSupabaseStorage(`certificates/${certId}`, file);
-          await supabase.from('certificates').upsert({ id: certId, imageUrl: imgUrl });
-          setCertificates(prev => prev.map(c => c.id === certId ? { ...c, imageUrl: imgUrl } : c));
+          const { error: updateErr } = await supabase.from('certificates').update({ imageUrl: imgUrl }).eq('id', certId);
+          if (updateErr) {
+            await supabase.from('certificates').upsert({
+              id: certId,
+              title: currentCert?.title || 'Verified Credential',
+              issuer: currentCert?.issuer || 'Official Accreditation',
+              date: currentCert?.date || '',
+              imageUrl: imgUrl,
+            });
+          }
+          setCertificates(prev => {
+            const next = prev.map(c => c.id === certId ? { ...c, imageUrl: imgUrl } : c);
+            try { localStorage.setItem('portfolio_certificates', JSON.stringify(next)); } catch (_) {}
+            return next;
+          });
           return;
         }
       }
@@ -984,12 +1011,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       {/* ─── Clean Header Bar (Theme-Adaptive) ─── */}
       <div className="flex items-center justify-between gap-3 mb-4 px-1 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 shadow-xs">
-            <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
-            <Award size={13} className="text-sky-700 dark:text-cyan-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-sky-100 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/25 shadow-xs">
+            <span className="w-1.5 h-1.5 rotate-45 bg-sky-600 dark:bg-sky-400" />
+            <Award size={13} className="text-sky-700 dark:text-sky-400" />
             <span>Verified Credentials</span>
           </div>
-          <span className="text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
+          <span className="text-xs font-mono tabular-nums text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
             {String(activeIndex + 1).padStart(2, '0')} / {String(certificates.length).padStart(2, '0')}
           </span>
 
@@ -997,7 +1024,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               type="button"
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-sky-100 dark:bg-cyan-500/20 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/40 hover:bg-sky-200 dark:hover:bg-cyan-500/30 transition-colors cursor-pointer shadow-sm ml-1"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/40 hover:bg-sky-200 dark:hover:bg-sky-500/30 transition-colors cursor-pointer shadow-sm ml-1"
               title="Add new certificate"
             >
               <Plus size={13} /> Add Credential
@@ -1006,33 +1033,26 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* ─── 3D PERSPECTIVE STAGE WITH FLANKING STAGE NAVIGATION ARROWS ─── */}
+      {/* ─── STACKED / LAYERED CREDENTIAL DECK STAGE ─── */}
       <div 
-        className="certificates-carousel w-full relative h-[360px] sm:h-[400px] md:h-[430px] lg:h-[450px] flex items-center justify-center"
-        style={{ perspective: '1400px' }}
+        className="certificates-carousel w-full relative h-[350px] sm:h-[390px] md:h-[420px] lg:h-[440px] flex items-center justify-center overflow-visible"
         data-no-swipe="true"
       >
         {/* Floating Left Stage Arrow Button (Theme-Adaptive) */}
         <button
           type="button"
+          aria-label="Previous certificate"
           onClick={handlePrev}
-          className="absolute left-1 sm:left-3 md:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-cyan-300 hover:border-sky-400 dark:hover:border-cyan-400/50 hover:bg-sky-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute left-1 sm:left-3 md:left-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/85 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400 dark:hover:border-sky-400/50 hover:bg-sky-50 dark:hover:bg-sky-500/20 backdrop-blur-md transition-colors shadow-xl active:scale-95 cursor-pointer"
           title="Previous Certificate"
         >
           <ChevronLeft size={22} />
         </button>
 
-        {/* 3D Revolving Container */}
+        {/* Stacked / Layered Deck Container */}
         <motion.div
-          className="certificates-carousel-stage relative w-[320px] sm:w-[460px] md:w-[520px] lg:w-[560px] h-[270px] sm:h-[310px] md:h-[335px] lg:h-[350px] cursor-grab active:cursor-grabbing"
-          style={{
-            transformStyle: 'preserve-3d',
-            rotateY: rotation,
-            z: -translateZ,
-          }}
+          className="certificates-carousel-stage relative w-[310px] sm:w-[450px] md:w-[510px] lg:w-[550px] h-[270px] sm:h-[310px] md:h-[335px] lg:h-[350px] cursor-grab active:cursor-grabbing"
           data-no-swipe="true"
-          onPanStart={handlePanStart}
-          onPan={handlePan}
           onPanEnd={handlePanEnd}
         >
           {certificates.map((cert, idx) => (
@@ -1041,8 +1061,8 @@ export default function CertificatesCarousel({ isAdmin = false }) {
               cert={cert}
               idx={idx}
               total={certificates.length}
-              rotation={rotation}
-              translateZ={translateZ}
+              activeIndex={activeIndex}
+              windowWidth={windowWidth}
               isActive={idx === activeIndex}
               isAdmin={isAdmin}
               editingUrlId={editingUrlId}
@@ -1064,8 +1084,9 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         {/* Floating Right Stage Arrow Button (Theme-Adaptive) */}
         <button
           type="button"
+          aria-label="Next certificate"
           onClick={handleNext}
-          className="absolute right-1 sm:right-3 md:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/80 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-cyan-300 hover:border-sky-400 dark:hover:border-cyan-400/50 hover:bg-sky-50 dark:hover:bg-cyan-500/20 backdrop-blur-md transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+          className="absolute right-1 sm:right-3 md:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white dark:bg-slate-950/85 border-2 border-slate-200 dark:border-white/15 text-slate-900 dark:text-slate-200 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-400 dark:hover:border-sky-400/50 hover:bg-sky-50 dark:hover:bg-sky-500/20 backdrop-blur-md transition-colors shadow-xl active:scale-95 cursor-pointer"
           title="Next Certificate"
         >
           <ChevronRight size={22} />
@@ -1080,10 +1101,11 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <button
               key={i}
               type="button"
+              aria-label={`Jump to certificate ${i + 1}`}
               onClick={() => handleSelectCard(i)}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+              className={`h-2 rounded-full transition-colors duration-300 cursor-pointer ${
                 isCurrent 
-                  ? 'w-7 bg-sky-600 dark:bg-cyan-400 shadow-[0_0_12px_rgba(2,132,199,0.5)]' 
+                  ? 'w-7 bg-sky-600 dark:bg-sky-400' 
                   : 'w-2 bg-slate-300 dark:bg-white/20 hover:bg-slate-400 dark:hover:bg-white/40'
               }`}
               title={`Jump to certificate ${i + 1}`}
@@ -1097,11 +1119,11 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         {isTouchDevice ? (
           <>
             <span className="inline-flex items-center gap-1">
-              <span>Swipe to rotate</span>
+              <span>Swipe deck to browse</span>
             </span>
             <span className="text-slate-400 dark:text-slate-600">•</span>
             <span className="inline-flex items-center gap-1">
-              <span>Tap card to bring to front</span>
+              <span>Tap layered card to bring to front</span>
             </span>
           </>
         ) : (
@@ -1109,12 +1131,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
             <span className="inline-flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">◄</kbd>
               <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] border border-slate-300 dark:border-white/10 text-[10px] text-slate-900 dark:text-slate-300 font-bold">►</kbd>
-              <span>Drag or arrows to rotate</span>
+              <span>Swipe or arrows to cycle deck</span>
             </span>
             <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1">
-              <MousePointerClick size={12} className="text-sky-700 dark:text-cyan-400" />
-              <span>Click card to bring to front</span>
+              <MousePointerClick size={12} className="text-sky-700 dark:text-sky-400" />
+              <span>Click layered card to bring to front</span>
             </span>
           </>
         )}

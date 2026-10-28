@@ -63,25 +63,3 @@
     padding-bottom: calc(var(--mobile-nav-height, 72px) + 36px);
   }
 }
-
-/* Submit button with Cryo glint sweep */
-.contact-submit-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.45) 50%,
-    transparent 100%
-  );
-  transform: skewX(-20deg);
-  transition: none;
-}
-
-.contact-submit-btn:hover::after {
-  animation: cryoGlintSweep 1.2s ease-in-out infinite;
-}

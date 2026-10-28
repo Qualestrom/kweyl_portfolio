@@ -34,20 +34,20 @@ import useInputDevice from '../utils/useInputDevice';
 const PROJECT_STATUS_CONFIG = {
   'deployed': {
     label: 'Deployed',
-    colorClass: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(16,185,129,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
-    dotClass: 'w-2 h-2 rotate-45 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.9)] shrink-0',
+    colorClass: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 backdrop-blur-md rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0',
     icon: Globe,
   },
   'in-progress': {
     label: 'In Progress',
-    colorClass: 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(6,182,212,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
-    dotClass: 'w-2 h-2 rotate-45 bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.9)] animate-pulse shrink-0',
+    colorClass: 'bg-sky-500/10 text-sky-300 border border-sky-500/30 backdrop-blur-md rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0',
     icon: Sparkles,
   },
   'confidential': {
     label: 'Confidential',
-    colorClass: 'bg-amber-500/10 text-amber-300 border border-amber-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(245,158,11,0.15)] rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
-    dotClass: 'w-2 h-2 rotate-45 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.9)] shrink-0',
+    colorClass: 'bg-amber-500/10 text-amber-300 border border-amber-500/30 backdrop-blur-md rounded-full px-2.5 py-0.5 text-[11px] font-mono inline-flex items-center gap-1.5',
+    dotClass: 'w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0',
     icon: Lock,
   }
 };
@@ -67,6 +67,8 @@ const ProjectMediaSlider = ({
   photos = [],
   fallbackImage = null,
   title = '',
+  tag = '',
+  skills = [],
   isCurrentSlide = false,
   isAdmin = false,
   projectId = '',
@@ -161,17 +163,50 @@ const ProjectMediaSlider = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex flex-col items-end justify-start p-6 sm:p-8 pt-10 sm:pt-12 select-none"
+            className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex flex-col items-end justify-start p-6 sm:p-8 pt-8 sm:pt-10 select-none overflow-hidden"
             style={{ zIndex: 1 }}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_35%,rgba(34,211,238,0.08),transparent_70%)] pointer-events-none" />
-            <div className="relative z-10 flex flex-col items-end gap-2 max-w-xs text-right opacity-60 group-hover:opacity-90 transition-opacity">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/25 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
-                <ImageIcon size={24} />
+            {/* Subtle Architectural Blueprint Grid */}
+            <div
+              className="absolute inset-0 opacity-35 pointer-events-none"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, rgba(56, 189, 248, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px)',
+                backgroundSize: '36px 36px',
+              }}
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_28%,rgba(56,189,248,0.14),transparent_65%)] pointer-events-none" />
+
+            {/* Intentional Upper-Right Architectural Preview Card */}
+            <div className="relative z-10 flex flex-col items-end gap-2.5 max-w-xs sm:max-w-sm text-right rounded-2xl bg-slate-900/75 border border-sky-400/20 px-4 py-3.5 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-sky-300">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-sky-300/90 font-semibold">
+                  {tag || 'System Architecture'}
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-300">
+                  <FolderGit2 size={15} />
+                </div>
               </div>
-              <span className="text-[11px] font-mono text-cyan-300/80 tracking-wider uppercase font-semibold">
-                {isAdmin ? 'Upload Screenshots' : 'Preview In Progress'}
-              </span>
+              <div className="text-xs sm:text-sm font-semibold text-white/90 font-['Outfit'] tracking-tight">
+                {title || 'Architecture Overview'}
+              </div>
+              {skills && skills.length > 0 && (
+                <div className="flex flex-wrap justify-end gap-1 pt-0.5">
+                  {skills.slice(0, 4).map((s, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/10 text-sky-200/90 border border-sky-400/20"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {isAdmin && (
+                <span className="text-[10px] font-mono text-sky-400/80 pt-1">
+                  Use &ldquo;Add Photo&rdquo; to attach gallery media
+                </span>
+              )}
             </div>
           </motion.div>
         )}
@@ -185,7 +220,8 @@ const ProjectMediaSlider = ({
             <button
               type="button"
               onClick={handlePrevPhoto}
-              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+              aria-label="Previous photo"
+              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer backdrop-blur-md"
               title="Previous Photo"
             >
               <ChevronLeft size={16} />
@@ -193,7 +229,8 @@ const ProjectMediaSlider = ({
             <button
               type="button"
               onClick={handleNextPhoto}
-              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+              aria-label="Next photo"
+              className="pointer-events-auto w-8 h-8 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white border border-white/20 flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer backdrop-blur-md"
               title="Next Photo"
             >
               <ChevronRight size={16} />
@@ -202,26 +239,27 @@ const ProjectMediaSlider = ({
 
           {/* Photo Dots & Counter Badge */}
           <div className="absolute top-3.5 right-3.5 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 border border-white/15 backdrop-blur-md shadow-md pointer-events-auto select-none">
-            <Images size={12} className="text-cyan-400" />
+            <Images size={12} className="text-sky-400" />
             <div className="flex items-center gap-1">
               {photos.map((_, pIdx) => (
                 <button
                   key={pIdx}
                   type="button"
+                  aria-label={`View photo ${pIdx + 1} of ${totalPhotos}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setPhotoIndex(pIdx);
                   }}
-                  className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  className={`h-1.5 rounded-full transition-colors duration-300 cursor-pointer ${
                     pIdx === photoIndex
-                      ? 'w-4 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]'
+                      ? 'w-4 bg-sky-400'
                       : 'w-1.5 bg-white/40 hover:bg-white/70'
                   }`}
                   title={`View photo ${pIdx + 1} of ${totalPhotos}`}
                 />
               ))}
             </div>
-            <span className="text-[10px] font-mono text-slate-300 font-bold ml-1">
+            <span className="text-[10px] font-mono text-slate-300 font-bold ml-1 tabular-nums">
               {photoIndex + 1}/{totalPhotos}
             </span>
           </div>
@@ -1042,11 +1080,11 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       {/* ─── Top Header / Controls (Theme-Adaptive) ─── */}
       <div className="flex items-center justify-between gap-3 mb-3 px-1 flex-wrap">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-cyan-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-sky-100 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/25 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-600 dark:bg-sky-400" />
             Selected Work
           </div>
-          <span className="text-xs font-mono text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
+          <span className="text-xs font-mono tabular-nums text-slate-900 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-300 dark:border-white/[0.1] px-2.5 py-0.5 rounded-full font-bold">
             {activeIndexNumber} / {String(displayedProjects.length).padStart(2, '0')}
           </span>
 
@@ -1172,6 +1210,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   photos={project.photos || []}
                   fallbackImage={getProjectImage(project, idx)}
                   title={project.title || 'Project Preview'}
+                  tag={project.tag || project.category || ''}
+                  skills={project.skills || []}
                   isCurrentSlide={isCurrent}
                   isAdmin={isAdmin}
                   projectId={project.id}
@@ -1181,27 +1221,15 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   onReorderPhotos={handleReorderPhotos}
                 />
 
-                {/* Lightened, soft gradient overlay — keeps screenshot bright & clear while ensuring text contrast */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent pointer-events-none z-10" />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/40 via-transparent to-transparent pointer-events-none z-10" />
-
-                {/* Click to redirect indicator hint (top right inside frame, only if single photo or not hovering controls) */}
-                {hasLink && !isAdmin && (!project.photos || project.photos.length <= 1) && (
-                  <div 
-                    onClick={() => handleSlideClick(project)}
-                    className="absolute top-3.5 right-3.5 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md text-xs font-mono opacity-80 group-hover:opacity-100 group-hover:bg-cyan-500/20 cursor-pointer transition-all shadow-lg"
-                    title="Click photo to visit project link"
-                  >
-                    <span>Visit Project</span>
-                    <ExternalLink size={12} />
-                  </div>
-                )}
+                {/* Soft gradient overlay — keeps screenshot bright & clear while ensuring text contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-transparent to-transparent pointer-events-none z-10" />
 
                 {/* Scanning / Uploading Status Overlay */}
                 {Boolean(uploading[project.id]) && (
-                  <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-2.5 text-cyan-300 text-xs font-mono z-40 backdrop-blur-md">
-                    <Sparkles size={24} className="animate-spin text-cyan-400" />
-                    <span className="font-bold text-sm text-cyan-200 animate-pulse">
+                  <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center gap-2.5 text-sky-300 text-xs font-mono z-40 backdrop-blur-md">
+                    <Sparkles size={24} className="animate-spin text-sky-400" />
+                    <span className="font-bold text-sm text-sky-200">
                       {typeof uploading[project.id] === 'string' ? uploading[project.id] : 'Processing...'}
                     </span>
                     <span className="text-[11px] text-slate-400">Updating project details & media</span>
@@ -1240,7 +1268,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                       isAdmin={isAdmin && isCurrent}
                       placeholder="CATEGORY / TAG"
                       onSave={(v) => handleUpdateField(project.id, 'tag', v)}
-                      className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold drop-shadow-sm"
+                      className="text-xs font-mono uppercase tracking-wider text-sky-400 font-semibold drop-shadow-sm"
                     />
 
                     <span className="text-slate-500 text-xs select-none">•</span>
@@ -1255,8 +1283,8 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                         <button
                           type="button"
                           onClick={isAdmin && isCurrent ? (e) => handleCycleStatus(project.id, statusKey, e) : undefined}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono border backdrop-blur-md transition-all select-none ${statusCfg.colorClass} ${
-                            isAdmin && isCurrent ? 'cursor-pointer hover:brightness-125 hover:border-cyan-400 active:scale-95' : 'cursor-default'
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono border backdrop-blur-md transition-colors select-none ${statusCfg.colorClass} ${
+                            isAdmin && isCurrent ? 'cursor-pointer hover:brightness-125 hover:border-sky-400 active:scale-95' : 'cursor-default'
                           }`}
                           title={isAdmin && isCurrent ? `Status: ${statusCfg.label} (Click to toggle: Deployed / In Progress / Confidential)` : `Status: ${statusCfg.label}`}
                         >
@@ -1271,24 +1299,14 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     })()}
                   </div>
 
-                  {/* Project Title — Clickable to redirect */}
-                  <h3 
-                    onClick={() => {
-                      if (!isAdmin) handleSlideClick(project);
-                    }}
-                    className={`text-xl sm:text-2xl lg:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2 flex items-center gap-2 flex-wrap ${
-                      hasLink && !isAdmin ? 'cursor-pointer hover:text-cyan-300 transition-colors' : ''
-                    }`}
-                  >
+                  {/* Project Title */}
+                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white font-['Outfit'] tracking-tight mb-2 flex items-center gap-2 flex-wrap">
                     <EditableText
                       text={project.title}
                       isAdmin={isAdmin && isCurrent}
                       placeholder="Project Title"
                       onSave={(v) => handleUpdateField(project.id, 'title', v)}
                     />
-                    {hasLink && !isAdmin && (
-                      <ExternalLink size={18} className="opacity-60 group-hover:opacity-100 text-cyan-400 inline shrink-0" />
-                    )}
                   </h3>
 
                   {/* Project Description */}
@@ -1392,7 +1410,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                         href={ensureAbsoluteUrl(project.demoUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold font-mono text-slate-950 bg-emerald-400 hover:bg-emerald-300 transition-all cursor-pointer shadow-lg shadow-emerald-500/20 active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold font-mono text-slate-950 bg-sky-400 hover:bg-sky-300 transition-colors cursor-pointer active:scale-95"
                         title="Open Live Demo"
                       >
                         <Globe size={13} />
@@ -1405,7 +1423,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     {isAdmin && isCurrent ? (
                       editingUrl?.projectId === project.id && editingUrl?.field === 'github' ? (
                         <form
-                          className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-cyan-400"
+                          className="inline-flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-sky-400"
                           onSubmit={(e) => { e.preventDefault(); handleSaveUrl(project.id, 'githubUrl'); }}
                         >
                           <input
@@ -1424,12 +1442,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                         <button
                           type="button"
                           onClick={() => { setEditingUrl({ projectId: project.id, field: 'github' }); setUrlDraft(project.githubUrl || ''); }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-cyan-300 bg-cyan-500/20 border border-cyan-500/40 border-dashed hover:bg-cyan-500/30 transition-all cursor-pointer backdrop-blur-md"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-sky-300 bg-sky-500/20 border border-sky-500/40 border-dashed hover:bg-sky-500/30 transition-colors cursor-pointer backdrop-blur-md"
                           title="Click to edit GitHub URL"
                         >
                           <FolderGit2 size={13} />
                           <span>{project.githubUrl ? 'Source Code' : 'Set Repo URL'}</span>
-                          <Edit3 size={10} className="text-cyan-400/70" />
+                          <Edit3 size={10} className="text-sky-400/70" />
                         </button>
                       )
                     ) : project.githubUrl ? (
@@ -1437,7 +1455,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                         href={ensureAbsoluteUrl(project.githubUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono text-slate-200 bg-white/[0.08] border border-white/[0.15] hover:border-cyan-400/50 hover:bg-cyan-500/20 hover:text-cyan-200 transition-all cursor-pointer backdrop-blur-md active:scale-95 shadow-md"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono text-slate-200 bg-white/[0.08] border border-white/[0.15] hover:border-sky-400/50 hover:bg-sky-500/20 hover:text-sky-200 transition-colors cursor-pointer backdrop-blur-md active:scale-95"
                         title="View Source Code"
                       >
                         <FolderGit2 size={13} />
@@ -1455,8 +1473,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
         {/* ─── Navigation Arrow Buttons (Theme-Adaptive) ─── */}
         <motion.button
           disabled={index === 0}
+          aria-label="Previous project"
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
-          className={`absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
+          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-30 ${
             index === 0
               ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
               : 'bg-white dark:bg-slate-950/70 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-white/20 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-400 shadow-xl hover:scale-105 active:scale-95 cursor-pointer'
@@ -1468,8 +1487,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
         <motion.button
           disabled={index === displayedProjects.length - 1}
+          aria-label="Next project"
           onClick={() => setIndex((i) => Math.min(displayedProjects.length - 1, i + 1))}
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-30 ${
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-colors z-30 ${
             index === displayedProjects.length - 1
               ? 'opacity-20 cursor-not-allowed bg-black/40 text-slate-500 border border-white/5'
               : 'bg-white dark:bg-slate-950/70 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-white/20 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-400 shadow-xl hover:scale-105 active:scale-95 cursor-pointer'
@@ -1500,6 +1520,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
               <motion.button
                 key={project.id || i}
                 onClick={() => setIndex(i)}
+                aria-label={`Select project ${project.title || i + 1}`}
                 initial={false}
                 animate={isCurrent ? 'active' : 'inactive'}
                 variants={{
@@ -1515,9 +1536,9 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                   },
                 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className={`relative shrink-0 h-full overflow-hidden rounded-xl border transition-all cursor-pointer ${
+                className={`relative shrink-0 h-full overflow-hidden rounded-xl border transition-colors cursor-pointer ${
                   isCurrent
-                    ? 'border-2 border-sky-600 dark:border-cyan-400 shadow-[0_0_16px_rgba(2,132,199,0.4)] opacity-100 ring-2 ring-sky-400/40 dark:ring-cyan-400/50'
+                    ? 'border-2 border-sky-600 dark:border-sky-400 opacity-100 ring-2 ring-sky-400/40 dark:ring-sky-400/50'
                     : 'border-2 border-slate-300 dark:border-white/10 opacity-70 hover:opacity-100 hover:border-sky-400 dark:hover:border-white/30'
                 }`}
                 title={project.title || 'Project Thumbnail'}
@@ -1531,8 +1552,17 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                     draggable={false}
                   />
                 ) : (
-                  <div className="w-full h-full bg-slate-900 border border-slate-800 flex items-center justify-center p-1 text-center">
-                    <span className="text-[9px] font-mono text-slate-400 font-semibold truncate px-1">
+                  <div className="w-full h-full bg-slate-900 border border-slate-800 flex flex-col items-center justify-center p-1 text-center relative overflow-hidden">
+                    <div
+                      className="absolute inset-0 opacity-30 pointer-events-none"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(to right, rgba(56, 189, 248, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(56, 189, 248, 0.12) 1px, transparent 1px)',
+                        backgroundSize: '12px 12px',
+                      }}
+                    />
+                    <FolderGit2 size={14} className="text-sky-400/80 mb-0.5 relative z-10 shrink-0" />
+                    <span className="text-[9px] font-mono text-slate-300 font-semibold truncate px-1 max-w-full relative z-10">
                       {project.title || 'Project'}
                     </span>
                   </div>

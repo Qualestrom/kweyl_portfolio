@@ -49,49 +49,12 @@
 }
 
 .home-hero-greeting-dot {
-  width: 9px;
-  height: 9px;
+  width: 7px;
+  height: 7px;
   background: var(--cryo-accent);
-  box-shadow: 0 0 12px var(--cryo-accent-glow), 0 0 24px rgba(224, 242, 254, 0.7);
   display: inline-block;
   flex-shrink: 0;
   transform: rotate(45deg);
-  animation: cryoDiamondPulse 3.5s infinite ease-in-out;
-  will-change: transform, filter;
-}
-
-/* Genshin Cryo Vision Tag */
-.home-hero-vision-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 14px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(103, 232, 249, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
-  border: 1px solid rgba(103, 232, 249, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-family: 'Inter', monospace, sans-serif;
-  font-size: clamp(0.7rem, 0.82vw, 0.8rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--cryo-accent);
-  text-transform: uppercase;
-  margin-bottom: 0.85rem;
-  box-shadow: 0 0 16px rgba(103, 232, 249, 0.14);
-}
-
-.home-hero-vision-badge-star {
-  font-size: 0.75rem;
-  color: var(--cryo-frost-core, #E0F2FE);
-  animation: cryoStarTwinkle 2.5s infinite ease-in-out;
-}
-
-[data-theme='light'] .home-hero-vision-badge {
-  background: #FFFFFF;
-  border-color: rgba(2, 132, 199, 0.3);
-  color: #0284C7;
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.12);
 }
 
 /* Headline */
@@ -111,13 +74,14 @@
   text-transform: uppercase;
   line-height: 1.14;
   letter-spacing: -0.02em;
+  text-wrap: balance;
   margin-bottom: 0.5rem;
 }
 
 .home-hero-headline-editable {
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-hero-headline-editable:hover {
@@ -134,27 +98,10 @@
   color: var(--cryo-accent);
   position: relative;
   display: inline-block;
-  background: linear-gradient(
-    115deg,
-    #67E8F9 0%,
-    #E0F2FE 28%,
-    #67E8F9 52%,
-    #38BDF8 76%,
-    #E0F2FE 100%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 18px var(--cryo-accent-glow));
-  animation: cryoPrismShimmer 7s ease-in-out infinite alternate;
 }
 
 [data-theme='light'] .home-hero-highlight {
-  background: linear-gradient(115deg, #0284C7 0%, #38BDF8 40%, #0369A1 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(2, 132, 199, 0.3));
+  color: #0284C7;
 }
 
 .home-hero-headline-edit-trigger {
@@ -170,7 +117,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   text-transform: none;
   margin-top: 4px;
 }
@@ -204,39 +151,35 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 34px;
-  background: linear-gradient(135deg, #67E8F9 0%, #38BDF8 60%, #0284C7 100%);
-  color: #0A0F1C;
+  padding: 14px 32px;
+  background: #67E8F9;
+  color: #060913;
   font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  border-radius: 9999px;
+  letter-spacing: 0.01em;
+  border-radius: 14px;
   text-decoration: none;
-  box-shadow: 0 0 24px var(--cryo-accent-glow), inset 0 1px 1px rgba(255, 255, 255, 0.6);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
+  touch-action: manipulation;
 }
 
-.home-hero-btn-primary::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-  animation: cryoGlintSweep 5s infinite;
-  pointer-events: none;
+[data-theme='light'] .home-hero-btn-primary {
+  background: #0284C7;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.22);
 }
 
 .home-hero-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 36px var(--cryo-accent-glow), 0 0 16px rgba(224, 242, 254, 0.6);
-  filter: brightness(1.08);
+  transform: translateY(-1px);
+  background: #38BDF8;
+}
+
+[data-theme='light'] .home-hero-btn-primary:hover {
+  background: #0369A1;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28);
 }
 
 .home-hero-btn-secondary-wrapper {
@@ -251,42 +194,39 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 34px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(103, 232, 249, 0.03) 100%);
+  padding: 14px 32px;
+  background: rgba(15, 23, 42, 0.45);
   color: var(--text-main);
   font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 600;
-  border-radius: 9999px;
-  border: 1px solid var(--cryo-frost-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border-radius: 14px;
+  border: 1px solid var(--surface-border, rgba(148, 163, 184, 0.22));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   text-decoration: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 0 12px rgba(103, 232, 249, 0.05);
-  transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .home-hero-btn-secondary:hover {
-  transform: translateY(-2px);
-  background: rgba(103, 232, 249, 0.1);
+  transform: translateY(-1px);
+  background: rgba(103, 232, 249, 0.08);
   border-color: var(--cryo-accent);
   color: var(--cryo-accent);
-  box-shadow: 0 0 24px rgba(103, 232, 249, 0.28);
 }
 
 [data-theme='light'] .home-hero-btn-secondary {
   background: #FFFFFF;
-  border-color: #E2E8F0;
+  border-color: #CBD5E1;
   color: #0F172A;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
 [data-theme='light'] .home-hero-btn-secondary:hover {
   background: #F8FAFC;
   border-color: #0284C7;
   color: #0284C7;
-  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.2);
 }
 
 /* Genshin Cryo Vision Crystals (Cardinal Orbit Accents) */
@@ -339,7 +279,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-hero-admin-btn-inline:hover {
@@ -371,7 +311,7 @@
   background: var(--cryo-glass-bg);
   border: 1px solid var(--cryo-glass-border);
   color: var(--text-muted);
-  transition: all 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
   text-decoration: none;
   cursor: pointer;
 }
@@ -411,7 +351,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-hero-social-admin-add:hover {
@@ -641,7 +581,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-hero-avatar-admin-trigger:hover {
@@ -663,7 +603,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .home-hero-avatar-admin-settings-btn:hover {
@@ -732,7 +672,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stellar-modal-close:hover {
@@ -882,7 +822,7 @@
   padding: 6px;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stellar-modal-link-delete:hover {
@@ -936,7 +876,7 @@
   font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
@@ -972,7 +912,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stellar-modal-btn-cancel:hover {
@@ -993,7 +933,7 @@
   border: none;
   cursor: pointer;
   box-shadow: 0 0 20px var(--cryo-accent-glow);
-  transition: all 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .stellar-modal-btn-primary:hover {

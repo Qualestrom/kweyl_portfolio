@@ -10,6 +10,10 @@ export default function ImageWithPlaceholder({
   fallbackSrc = '',
   showSpinner = false,
   draggable = false,
+  width,
+  height,
+  fetchPriority,
+  decoding = 'async',
   style = {},
   onClick,
 }) {
@@ -66,6 +70,10 @@ export default function ImageWithPlaceholder({
           }}
           src={activeSrc}
           alt={alt}
+          width={width}
+          height={height}
+          fetchPriority={fetchPriority}
+          decoding={decoding}
           style={style}
           draggable={draggable}
           onLoad={() => setLoaded(true)}

@@ -407,47 +407,25 @@ export default function HomeHero({
 
       <div className="home-hero-container">
         
-        {/* ─── Left Side: Text Content ────────────────────────── */}
+        {/* ─── Left Side: Text Content (Single Coordinated Entrance) ── */}
         <motion.div 
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="home-hero-text"
         >
-          {/* Genshin Cryo Vision Tag */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-            className="home-hero-vision-badge"
-          >
-            <span className="home-hero-vision-badge-star">✦</span>
-            <span>CRYO // VISION: ARCHITECT</span>
-            <span className="home-hero-vision-badge-star">✦</span>
-          </motion.div>
-
           {/* Greeting */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="home-hero-greeting"
-          >
-            <span className="home-hero-greeting-dot"></span>
+          <div className="home-hero-greeting">
+            <span className="home-hero-greeting-dot" aria-hidden="true"></span>
             <EditableText 
               text={greetingText} 
               isAdmin={isAdmin} 
               onSave={(v) => onUpdateConfig && onUpdateConfig('heroGreeting', v)} 
             />
-          </motion.div>
+          </div>
           
           {/* Headline with Word Emphasis Support */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="home-hero-headline-wrapper"
-          >
+          <div className="home-hero-headline-wrapper">
             <h1 
               className={`home-hero-headline ${isAdmin ? 'home-hero-headline-editable' : ''}`}
               onClick={isAdmin ? () => setHeadlineModalOpen(true) : undefined}
@@ -471,30 +449,20 @@ export default function HomeHero({
                 <Sparkles size={14} /> Customize Headline & Color Emphasis
               </button>
             )}
-          </motion.div>
+          </div>
           
           {/* Sub-headline / Bio */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.45 }}
-            className="home-hero-subheadline"
-          >
+          <div className="home-hero-subheadline">
             <EditableText 
               text={subHeadlineText} 
               isAdmin={isAdmin} 
               multiline={true}
               onSave={(v) => onUpdateConfig && onUpdateConfig('heroSub', v)} 
             />
-          </motion.div>
+          </div>
           
           {/* Action Buttons Row */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="home-hero-actions"
-          >
+          <div className="home-hero-actions">
             {onNavigateProjects ? (
               <button onClick={onNavigateProjects} className="home-hero-btn-primary">
                 <EditableText 
@@ -533,20 +501,16 @@ export default function HomeHero({
                   onClick={() => setIsResumeUploadOpen(true)}
                   className="home-hero-admin-btn-inline"
                   title="Upload / Replace resume in database"
+                  aria-label="Upload or replace resume"
                 >
                   <FileText size={14} />
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
           
           {/* Dynamic Social Links Row */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.75 }}
-            className="home-hero-socials-wrapper"
-          >
+          <div className="home-hero-socials-wrapper">
             <div className="home-hero-socials">
               {socials.map((link) => (
                 <a 
@@ -574,7 +538,7 @@ export default function HomeHero({
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         </motion.div>
         
         {/* ─── Right Side: Avatar Image Frame ──────────────────── */}
@@ -619,6 +583,10 @@ export default function HomeHero({
                 <ImageWithPlaceholder 
                   src={profileImage} 
                   alt="Christopher Lamera" 
+                  width={360}
+                  height={360}
+                  fetchPriority="high"
+                  decoding="async"
                   className="home-hero-avatar-img"
                   containerClassName="w-full h-full"
                 />

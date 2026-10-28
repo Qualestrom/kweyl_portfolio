@@ -33,11 +33,13 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
   const statusOption = STATUS_OPTIONS.find(s => s.label === status);
   const isAvailable = statusOption?.available ?? true;
 
-  // Skill arrays from config (with hardcoded fallbacks for first load)
-  const softwareSkills = config?.aboutSoftwareSkills || ['React', 'TypeScript', 'C#'];
-  const mobileSkills = config?.aboutMobileSkills || ['Flutter', 'Dart', 'React Native', 'PWA'];
-  const cloudSkills = config?.aboutCloudSkills || ['Firebase', 'Supabase', 'Vercel'];
-  const designSkills = config?.aboutDesignSkills || ['Figma', 'UI/UX', 'Git / CI/CD'];
+  // Skill arrays from config (calibrated to keep Three.js & Konva.js cleanly)
+  const rawSoftware = config?.aboutSoftwareSkills || ['React', 'TypeScript', 'Three.js', 'Konva.js', 'Tailwind CSS', 'Vite'];
+  const softwareSkills = rawSoftware.filter(s => s !== 'React Three Fiber' && s !== 'C#');
+  const mobileSkills = config?.aboutMobileSkills || ['React Native', 'Expo', 'Flutter', 'Dart', 'Cross-Platform Architecture', 'PWA'];
+  const cloudSkills = config?.aboutCloudSkills || ['Supabase', 'PostgreSQL', 'Firebase', 'Row Level Security', 'Vercel', 'Realtime Sync'];
+  const rawDesign = config?.aboutDesignSkills || ['Figma', 'UI/UX Design', 'Framer Motion', 'Design Systems', 'Git / CI/CD'];
+  const designSkills = rawDesign.filter(s => s !== '3D Graphics' && s !== 'Canvas Confetti');
 
   // ── Status cycling (admin only) ────────────────────────────────────────
   const cycleStatus = () => {
@@ -62,24 +64,24 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
 
   // ── Reusable skill tags renderer ───────────────────────────────────────
   const renderSkillTags = (skills, configKey) => (
-    <div className="flex flex-wrap gap-1 sm:gap-1.5">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2">
       {skills.map((skill) => (
         <span
           key={skill}
-          className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded sm:rounded-lg text-[10px] sm:text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-white/[0.08] inline-flex items-center gap-1 sm:gap-1.5 transition-all duration-200 ${
+          className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-medium bg-slate-100 dark:bg-white/[0.04] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] inline-flex items-center gap-1.5 transition-colors duration-200 ${
             isAdmin 
               ? 'hover:border-red-400/40 hover:bg-red-500/10' 
-              : 'hover:text-cyan-300 hover:border-cyan-400/60 hover:bg-cyan-500/15 hover:shadow-[0_0_12px_rgba(103,232,249,0.2)] hover:scale-[1.03]'
+              : 'hover:text-sky-700 dark:hover:text-cyan-300 hover:border-sky-300 dark:hover:border-cyan-400/40'
           }`}
         >
-          <span className="text-[8px] text-cyan-500 dark:text-cyan-400 font-bold select-none">◇</span>
           <span>{skill}</span>
           {isAdmin && (
             <button
               type="button"
               onClick={() => handleRemoveSkill(configKey, skills, skill)}
-              className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-all duration-150 cursor-pointer flex-shrink-0 ml-0.5"
+              className="w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-500/40 transition-colors duration-150 cursor-pointer flex-shrink-0 ml-0.5"
               title={`Remove ${skill}`}
+              aria-label={`Remove ${skill}`}
             >
               <X size={8} />
             </button>
@@ -133,23 +135,15 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
     </div>
   );
 
-  // ── Reusable skill card renderer ───────────────────────────────────────
-  const renderSkillCard = (icon, title, number, skills, configKey) => (
-    <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-3 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-xs dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 hover:shadow-[0_0_24px_rgba(103,232,249,0.15)] transition-all duration-300 group">
-
+  // ── Reusable skill card renderer (unnumbered, restrained surface) ──────
+  const renderSkillCard = (icon, title, skills, configKey) => (
+    <div className="col-span-1 lg:col-span-1 lg:row-span-1 relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-slate-200/90 dark:border-white/[0.08] bg-white/95 dark:bg-slate-900/55 backdrop-blur-xl p-3.5 sm:p-5 xl:p-5.5 flex flex-col justify-between shadow-xs dark:shadow-[0_8px_28px_rgba(0,0,0,0.28)] hover:border-sky-300 dark:hover:border-cyan-400/35 transition-colors duration-250">
       <div>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-400/30 flex items-center justify-center text-sky-700 dark:text-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.2)]">
-              {React.cloneElement(icon, { size: 15 })}
-            </div>
-            <h3 className="font-bold text-xs sm:text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit'] truncate">{title}</h3>
+        <div className="flex items-center gap-2.5 mb-2.5 sm:mb-3.5">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-sky-50 dark:bg-cyan-500/10 border border-sky-200 dark:border-cyan-400/25 flex items-center justify-center text-sky-700 dark:text-cyan-300">
+            {React.cloneElement(icon, { size: 15 })}
           </div>
-          <span className="text-[9px] sm:text-[10px] font-mono text-cyan-700 dark:text-cyan-300 bg-sky-100 dark:bg-cyan-500/10 border border-sky-300 dark:border-cyan-500/30 px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 shadow-xs">
-            <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 inline-block" />
-            <span>{number}</span>
-          </span>
+          <h3 className="font-bold text-xs sm:text-base xl:text-lg text-slate-900 dark:text-white font-['Outfit'] truncate">{title}</h3>
         </div>
       </div>
 
@@ -171,16 +165,13 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
           {/* ─────────────────────────────────────────────────────────────
               1. LARGE BIO CARD (Span 2 Columns, Span 2 Rows on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-slate-900/60 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.08),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:border-cyan-400/50 transition-all duration-300 group">
-
-            {/* Ambient Glow */}
-            <div className="absolute -top-24 -left-24 w-60 h-60 rounded-full bg-sky-400/10 dark:bg-cyan-500/10 blur-3xl pointer-events-none group-hover:bg-sky-400/15 transition-all duration-500" />
+          <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-2xl lg:rounded-3xl border border-slate-200/90 dark:border-white/[0.10] bg-white/95 dark:bg-slate-900/65 backdrop-blur-xl p-4 sm:p-7 xl:p-8 flex flex-col justify-between shadow-[0_12px_36px_-6px_rgba(15,23,42,0.07),0_4px_12px_rgba(15,23,42,0.03)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.35)] transition-colors duration-250">
             
             {/* Top Bar: Eyebrow + Status Badge */}
             <div>
               <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-widest uppercase bg-sky-100 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-cyan-500/20 w-fit shadow-xs">
-                  <span className="w-1.5 h-1.5 rotate-45 bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold tracking-wider uppercase bg-sky-50 dark:bg-cyan-500/10 text-sky-800 dark:text-cyan-300 border border-sky-200 dark:border-cyan-500/20 w-fit">
+                  <span className="w-1.5 h-1.5 rotate-45 bg-sky-600 dark:bg-cyan-400" aria-hidden="true" />
                   <span>About Me</span>
                 </div>
 
@@ -190,31 +181,31 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
                     type="button"
                     onClick={cycleStatus}
                     title={`Click to change status • Current: ${status}`}
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border transition-all cursor-pointer backdrop-blur-md ${
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-medium border transition-colors cursor-pointer backdrop-blur-md ${
                       isAvailable
-                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                        : 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 hover:bg-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
+                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100'
+                        : 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 hover:bg-amber-100'
                     }`}
                   >
-                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-amber-500 dark:bg-amber-400'}`} aria-hidden="true" />
                     <span>{status}</span>
                   </button>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold border backdrop-blur-md ${
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-medium border backdrop-blur-md ${
                       isAvailable
-                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                        : 'text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
+                        ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                        : 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                     }`}
                   >
-                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
+                    <span className={`w-2 h-2 rotate-45 shrink-0 ${isAvailable ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-amber-500 dark:bg-amber-400'}`} aria-hidden="true" />
                     <span>{status}</span>
                   </span>
                 )}
               </div>
 
               {/* Headline */}
-              <h2 className="text-xl sm:text-3xl lg:text-[2.6rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 sm:mb-3.5 font-['Outfit'] leading-tight">
+              <h2 className="text-xl sm:text-3xl lg:text-[2.5rem] font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 sm:mb-3.5 font-['Outfit'] leading-tight">
                 <EditableText
                   text={headline}
                   isAdmin={isAdmin}
@@ -223,7 +214,7 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
               </h2>
 
               {/* Bio Paragraph (Full text displayed, no clamping) */}
-              <div className="text-slate-700 dark:text-slate-300/90 text-xs sm:text-sm lg:text-[0.925rem] leading-relaxed max-w-xl font-normal">
+              <div className="text-slate-700 dark:text-slate-300 text-xs sm:text-sm lg:text-[0.95rem] leading-relaxed max-w-xl font-normal">
                 <EditableText
                   text={paragraph}
                   isAdmin={isAdmin}
@@ -234,41 +225,37 @@ export default function AboutSection({ config, isAdmin, onUpdateConfig, onNaviga
             </div>
 
             {/* Bottom Actions Row */}
-            <div className="pt-2 sm:pt-4 mt-2 sm:mt-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4 border-t border-slate-200 dark:border-white/[0.06]">
+            <div className="pt-2 sm:pt-4 mt-2 sm:mt-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4 border-t border-slate-200/80 dark:border-white/[0.06]">
               <button
                 type="button"
                 onClick={onNavigateContact}
-                className="btn-primary group cursor-pointer text-xs sm:text-sm py-1.5 sm:py-2.5 px-4 sm:px-6 font-semibold"
+                className="btn-primary group cursor-pointer text-xs sm:text-sm py-2 sm:py-2.5 px-5 sm:px-6 font-semibold"
               >
                 Let's Connect
                 <ArrowRight size={14} className="ml-1.5 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
-
-              <span className="text-[10px] sm:text-[11px] font-mono text-slate-500 dark:text-slate-400 hidden sm:inline-block font-medium">
-                Computer Engineering // Software Development
-              </span>
             </div>
           </div>
 
           {/* ─────────────────────────────────────────────────────────────
               2. SOFTWARE CARD (Row 1, Col 3 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          {renderSkillCard(<Terminal size={17} />, 'Software', '01', softwareSkills, 'aboutSoftwareSkills')}
+          {renderSkillCard(<Terminal size={17} />, 'Software', softwareSkills, 'aboutSoftwareSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
               3. MOBILE CARD (Row 1, Col 4 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          {renderSkillCard(<Smartphone size={17} />, 'Mobile', '02', mobileSkills, 'aboutMobileSkills')}
+          {renderSkillCard(<Smartphone size={17} />, 'Mobile', mobileSkills, 'aboutMobileSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
               4. CLOUD CARD (Row 2, Col 3 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          {renderSkillCard(<Cloud size={17} />, 'Cloud', '03', cloudSkills, 'aboutCloudSkills')}
+          {renderSkillCard(<Cloud size={17} />, 'Cloud', cloudSkills, 'aboutCloudSkills')}
 
           {/* ─────────────────────────────────────────────────────────────
               5. DESIGN & TOOLS CARD (Row 2, Col 4 on Desktop)
              ───────────────────────────────────────────────────────────── */}
-          {renderSkillCard(<Layers size={17} />, 'Design', '04', designSkills, 'aboutDesignSkills')}
+          {renderSkillCard(<Layers size={17} />, 'Design & Workflow', designSkills, 'aboutDesignSkills')}
 
         </div>
       </div>

@@ -51,3 +51,30 @@ During empirical headless browser inspection of the live application against [`s
 | [`src/components/StellarCryoLoader.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/StellarCryoLoader.css) | Verified | Fixed `animation: none` override on `.hud-warp-exit` for true forward camera fly-by. |
 | [`src/components/PortfolioSPA.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/PortfolioSPA.jsx) | Verified | 5-point 3D tunnel approach keyframes with `1.032 -> 1.00` inertial camera braking; unified `SectionLabels` inside stage. |
 | [`src/components/InteractiveBackground.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/InteractiveBackground.jsx) | Verified | Fixed parallax-adjusted cursor repulsion (`(p.x + currentParallaxX) - mouse.x`) and `3.2 * width` mesh coverage. |
+| [`src/utils/constellations.js`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/utils/constellations.js) | Verified | 5 authentic Genshin/Snezhnayan/Nod-Krai celestial archetypes (`Stella Glacialis`, `Corona Frostmoon`, `Lotus Niveus`, `Columba Caelestis`, `Horologium Astrale`), canopy-anchored spawning (`y: 8%–16%`), Moon corridor clearance (`0.65w`), zero text clutter. |
+
+---
+
+## 3. Celestial Star & Constellation Engine Overhaul
+
+### Scope & Architecture
+1. **Authentic Genshin / Snezhnayan / Nod-Krai Archetypes**:
+   - Replaced generic astrology (Ursa Major, Cygnus, Orion) with 5 thematic archetypes:
+     - `Stella Glacialis` (*The Frost Prism / Diamond Crest*)
+     - `Corona Frostmoon` (*Crown of the Frostmoon*)
+     - `Lotus Niveus` (*Snow Lotus / Crystalline Hexagon*)
+     - `Columba Caelestis` (*The Celestial Feather / Astral Quill*)
+     - `Horologium Astrale` (*The Celestial Astrolabe / Hourglass*)
+2. **Kinetic Connect-a-Dot Comet Head Tracing**:
+   - As each line segment traces from node to node, its leading tip is illuminated by an active comet head (`targetX, targetY`) with a radial starlight bloom (`r: 13px`) and rotating 4-point Primogem star (`size: 3.8px`).
+3. **Node Ignition Shockwaves**:
+   - When an edge completes, the destination node emits an expanding shockwave ripple (`r: 0 -> 28px`, `lineWidth: 1.2px`) with radiant starlight bloom (`shadowBlur: 5px`).
+4. **Traveling Photon Energy Pulses**:
+   - Completed constellations circulate luminous starlight photon beads along formed edges at calibrated speeds (`0.022–0.035`), keeping the celestial canopy alive during the holding phase.
+5. **Interactive "Celestial Astrolabe" Cursor Resonance**:
+   - When the user's cursor glides across the upper sky canopy (`y < 72%h`), radiant starlight filaments (`lineWidth: 1.0px`, `alpha: 0.40–0.50`) dynamically connect the cursor to the nearest 4 background stars and constellation nodes. The cursor itself is crowned with an astrolabe reticle ring (`r: 9px`) and glowing Primogem spark.
+6. **Canopy Anchoring & Moon Corridor Protection**:
+   - Constellations are strictly anchored to the upper sky canopy (`y: 8%–16%h`, `scale: 13%–18% min(w,h)`), leaving Columbina's Crescent Moon corridor (`x: 0.65w`) completely open.
+7. **Zero Background Text Clutter**:
+   - All text labels (`✦ STELLA GLACIALIS`, subtitle) have been completely removed from the canvas per user request, preserving a pure, atmospheric, uncluttered night sky.
+

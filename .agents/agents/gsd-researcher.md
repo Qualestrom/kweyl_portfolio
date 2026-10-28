@@ -17,7 +17,6 @@ mainAgent: false
 skills:
   - skills/codebase-mapper
   - skills/context-fetch
-  - skills/token-budget
 ---
 
 # System Prompt

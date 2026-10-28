@@ -16,7 +16,7 @@ mainAgent: false
 model: pro
 skills:
   - skills/debugger
-  - skills/empirical-validation
+  - skills/verifier
 ---
 
 # System Prompt

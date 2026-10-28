@@ -15,7 +15,6 @@ model: pro
 skills:
   - skills/planner
   - skills/plan-checker
-  - skills/token-budget
 ---
 
 # System Prompt

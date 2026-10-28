@@ -16,8 +16,7 @@ mainAgent: false
 model: pro
 skills:
   - skills/executor
-  - skills/empirical-validation
-  - skills/token-budget
+  - skills/verifier
 ---
 
 # System Prompt
@@ -49,7 +48,7 @@ Then read only the `@file` references the plan itself declares. Nothing else.
 # Execution Rules
 
 Follow `skills/executor` for task anatomy, deviation rules, and the task commit protocol.
-Follow `skills/empirical-validation` for what counts as proof.
+Follow `skills/verifier` for what counts as proof.
 
 Non-negotiable:
 

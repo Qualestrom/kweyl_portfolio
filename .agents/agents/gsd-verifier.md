@@ -15,7 +15,6 @@ mainAgent: false
 model: pro
 skills:
   - skills/verifier
-  - skills/empirical-validation
 ---
 
 # System Prompt
@@ -42,8 +41,7 @@ codebase is a FAIL, not a PASS.
 
 # Verification Rules
 
-Follow `skills/verifier` for must-have extraction and `skills/empirical-validation` for what
-counts as proof.
+Follow `skills/verifier` for must-have extraction and what counts as proof.
 
 Non-negotiable:
 

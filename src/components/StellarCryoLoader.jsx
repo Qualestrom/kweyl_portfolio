@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Compass, User, FolderGit2, Award, Send, Sparkles, Moon } from 'lucide-react';
 import { spawnRealConstellation } from '../utils/constellations';
-import { drawFrostmoon } from './StellarBackground';
+import { drawFrostmoon, getHeroMoonMetrics } from './StellarBackground';
 import './StellarCryoLoader.css';
 
 /**
@@ -399,19 +399,17 @@ export default function StellarCryoLoader({
       }
 
       // Render the Nod-Krai Crescent Frostmoon (Distant Beacon -> Hyperspace Approach)
-      const targetRadius = Math.max(30, Math.min(44, w * 0.030));
-      const targetX = w * 0.65;
-      const targetY = Math.min(82, h * 0.092);
+      const { radius: targetRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
 
-      const distantRadius = Math.max(12, Math.min(17, w * 0.012)); // ~0.36x scale: distant celestial beacon
+      const distantRadius = Math.max(18, Math.min(26, w * 0.016)); // ~0.13x scale: distant celestial beacon
       const distantX = w * 0.58;
-      const distantY = h * 0.13;
+      const distantY = h * 0.14;
 
       const approachT = isWarpingRef.current ? easeInOutQuad(warp) : 0;
       const curX = distantX + (targetX - distantX) * approachT;
       const curY = distantY + (targetY - distantY) * approachT;
       const curRadius = distantRadius + (targetRadius - distantRadius) * approachT;
-      const curRotation = -0.48 + frame * 0.0006;
+      const curRotation = -0.48 + frame * 0.0004;
 
       ctx.save();
       ctx.globalAlpha = 1;

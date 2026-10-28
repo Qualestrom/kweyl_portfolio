@@ -54,12 +54,13 @@ class DSU {
  * Spawns a procedural celestial constellation with collision avoidance ("hitbox").
  * Returns null if the sky canopy is currently crowded.
  */
-export function spawnRealConstellation(w, h, rand, getStarColor, existingConstellations = []) {
+export function spawnRealConstellation(w, h, rand, getStarColor, existingConstellations = [], moonInfo = null) {
   const isSmall = w < 768;
   const boundRadius = isSmall ? rand(50, 70) : rand(75, 110);
-  const moonX = w * 0.65;
-  const moonY = Math.min(82, h * 0.092);
-  const moonClearance = 115;
+  const moonX = moonInfo?.x ?? (w * 0.70);
+  const moonY = moonInfo?.y ?? (h * 0.22);
+  const moonRadius = moonInfo?.radius ?? (isSmall ? 80 : 180);
+  const moonClearance = moonRadius * 1.32;
 
   // Active constellations currently visible or holding
   const activeExisting = existingConstellations.filter(
@@ -74,18 +75,20 @@ export function spawnRealConstellation(w, h, rand, getStarColor, existingConstel
 
   // ── 1. Spatial Hitbox & Clearance Placement ──
   // Candidate pockets in the upper sky canopy:
-  // Pocket 0: Far Left (w * 0.08 - 0.22)
-  // Pocket 1: Mid Left (w * 0.26 - 0.44)
-  // Pocket 2: Right sky (w * 0.74 - 0.88), safely past Columbina's Moon
+  // Pocket 0: Far Left (w * 0.08 - 0.26)
+  // Pocket 1: Mid Left (w * 0.28 - 0.50)
+  // Pocket 2: Lower Horizon / Mid-Sky below the moon corridor
+  // Pocket 3: Far Right Horizon (if space allows past the colossal moon)
   const candidatePockets = isSmall
     ? [
-        { minX: w * 0.12, maxX: w * 0.40 },
-        { minX: w * 0.55, maxX: w * 0.85 }
+        { minX: w * 0.10, maxX: w * 0.38, minY: h * 0.09, maxY: h * 0.18 },
+        { minX: w * 0.15, maxX: w * 0.55, minY: h * 0.22, maxY: h * 0.35 }
       ]
     : [
-        { minX: w * 0.08 + boundRadius, maxX: w * 0.22 },
-        { minX: w * 0.26, maxX: w * 0.44 },
-        { minX: w * 0.76, maxX: Math.max(w * 0.78, w * 0.90 - boundRadius) }
+        { minX: w * 0.08 + boundRadius, maxX: w * 0.26, minY: h * 0.09, maxY: h * 0.20 },
+        { minX: w * 0.28, maxX: w * 0.50, minY: h * 0.08, maxY: h * 0.22 },
+        { minX: w * 0.14, maxX: w * 0.48, minY: h * 0.24, maxY: h * 0.38 },
+        { minX: Math.max(w * 0.88, moonX + moonClearance + boundRadius), maxX: w * 0.94, minY: h * 0.10, maxY: h * 0.24 }
       ];
 
   // Shuffle pockets to distribute variety
@@ -95,11 +98,12 @@ export function spawnRealConstellation(w, h, rand, getStarColor, existingConstel
   let chosenCy = null;
 
   for (const pocket of candidatePockets) {
+    if (pocket.minX >= pocket.maxX) continue;
     for (let attempt = 0; attempt < 8; attempt++) {
       const cx = rand(pocket.minX, pocket.maxX);
-      const cy = rand(h * 0.09, h * 0.17);
+      const cy = rand(pocket.minY, pocket.maxY);
 
-      // Check distance to Moon
+      // Check distance to Moon (scaled to colossal radius)
       const distToMoon = Math.hypot(cx - moonX, cy - moonY);
       if (distToMoon < boundRadius + moonClearance) {
         continue;

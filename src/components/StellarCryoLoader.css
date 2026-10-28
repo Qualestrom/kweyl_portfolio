@@ -35,16 +35,14 @@
 .genshin-loader-overlay.is-warping {
   pointer-events: none;
   background: transparent;
-  transition: background-color 0.4s ease;
 }
 
 .genshin-loader-overlay.fade-out {
   opacity: 0;
   visibility: hidden;
   background: transparent;
-  transition: opacity 1.05s cubic-bezier(0.22, 1, 0.36, 1),
-              background-color 0.65s ease,
-              visibility 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+              visibility 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
@@ -102,13 +100,14 @@
 
 /* Warp Exit: Camera plunges forward along Z-axis; HUD scales UP and flies past the viewer */
 .genshin-bottom-hud.hud-warp-exit {
-  transform: scale(2.8) translateY(140px);
+  animation: none;
+  transform: scale(2.8) translateY(160px);
   opacity: 0;
-  filter: blur(8px);
+  filter: blur(10px);
   pointer-events: none;
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.45s ease;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.32s ease;
 }
 
 /* ─── Elemental Glyphs Row (Icon Only, Centered) ──────────────────────────── */

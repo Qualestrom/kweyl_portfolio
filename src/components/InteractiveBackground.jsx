@@ -128,7 +128,7 @@ export default function InteractiveBackground({ activeSection = 0 }) {
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
 
-          const dx = p.x - mouse.x;
+          const dx = (p.x + currentParallaxX) - mouse.x;
           const dy = p.y - mouse.y;
           const distSq = dx * dx + dy * dy;
           const radiusSq = mouse.radius * mouse.radius;

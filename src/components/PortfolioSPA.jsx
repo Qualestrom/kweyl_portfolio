@@ -366,13 +366,6 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         )}
       </AnimatePresence>
 
-      <SectionLabels 
-        activeSection={currentSection} 
-        onNavigate={navigateTo} 
-        isAdmin={isAdmin}
-        onLogout={onLogout}
-      />
-
       <div 
         className="stellar-viewport-stage"
         style={{
@@ -392,26 +385,36 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
             width: '100%',
             height: '100%',
             overflow: 'hidden',
-            transformStyle: 'preserve-3d',
             transformOrigin: '50% 50%',
           }}
           initial={false}
           animate={
             loaderExited
-              ? { opacity: 1, scale: 1, z: 0, filter: 'blur(0px)' }
+              ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
               : isWarping
-              ? { opacity: 1, scale: 1, z: 0, filter: 'blur(0px)' }
-              : { opacity: 0, scale: 0.18, z: -2500, filter: 'blur(10px)' }
+              ? {
+                  opacity: [0, 0.72, 0.96, 1, 1],
+                  scale: [0.08, 0.24, 0.62, 1.032, 1],
+                  filter: ['blur(12px)', 'blur(5px)', 'blur(1.5px)', 'blur(0px)', 'blur(0px)'],
+                }
+              : { opacity: 0, scale: 0.08, filter: 'blur(12px)' }
           }
           transition={
             isWarping
               ? {
-                  duration: 1.45,
-                  ease: [0.16, 1, 0.3, 1],
+                  duration: 1.52,
+                  times: [0, 0.22, 0.54, 0.84, 1.0],
+                  ease: 'easeInOut',
                 }
-              : { duration: 0.5, ease: 'easeOut' }
+              : { duration: 0.35, ease: 'easeOut' }
           }
         >
+        <SectionLabels 
+          activeSection={currentSection} 
+          onNavigate={navigateTo} 
+          isAdmin={isAdmin}
+          onLogout={onLogout}
+        />
         <motion.div
           className="stellar-camera-track"
           animate={{ x: `${-currentSection * 100}vw` }}

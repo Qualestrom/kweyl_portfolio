@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Compass, User, FolderGit2, Award, Send, Sparkles, Moon } from 'lucide-react';
 import { spawnRealConstellation } from '../utils/constellations';
+import { drawFrostmoon } from './StellarBackground';
 import './StellarCryoLoader.css';
 
 /**
@@ -236,6 +237,7 @@ export default function StellarCryoLoader({
     const ctx = canvas.getContext('2d');
     let w, h;
     let stars = [];
+    let warpTunnelStars = [];
     let starIndices = [];
     let constellations = [];
     let meteors = [];
@@ -247,6 +249,18 @@ export default function StellarCryoLoader({
     let nextMeteorFrame = 80;
 
     const getTheme = () => document.documentElement.getAttribute('data-theme') || 'dark';
+
+    const createWarpTunnelStar = (initial = false) => {
+      const angle = rand(0, Math.PI * 2);
+      const radius = rand(55, Math.max(w || 1440, h || 900) * 0.95);
+      return {
+        x3d: Math.cos(angle) * radius,
+        y3d: Math.sin(angle) * radius,
+        z3d: initial ? rand(40, 1600) : rand(1050, 1600),
+        size: rand(1.4, 3.4),
+        isBrightCyan: Math.random() > 0.35,
+      };
+    };
 
     const resize = () => {
       w = canvas.width = window.innerWidth;
@@ -260,7 +274,7 @@ export default function StellarCryoLoader({
         { x: w * 0.50, y: h * 0.45, radius: Math.min(w, h) * 0.40, colorIdx: 2, driftX: 0.05, driftY: -0.04 },
       ];
 
-      // 2. Stars
+      // 2. Ambient Stars
       const count = Math.max(120, Math.floor((w * h) / 8500));
       stars = Array.from({ length: count }, () => {
         const isStar = Math.random() > 0.58;
@@ -284,6 +298,9 @@ export default function StellarCryoLoader({
           glowPhase: 'idle',
         };
       });
+
+      // 3. True 3D (x, y, z) Hyperspace Tunnel Star Pool
+      warpTunnelStars = Array.from({ length: 240 }, () => createWarpTunnelStar(true));
 
       starIndices = stars.map((s, i) => (s.isStar ? i : -1)).filter((i) => i >= 0);
       constellations = [];
@@ -337,27 +354,31 @@ export default function StellarCryoLoader({
     const animate = () => {
       frame++;
       const theme = getTheme();
+      const isDark = theme === 'dark';
       const palette = PALETTES[theme] || PALETTES.dark;
 
-      // ── Handle Warp Zoom Velocity with Gradual Deceleration ──
-      let currentWarpSpeed = 0;
+      // ── Handle 3D Hyperspace Velocity with Acceleration, Tunnel Cruise, & Braking ──
+      let warpSpeed3D = 0;
       let streakFactor = 0;
 
       if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.011);
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.0115);
         const p = warpProgressRef.current;
 
-        if (p < 0.22) {
-          // 1. Initial swift acceleration into warp
-          const accel = p / 0.22;
-          currentWarpSpeed = Math.sin(accel * (Math.PI / 2)) * 46;
-          streakFactor = accel;
+        if (p < 0.20) {
+          // 1. Plunge into hyperspace
+          const accel = p / 0.20;
+          streakFactor = Math.sin(accel * (Math.PI / 2));
+          warpSpeed3D = 8 + streakFactor * 52;
+        } else if (p < 0.72) {
+          // 2. Relativistic 3D warp tunnel cruise
+          streakFactor = 1.0;
+          warpSpeed3D = 60;
         } else {
-          // 2. Gradual deceleration — reaching closer to destination
-          const decel = (p - 0.22) / 0.78;
-          const decelCurve = Math.pow(1 - decel, 2.2);
-          currentWarpSpeed = decelCurve * 46 + 0.6;
-          streakFactor = decelCurve;
+          // 3. Inertial camera braking upon destination arrival
+          const decel = (p - 0.72) / 0.28;
+          streakFactor = Math.pow(1 - decel, 1.8);
+          warpSpeed3D = streakFactor * 55 + 1.5;
         }
       }
 
@@ -367,21 +388,50 @@ export default function StellarCryoLoader({
       const cy = h * 0.48;
       const warp = warpProgressRef.current;
 
-      // ── 1. Draw Nebula Background Clouds ──
-      for (const neb of nebulae) {
-        neb.x += neb.driftX;
-        neb.y += neb.driftY;
-        if (neb.x < 0 || neb.x > w) neb.driftX *= -1;
-        if (neb.y < 0 || neb.y > h) neb.driftY *= -1;
+      // ── 0. Smooth Sky-to-Tunnel Backdrop & Nod-Krai Frostmoon ──
+      if (isWarpingRef.current && warp < 0.55) {
+        const backdropAlpha = Math.max(0, 1 - Math.pow(warp / 0.50, 1.4));
+        ctx.save();
+        ctx.globalAlpha = backdropAlpha;
+        ctx.fillStyle = isDark ? '#050811' : '#F4F7FB';
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+      }
 
-        const nebColor = palette.nebulaColors[neb.colorIdx] || palette.nebulaColors[0];
-        const grad = ctx.createRadialGradient(neb.x, neb.y, 0, neb.x, neb.y, neb.radius * (1 + warp * 1.5));
-        grad.addColorStop(0, nebColor);
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(neb.x, neb.y, neb.radius * (1 + warp * 1.5), 0, Math.PI * 2);
-        ctx.fill();
+      // Render the Nod-Krai Crescent Frostmoon on the Opening Screen sky
+      if (!isWarpingRef.current || warp < 0.28) {
+        const moonAlpha = isWarpingRef.current ? Math.max(0, 1 - warp / 0.28) : 1;
+        ctx.save();
+        ctx.globalAlpha = moonAlpha;
+        const moonRadius = Math.max(30, Math.min(44, w * 0.030));
+        const baseY = Math.min(82, h * 0.092) + 5;
+        const moonX = w * 0.65 + (isWarpingRef.current ? (w * 0.65 - cx) * warp * 1.8 : 0);
+        const moonY = baseY + (isWarpingRef.current ? (baseY - cy) * warp * 1.8 : 0);
+        drawFrostmoon(ctx, moonX, moonY, moonRadius * (1 + warp * 0.8), palette, frame, isDark);
+        ctx.restore();
+      }
+
+      // ── 1. Draw Nebula Background Clouds ──
+      if (!isWarpingRef.current || warp < 0.45) {
+        const nebAlpha = isWarpingRef.current ? Math.max(0, 1 - warp / 0.45) : 1;
+        ctx.save();
+        ctx.globalAlpha = nebAlpha;
+        for (const neb of nebulae) {
+          neb.x += neb.driftX;
+          neb.y += neb.driftY;
+          if (neb.x < 0 || neb.x > w) neb.driftX *= -1;
+          if (neb.y < 0 || neb.y > h) neb.driftY *= -1;
+
+          const nebColor = palette.nebulaColors[neb.colorIdx] || palette.nebulaColors[0];
+          const grad = ctx.createRadialGradient(neb.x, neb.y, 0, neb.x, neb.y, neb.radius);
+          grad.addColorStop(0, nebColor);
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(neb.x, neb.y, neb.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
       }
 
       // ── 2. Percentage Step Interpolation ──
@@ -575,75 +625,100 @@ export default function StellarCryoLoader({
         ctx.stroke();
       }
 
-      // ── 6. Draw Stars with Warp Stretch ──
-      for (let i = 0; i < stars.length; i++) {
-        const p = stars[i];
-        p.rotation += p.rotationSpeed;
-        const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
-        let opacity = p.baseOpacity + breath;
+      // ── 6. Draw Stars OR True 3D (x, y, z) Hyperspace Warp Tunnel ──
+      if (isWarpingRef.current && warp > 0.01) {
+        const fov = 460;
+        ctx.save();
+        for (let i = 0; i < warpTunnelStars.length; i++) {
+          const ws = warpTunnelStars[i];
+          ws.z3d -= warpSpeed3D;
 
-        // Individual star ignition glow cycle
-        if (p.glowPhase === 'rising') {
-          p.glowProgress += 0.04;
-          if (p.glowProgress >= 1) {
-            p.glowProgress = 1;
-            p.glowPhase = 'falling';
+          // Continuously respawn stars behind the camera deep into the 3D tunnel
+          if (ws.z3d <= 22) {
+            const next = createWarpTunnelStar(false);
+            ws.x3d = next.x3d;
+            ws.y3d = next.y3d;
+            ws.z3d = next.z3d;
+            ws.size = next.size;
+            ws.isBrightCyan = next.isBrightCyan;
           }
-        } else if (p.glowPhase === 'falling') {
-          p.glowProgress -= 0.015;
-          if (p.glowProgress <= 0) {
-            p.glowProgress = 0;
-            p.glowPhase = 'idle';
+
+          // 3D Perspective Projection: x_proj = cx + (x / z) * fov
+          const sx = cx + (ws.x3d / ws.z3d) * fov;
+          const sy = cy + (ws.y3d / ws.z3d) * fov;
+
+          if (sx < -150 || sx > w + 150 || sy < -150 || sy > h + 150) {
+            continue;
           }
-        }
 
-        const glowEased = easeInOutQuad(p.glowProgress);
-        const isGlowing = p.glowPhase !== 'idle' && p.glowProgress > 0.01;
+          const zTail = ws.z3d + warpSpeed3D * (2.6 + streakFactor * 4.2);
+          const tx = cx + (ws.x3d / zTail) * fov;
+          const ty = cy + (ws.y3d / zTail) * fov;
 
-        if (isGlowing) {
-          const bloomSize = p.size * (3.5 + glowEased * 9);
-          const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
-          outerGrad.addColorStop(0, palette.starGlow + (glowEased * 0.6).toFixed(3) + ')');
-          outerGrad.addColorStop(1, palette.starGlow + '0)');
-          ctx.fillStyle = outerGrad;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
-          ctx.fill();
-          opacity = Math.min(1, opacity + glowEased * 0.85);
-        }
+          const depthAlpha = Math.min(1, Math.max(0.08, (1 - ws.z3d / 1650) * (0.35 + streakFactor * 0.65)));
+          const streakGrad = ctx.createLinearGradient(tx, ty, sx, sy);
 
-        // ── If Warping: Stretch into Hyper-Speed Radial Light Beams with Deceleration ──
-        if (isWarpingRef.current && warpProgressRef.current > 0.01) {
-          const dx = p.x - cx;
-          const dy = p.y - cy;
-          const dist = Math.hypot(dx, dy) || 1;
-          const angle = Math.atan2(dy, dx);
-          const stretchLength = (dist * 0.08 + 8) * (streakFactor * 1.5 + 0.1);
-
-          const prevX = p.x;
-          const prevY = p.y;
-          p.x += Math.cos(angle) * (currentWarpSpeed * (dist / 220 + 0.4));
-          p.y += Math.sin(angle) * (currentWarpSpeed * (dist / 220 + 0.4));
-
-          const streakGrad = ctx.createLinearGradient(prevX, prevY, p.x, p.y);
           if (theme === 'light') {
             streakGrad.addColorStop(0, 'rgba(2, 132, 199, 0)');
-            streakGrad.addColorStop(0.5, `rgba(14, 165, 233, ${(0.4 + streakFactor * 0.5).toFixed(2)})`);
-            streakGrad.addColorStop(1, '#0284C7');
+            streakGrad.addColorStop(0.55, `rgba(14, 165, 233, ${(depthAlpha * 0.65).toFixed(3)})`);
+            streakGrad.addColorStop(1, `rgba(2, 132, 199, ${depthAlpha.toFixed(3)})`);
           } else {
-            streakGrad.addColorStop(0, palette.starGlow + '0)');
-            streakGrad.addColorStop(0.5, palette.starGlow + `${(0.4 + streakFactor * 0.5).toFixed(2)})`);
-            streakGrad.addColorStop(1, '#ffffff');
+            streakGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+            streakGrad.addColorStop(
+              0.55,
+              ws.isBrightCyan
+                ? `rgba(56, 189, 248, ${(depthAlpha * 0.80).toFixed(3)})`
+                : `rgba(186, 230, 253, ${(depthAlpha * 0.75).toFixed(3)})`
+            );
+            streakGrad.addColorStop(1, `rgba(255, 255, 255, ${depthAlpha.toFixed(3)})`);
           }
 
+          const projScale = Math.min(2.8, Math.max(0.5, fov / ws.z3d));
           ctx.strokeStyle = streakGrad;
-          ctx.lineWidth = Math.max(1.2, p.size * (0.8 + streakFactor * 0.8));
+          ctx.lineWidth = Math.max(1.0, ws.size * projScale * (0.55 + streakFactor * 0.45));
+          ctx.lineCap = 'round';
           ctx.beginPath();
-          ctx.moveTo(prevX, prevY);
-          ctx.lineTo(p.x + Math.cos(angle) * stretchLength, p.y + Math.sin(angle) * stretchLength);
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(sx, sy);
           ctx.stroke();
-        } else {
-          // Standard Calm Ambient Star Rendering
+        }
+        ctx.restore();
+      } else {
+        for (let i = 0; i < stars.length; i++) {
+          const p = stars[i];
+          p.rotation += p.rotationSpeed;
+          const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
+          let opacity = p.baseOpacity + breath;
+
+          if (p.glowPhase === 'rising') {
+            p.glowProgress += 0.04;
+            if (p.glowProgress >= 1) {
+              p.glowProgress = 1;
+              p.glowPhase = 'falling';
+            }
+          } else if (p.glowPhase === 'falling') {
+            p.glowProgress -= 0.015;
+            if (p.glowProgress <= 0) {
+              p.glowProgress = 0;
+              p.glowPhase = 'idle';
+            }
+          }
+
+          const glowEased = easeInOutQuad(p.glowProgress);
+          const isGlowing = p.glowPhase !== 'idle' && p.glowProgress > 0.01;
+
+          if (isGlowing) {
+            const bloomSize = p.size * (3.5 + glowEased * 9);
+            const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
+            outerGrad.addColorStop(0, palette.starGlow + (glowEased * 0.6).toFixed(3) + ')');
+            outerGrad.addColorStop(1, palette.starGlow + '0)');
+            ctx.fillStyle = outerGrad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
+            ctx.fill();
+            opacity = Math.min(1, opacity + glowEased * 0.85);
+          }
+
           ctx.globalAlpha = Math.max(0.06, Math.min(1, opacity));
 
           if (p.isStar) {
@@ -660,19 +735,19 @@ export default function StellarCryoLoader({
       }
 
       // ── 7. Crystalline Frost Shockwave upon Arrival (100% Clear Center Tunnel) ──
-      if (isWarpingRef.current && warp > 0.50) {
-        const shockProgress = (warp - 0.50) / 0.50; // 0 to 1
+      if (isWarpingRef.current && warp > 0.52) {
+        const shockProgress = (warp - 0.52) / 0.48;
         const maxR = Math.hypot(w, h) * 0.95;
-        const shockRadius = maxR * Math.pow(shockProgress, 0.8);
-        const shockAlpha = Math.sin(shockProgress * Math.PI) * 0.5;
+        const shockRadius = maxR * Math.pow(shockProgress, 0.78);
+        const shockAlpha = Math.sin(shockProgress * Math.PI) * 0.55;
 
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, shockRadius, 0, Math.PI * 2);
         ctx.strokeStyle = theme === 'light'
           ? `rgba(2, 132, 199, ${shockAlpha.toFixed(3)})`
-          : `rgba(56, 189, 248, ${shockAlpha.toFixed(3)})`;
-        ctx.lineWidth = Math.max(1.5, 4.5 * (1 - shockProgress));
+          : `rgba(125, 211, 252, ${shockAlpha.toFixed(3)})`;
+        ctx.lineWidth = Math.max(1.5, 5.0 * (1 - shockProgress));
         ctx.stroke();
         ctx.restore();
       }

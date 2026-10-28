@@ -1,151 +1,315 @@
 /**
- * Stellar-Glimmer & Nod-Krai Constellation Templates
+ * Stellar-Glimmer & Nod-Krai Procedural Constellation Engine
  * 
- * Replaces generic astrology with authentic Snezhnayan, Cryo, and Astral archetypes:
- * - Stella Glacialis (Frost Prism / Diamond Crest)
- * - Corona Frostmoon (Crown of the Frostmoon)
- * - Lotus Niveus (Snow Lotus / Crystalline Hexagon)
- * - Columba Caelestis (Celestial Feather / Astral Quill)
- * - Horologium Astrale (Celestial Astrolabe / Hourglass)
+ * Generates unique, non-repeating procedural constellations:
+ * - 4 to 7 stars per constellation (strictly bounded).
+ * - Organic spatial clustering in the upper sky canopy.
+ * - Minimum Spanning Tree (MST) stick-figure topology with optional planar cross-facet.
+ * - Sequential BFS edge ordering (traces once slowly from apex outwards).
+ * - Spatial bounding hitbox to prevent overlapping with existing constellations or the Moon.
  */
 
-export const CONSTELLATION_TEMPLATES = [
-  {
-    name: 'STELLA GLACIALIS',
-    subtitle: 'The Frost Prism',
-    nodes: [
-      { x: 0.50, y: 0.05, isPrimary: true, size: 5.5 },  // Top apex
-      { x: 0.50, y: 0.44, isPrimary: false, size: 4.8 }, // Central nexus
-      { x: 0.12, y: 0.44, isPrimary: false, size: 3.8 }, // Left facet
-      { x: 0.88, y: 0.44, isPrimary: false, size: 3.8 }, // Right facet
-      { x: 0.50, y: 0.72, isPrimary: false, size: 4.2 }, // Lower brace
-      { x: 0.50, y: 0.95, isPrimary: false, size: 3.6 }, // Bottom tip
-    ],
-    edges: [
-      [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 4], [3, 4], [4, 5]
-    ],
-  },
-  {
-    name: 'CORONA FROSTMOON',
-    subtitle: 'Crown of the Frostmoon',
-    nodes: [
-      { x: 0.50, y: 0.08, isPrimary: true, size: 5.8 },  // Central crown jewel
-      { x: 0.28, y: 0.28, isPrimary: false, size: 4.4 }, // Left arch
-      { x: 0.72, y: 0.28, isPrimary: false, size: 4.4 }, // Right arch
-      { x: 0.10, y: 0.62, isPrimary: false, size: 3.6 }, // Left tip
-      { x: 0.90, y: 0.62, isPrimary: false, size: 3.6 }, // Right tip
-      { x: 0.50, y: 0.78, isPrimary: false, size: 4.2 }, // Base anchor
-    ],
-    edges: [
-      [0, 1], [0, 2], [1, 3], [2, 4], [1, 5], [2, 5], [3, 5], [4, 5]
-    ],
-  },
-  {
-    name: 'LOTUS NIVEUS',
-    subtitle: 'The Snow Lotus',
-    nodes: [
-      { x: 0.50, y: 0.50, isPrimary: true, size: 5.5 },  // Central core
-      { x: 0.50, y: 0.10, isPrimary: false, size: 4.0 }, // Top petal
-      { x: 0.85, y: 0.30, isPrimary: false, size: 3.8 }, // Top-right petal
-      { x: 0.85, y: 0.70, isPrimary: false, size: 3.8 }, // Bottom-right petal
-      { x: 0.50, y: 0.90, isPrimary: false, size: 4.0 }, // Bottom petal
-      { x: 0.15, y: 0.70, isPrimary: false, size: 3.8 }, // Bottom-left petal
-      { x: 0.15, y: 0.30, isPrimary: false, size: 3.8 }, // Top-left petal
-    ],
-    edges: [
-      [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 1],
-      [0, 1], [0, 3], [0, 5]
-    ],
-  },
-  {
-    name: 'COLUMBA CAELESTIS',
-    subtitle: 'The Celestial Feather',
-    nodes: [
-      { x: 0.18, y: 0.12, isPrimary: true, size: 5.2 },  // Quill apex
-      { x: 0.38, y: 0.36, isPrimary: false, size: 4.2 }, // Mid shaft
-      { x: 0.82, y: 0.26, isPrimary: false, size: 3.8 }, // High vane
-      { x: 0.58, y: 0.62, isPrimary: false, size: 4.0 }, // Low shaft
-      { x: 0.92, y: 0.54, isPrimary: false, size: 3.6 }, // Low vane
-      { x: 0.78, y: 0.90, isPrimary: false, size: 3.6 }, // Quill tip
-    ],
-    edges: [
-      [0, 1], [1, 2], [1, 3], [3, 4], [3, 5]
-    ],
-  },
-  {
-    name: 'HOROLOGIUM ASTRALE',
-    subtitle: 'The Celestial Astrolabe',
-    nodes: [
-      { x: 0.50, y: 0.50, isPrimary: true, size: 5.8 },  // Nexus star
-      { x: 0.20, y: 0.15, isPrimary: false, size: 4.0 }, // Top-left
-      { x: 0.80, y: 0.15, isPrimary: false, size: 4.0 }, // Top-right
-      { x: 0.20, y: 0.85, isPrimary: false, size: 4.0 }, // Bottom-left
-      { x: 0.80, y: 0.85, isPrimary: false, size: 4.0 }, // Bottom-right
-    ],
-    edges: [
-      [1, 2], [1, 0], [2, 0], [3, 4], [3, 0], [4, 0]
-    ],
-  },
-];
+// ── 2D Geometry Helpers ──
+function ccw(p1, p2, p3) {
+  return (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
+}
+
+function segmentsIntersect(a, b, c, d) {
+  // If sharing an endpoint, they don't "cross"
+  if (
+    (a.x === c.x && a.y === c.y) ||
+    (a.x === d.x && a.y === d.y) ||
+    (b.x === c.x && b.y === c.y) ||
+    (b.x === d.x && b.y === d.y)
+  ) {
+    return false;
+  }
+  return (
+    ccw(a, c, d) !== ccw(b, c, d) &&
+    ccw(a, b, c) !== ccw(a, b, d)
+  );
+}
+
+// ── Disjoint Set Union (Union-Find) for Kruskal's MST ──
+class DSU {
+  constructor(n) {
+    this.parent = Array.from({ length: n }, (_, i) => i);
+  }
+  find(i) {
+    if (this.parent[i] === i) return i;
+    return (this.parent[i] = this.find(this.parent[i]));
+  }
+  union(i, j) {
+    const rootI = this.find(i);
+    const rootJ = this.find(j);
+    if (rootI !== rootJ) {
+      this.parent[rootI] = rootJ;
+      return true;
+    }
+    return false;
+  }
+}
 
 /**
- * Spawns a celestial constellation anchored to the open sky canopy.
- * Guaranteed to frame the atmospheric vault (y: 8%–30%) without obscuring cards or text.
+ * Spawns a procedural celestial constellation with collision avoidance ("hitbox").
+ * Returns null if the sky canopy is currently crowded.
  */
-export function spawnRealConstellation(w, h, rand, getStarColor) {
-  const template = CONSTELLATION_TEMPLATES[Math.floor(Math.random() * CONSTELLATION_TEMPLATES.length)];
+export function spawnRealConstellation(w, h, rand, getStarColor, existingConstellations = []) {
+  const isSmall = w < 768;
+  const boundRadius = isSmall ? rand(50, 70) : rand(75, 110);
+  const moonX = w * 0.65;
+  const moonY = Math.min(82, h * 0.092);
+  const moonClearance = 115;
 
-  // Canopy Anchoring: keep high in upper sky vault framing the page
-  const scale = rand(Math.min(w, h) * 0.13, Math.min(w, h) * 0.18);
-  const cy = rand(h * 0.08, h * 0.16);
+  // Active constellations currently visible or holding
+  const activeExisting = existingConstellations.filter(
+    (c) => c.fadeAlpha > 0.08
+  );
 
-  // Position across open sky pockets:
-  // 60% spawn in left sky (w * 0.10 - 0.34), 40% in right sky (w * 0.72 - 0.88), leaving Moon corridor open
-  const spawnLeft = Math.random() < 0.60;
-  const cx = spawnLeft
-    ? rand(w * 0.10, Math.min(w * 0.34, w - scale))
-    : rand(w * 0.72, Math.min(w * 0.88, w - scale));
+  // Maximum simultaneous constellations in sky: 1 on mobile, 2 on desktop
+  const maxAllowed = isSmall ? 1 : 2;
+  if (activeExisting.length >= maxAllowed) {
+    return null;
+  }
 
-  // Subtle natural celestial tilt (-15 deg to +15 deg)
-  const rotation = rand(-0.26, 0.26);
+  // ── 1. Spatial Hitbox & Clearance Placement ──
+  // Candidate pockets in the upper sky canopy:
+  // Pocket 0: Far Left (w * 0.08 - 0.22)
+  // Pocket 1: Mid Left (w * 0.26 - 0.44)
+  // Pocket 2: Right sky (w * 0.74 - 0.88), safely past Columbina's Moon
+  const candidatePockets = isSmall
+    ? [
+        { minX: w * 0.12, maxX: w * 0.40 },
+        { minX: w * 0.55, maxX: w * 0.85 }
+      ]
+    : [
+        { minX: w * 0.08 + boundRadius, maxX: w * 0.22 },
+        { minX: w * 0.26, maxX: w * 0.44 },
+        { minX: w * 0.76, maxX: Math.max(w * 0.78, w * 0.90 - boundRadius) }
+      ];
 
-  const nodes = template.nodes.map((n) => {
-    const nx = n.x - 0.5;
-    const ny = n.y - 0.5;
+  // Shuffle pockets to distribute variety
+  candidatePockets.sort(() => Math.random() - 0.5);
 
-    const rx = nx * Math.cos(rotation) - ny * Math.sin(rotation);
-    const ry = nx * Math.sin(rotation) + ny * Math.cos(rotation);
+  let chosenCx = null;
+  let chosenCy = null;
 
-    return {
-      x: cx + rx * scale,
-      y: cy + ry * scale,
-      size: n.size || rand(3.4, 5.2),
-      isPrimary: Boolean(n.isPrimary),
-      rotation: rand(0, Math.PI * 2),
-      rotationSpeed: rand(0.0015, 0.004),
-      color: getStarColor(),
-      baseOpacity: 0,
-      glowProgress: 0,
-      glowPhase: 'idle',
-      isStar: true,
-    };
+  for (const pocket of candidatePockets) {
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const cx = rand(pocket.minX, pocket.maxX);
+      const cy = rand(h * 0.09, h * 0.17);
+
+      // Check distance to Moon
+      const distToMoon = Math.hypot(cx - moonX, cy - moonY);
+      if (distToMoon < boundRadius + moonClearance) {
+        continue;
+      }
+
+      // Check distance / hitbox to all existing constellations
+      let overlaps = false;
+      for (const other of activeExisting) {
+        const distToOther = Math.hypot(cx - other.cx, cy - other.cy);
+        const minSafeDist = boundRadius + (other.boundRadius || 90) + 65;
+        if (distToOther < minSafeDist) {
+          overlaps = true;
+          break;
+        }
+      }
+
+      if (!overlaps) {
+        chosenCx = cx;
+        chosenCy = cy;
+        break;
+      }
+    }
+    if (chosenCx !== null) break;
+  }
+
+  // If sky is too crowded to maintain proper clearance, skip this cycle
+  if (chosenCx === null) {
+    return null;
+  }
+
+  const cx = chosenCx;
+  const cy = chosenCy;
+
+  // ── 2. Random Star Placement (4 to 7 stars strictly) ──
+  const starCount = Math.floor(rand(4, 7.99)); // Exactly 4, 5, 6, or 7
+  const nodes = [];
+
+  // Star 0: Primary Nexus / Apex star near upper-center of cluster
+  nodes.push({
+    x: cx + rand(-0.25, 0.25) * boundRadius,
+    y: cy + rand(-0.55, -0.15) * boundRadius,
+    size: rand(4.6, 5.8),
+    isPrimary: true,
+    rotation: rand(0, Math.PI * 2),
+    rotationSpeed: rand(0.0015, 0.0035),
+    color: getStarColor(),
   });
 
+  // Generate remaining stars with aesthetic spatial separation (>= 38px apart)
+  const minStarDist = isSmall ? 28 : 38;
+  for (let i = 1; i < starCount; i++) {
+    let placed = false;
+    for (let attempts = 0; attempts < 35; attempts++) {
+      const angle = rand(0, Math.PI * 2);
+      const dist = rand(boundRadius * 0.32, boundRadius * 0.95);
+      const candidateX = cx + Math.cos(angle) * dist;
+      const candidateY = cy + Math.sin(angle) * dist;
+
+      // Keep within sky canopy
+      if (candidateY < 20 || candidateY > h * 0.24) continue;
+
+      let tooClose = false;
+      for (const existingNode of nodes) {
+        if (Math.hypot(candidateX - existingNode.x, candidateY - existingNode.y) < minStarDist) {
+          tooClose = true;
+          break;
+        }
+      }
+
+      if (!tooClose) {
+        nodes.push({
+          x: candidateX,
+          y: candidateY,
+          size: rand(3.2, 4.4),
+          isPrimary: false,
+          rotation: rand(0, Math.PI * 2),
+          rotationSpeed: rand(0.0015, 0.0035),
+          color: getStarColor(),
+        });
+        placed = true;
+        break;
+      }
+    }
+
+    // Fallback if tight: place on outer perimeter
+    if (!placed) {
+      const angle = (Math.PI * 2 * i) / starCount;
+      nodes.push({
+        x: cx + Math.cos(angle) * boundRadius * 0.75,
+        y: cy + Math.sin(angle) * boundRadius * 0.75,
+        size: rand(3.2, 4.2),
+        isPrimary: false,
+        rotation: rand(0, Math.PI * 2),
+        rotationSpeed: rand(0.0015, 0.0035),
+        color: getStarColor(),
+      });
+    }
+  }
+
+  // ── 3. Graph Connectivity: Minimum Spanning Tree (MST) ──
+  // Compute all pairwise distances
+  const allPairEdges = [];
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+      allPairEdges.push({ from: i, to: j, dist });
+    }
+  }
+  allPairEdges.sort((a, b) => a.dist - b.dist);
+
+  const dsu = new DSU(nodes.length);
+  const mstAdj = Array.from({ length: nodes.length }, () => []);
+  const mstEdges = [];
+
+  for (const edge of allPairEdges) {
+    if (dsu.union(edge.from, edge.to)) {
+      mstEdges.push(edge);
+      mstAdj[edge.from].push(edge.to);
+      mstAdj[edge.to].push(edge.from);
+      if (mstEdges.length === nodes.length - 1) break;
+    }
+  }
+
+  // Optional: add 1 planar cross-edge if starCount >= 5 to form a crystalline facet
+  if (nodes.length >= 5 && Math.random() < 0.35) {
+    for (const edge of allPairEdges) {
+      const isAlreadyInMst = mstEdges.some(
+        (e) => (e.from === edge.from && e.to === edge.to) || (e.from === edge.to && e.to === edge.from)
+      );
+      if (isAlreadyInMst) continue;
+
+      // Degree limiter: don't over-connect a single node
+      if (mstAdj[edge.from].length >= 3 || mstAdj[edge.to].length >= 3) continue;
+
+      // Check if this cross-edge intersects any existing MST edge
+      const p1 = nodes[edge.from];
+      const p2 = nodes[edge.to];
+      let crosses = false;
+      for (const existing of mstEdges) {
+        const ep1 = nodes[existing.from];
+        const ep2 = nodes[existing.to];
+        if (segmentsIntersect(p1, p2, ep1, ep2)) {
+          crosses = true;
+          break;
+        }
+      }
+
+      if (!crosses) {
+        mstEdges.push(edge);
+        mstAdj[edge.from].push(edge.to);
+        mstAdj[edge.to].push(edge.from);
+        break; // Only 1 cross-edge
+      }
+    }
+  }
+
+  // ── 4. Sequential BFS Ordering (Traces Once Slowly from Apex Outwards) ──
+  const visitedNodes = new Set([0]);
+  const orderedEdges = [];
+  const queue = [0];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const neighbors = mstAdj[current] || [];
+    // Sort neighbors by distance to keep tracing natural and contiguous
+    neighbors.sort((a, b) => {
+      const distA = Math.hypot(nodes[current].x - nodes[a].x, nodes[current].y - nodes[a].y);
+      const distB = Math.hypot(nodes[current].x - nodes[b].x, nodes[current].y - nodes[b].y);
+      return distA - distB;
+    });
+
+    for (const nbr of neighbors) {
+      if (!visitedNodes.has(nbr)) {
+        visitedNodes.add(nbr);
+        orderedEdges.push({ from: current, to: nbr, drawn: 0 });
+        queue.push(nbr);
+      } else {
+        // If it's a cross-edge between already visited nodes
+        const alreadyInList = orderedEdges.some(
+          (e) => (e.from === current && e.to === nbr) || (e.from === nbr && e.to === current)
+        );
+        if (!alreadyInList) {
+          orderedEdges.push({ from: current, to: nbr, drawn: 0 });
+        }
+      }
+    }
+  }
+
+  // Fallback: if any edge missed, append cleanly
+  for (const edge of mstEdges) {
+    const found = orderedEdges.some(
+      (e) => (e.from === edge.from && e.to === edge.to) || (e.from === edge.to && e.to === edge.from)
+    );
+    if (!found) {
+      orderedEdges.push({ from: edge.from, to: edge.to, drawn: 0 });
+    }
+  }
+
   return {
-    templateName: template.name,
-    subtitle: template.subtitle,
     cx,
     cy,
-    scale,
+    boundRadius,
     nodes,
-    edges: template.edges.map((e) => ({ from: e[0], to: e[1], drawn: 0 })),
+    edges: orderedEdges,
     activeEdgeIdx: 0,
-    nodeFlashes: [],  // Shockwave ripple ignitions
-    energyPulses: [], // Packets of starlight traveling along lines
-    phase: 'drawing', // 'drawing' -> 'holding' -> 'fading'
-    holdTimer: 0,
-    holdDuration: rand(180, 340),
-    drawSpeed: rand(0.038, 0.065),
+    nodeFlashes: [],     // Destination shockwave ripple on connection
+    phase: 'drawing',    // 'drawing' -> 'glowing' -> 'fading'
+    glowTimer: 0,
+    glowDuration: rand(180, 240), // Radiates starlight for ~3-4s
+    drawSpeed: rand(0.018, 0.026), // Traces once slowly (~45 frames per edge)
     fadeAlpha: 1,
   };
 }

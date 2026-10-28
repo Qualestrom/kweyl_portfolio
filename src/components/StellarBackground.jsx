@@ -357,8 +357,10 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       const maxConstellations = w < 768 ? 1 : 2;
       if (isWarpingRef.current || constellations.length >= maxConstellations) return;
       const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
-      const c = spawnRealConstellation(w, h, rand, getStarColor);
-      constellations.push(c);
+      const c = spawnRealConstellation(w, h, rand, getStarColor, constellations);
+      if (c) {
+        constellations.push(c);
+      }
     };
 
     const spawnMeteor = () => {
@@ -495,7 +497,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
               return Math.hypot(nx - mouseX, n.y - mouseY) < 140;
             });
 
-          // Kinetic State Machine
+          // Kinetic State Machine: 'drawing' -> 'glowing' -> 'fading'
           if (c.phase === 'drawing') {
             const currentEdge = c.edges[c.activeEdgeIdx];
             if (currentEdge) {
@@ -505,26 +507,22 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
                 // Node ignition shockwave
                 const targetNode = c.nodes[currentEdge.to];
                 if (targetNode) {
-                  c.nodeFlashes.push({ x: targetNode.x, y: targetNode.y, r: 0, maxR: 28, alpha: 1 });
+                  c.nodeFlashes.push({ x: targetNode.x, y: targetNode.y, r: 0, maxR: 26, alpha: 1 });
                 }
                 c.activeEdgeIdx++;
               }
             } else {
-              c.phase = 'holding';
-              c.holdTimer = 0;
-              // Initialize traveling photon energy pulses
-              c.energyPulses = [
-                { edgeIdx: 0, t: 0, speed: rand(0.022, 0.035) },
-                { edgeIdx: Math.max(0, Math.floor(c.edges.length / 2)), t: 0, speed: rand(0.022, 0.035) },
-              ];
+              // All edges have been traced once slowly! Transition to glowing
+              c.phase = 'glowing';
+              c.glowTimer = 0;
             }
-          } else if (c.phase === 'holding') {
-            c.holdTimer++;
-            if (c.holdTimer >= c.holdDuration) {
+          } else if (c.phase === 'glowing') {
+            c.glowTimer++;
+            if (c.glowTimer >= c.glowDuration) {
               c.phase = 'fading';
             }
           } else if (c.phase === 'fading') {
-            c.fadeAlpha -= 0.012;
+            c.fadeAlpha -= 0.009;
             if (c.fadeAlpha <= 0) {
               constellations.splice(ci, 1);
               continue;
@@ -532,6 +530,9 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
           }
 
           const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
+          const glowPulse = c.phase === 'glowing'
+            ? Math.sin((c.glowTimer / c.glowDuration) * Math.PI)
+            : 0;
 
           // Draw Edges & Active Comet Head
           for (let ei = 0; ei < c.edges.length; ei++) {
@@ -554,10 +555,10 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
 
             // Outer starlight filament with bloom
             ctx.save();
-            ctx.shadowColor = `rgba(${palette.glowRgb}, 0.70)`;
-            ctx.shadowBlur = 6;
-            ctx.strokeStyle = `rgba(${palette.glowRgb}, ${(masterAlpha * (c.isNearMouse ? 0.90 : 0.65)).toFixed(3)})`;
-            ctx.lineWidth = c.isNearMouse ? 1.8 : 1.35;
+            ctx.shadowColor = `rgba(${palette.glowRgb}, ${(0.65 + glowPulse * 0.35).toFixed(2)})`;
+            ctx.shadowBlur = 5 + glowPulse * 6;
+            ctx.strokeStyle = `rgba(${palette.glowRgb}, ${(masterAlpha * (0.60 + glowPulse * 0.35 + (c.isNearMouse ? 0.25 : 0))).toFixed(3)})`;
+            ctx.lineWidth = (c.isNearMouse ? 1.8 : 1.35) + glowPulse * 0.3;
             ctx.beginPath();
             ctx.moveTo(ax, ay);
             ctx.lineTo(targetX, targetY);
@@ -566,7 +567,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
 
             // Crisp inner crystalline core for fully-drawn edges
             if (edge.drawn >= 0.98) {
-              ctx.strokeStyle = `rgba(255, 255, 255, ${(masterAlpha * (c.isNearMouse ? 0.45 : 0.28)).toFixed(3)})`;
+              ctx.strokeStyle = `rgba(255, 255, 255, ${(masterAlpha * (0.35 + glowPulse * 0.45)).toFixed(3)})`;
               ctx.lineWidth = 0.65;
               ctx.beginPath();
               ctx.moveTo(ax, ay);
@@ -574,7 +575,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
               ctx.stroke();
             }
 
-            // Leading Comet Head at the active tracing tip
+            // Leading Comet Head at the active tracing tip (ONLY during active tracing)
             if (edge.drawn < 1 && c.phase === 'drawing') {
               const headGlow = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, 13);
               headGlow.addColorStop(0, '#FFFFFF');
@@ -611,49 +612,14 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
             ctx.restore();
           }
 
-          // Draw Traveling Photon Energy Pulses
-          for (let pi = c.energyPulses.length - 1; pi >= 0; pi--) {
-            const pulse = c.energyPulses[pi];
-            pulse.t += pulse.speed;
-            if (pulse.t >= 1) {
-              pulse.t = 0;
-              pulse.edgeIdx = (pulse.edgeIdx + 1) % c.edges.length;
-            }
-            const curEdge = c.edges[pulse.edgeIdx];
-            if (curEdge && curEdge.drawn >= 1) {
-              const sa = c.nodes[curEdge.from];
-              const sb = c.nodes[curEdge.to];
-              if (sa && sb) {
-                const ax = (((sa.x + midShift) % w) + w) % w;
-                const bx = (((sb.x + midShift) % w) + w) % w;
-                if (Math.abs(bx - ax) < w * 0.5) {
-                  const px = ax + (bx - ax) * pulse.t;
-                  const py = sa.y + (sb.y - sa.y) * pulse.t;
-
-                  const pGlow = ctx.createRadialGradient(px, py, 0, px, py, 9);
-                  pGlow.addColorStop(0, '#FFFFFF');
-                  pGlow.addColorStop(0.45, `rgba(${palette.glowRgb}, 0.85)`);
-                  pGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
-                  ctx.fillStyle = pGlow;
-                  ctx.beginPath();
-                  ctx.arc(px, py, 9, 0, Math.PI * 2);
-                  ctx.fill();
-
-                  ctx.fillStyle = '#FFFFFF';
-                  drawFourPointStar(ctx, px, py, 2.8, frame * 0.08);
-                }
-              }
-            }
-          }
-
           // Draw Constellation Nodes (Primogem Stars)
           for (let ni = 0; ni < c.nodes.length; ni++) {
             const s = c.nodes[ni];
             const nx = (((s.x + midShift) % w) + w) % w;
             const ny = s.y;
 
-            const nodeGlowAlpha = (masterAlpha * (c.isNearMouse ? 0.70 : s.isPrimary ? 0.55 : 0.35)).toFixed(3);
-            const glowR = s.size * (s.isPrimary ? 5.5 : 4.4);
+            const nodeGlowAlpha = (masterAlpha * (0.35 + glowPulse * 0.45 + (c.isNearMouse ? 0.30 : s.isPrimary ? 0.20 : 0.05))).toFixed(3);
+            const glowR = s.size * (s.isPrimary ? 5.5 : 4.4) * (1 + glowPulse * 0.35);
             const nodeGlow = ctx.createRadialGradient(nx, ny, 0, nx, ny, glowR);
             nodeGlow.addColorStop(0, `rgba(${palette.glowRgb}, ${nodeGlowAlpha})`);
             nodeGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
@@ -665,7 +631,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
             ctx.globalAlpha = Math.max(0.04, Math.min(1, masterAlpha * (s.isPrimary ? 1.0 : 0.90)));
             ctx.fillStyle = s.isPrimary ? palette.glowCore : s.color;
             s.rotation += s.rotationSpeed;
-            drawFourPointStar(ctx, nx, ny, s.size * (s.isPrimary ? 1.25 : 1.05), s.rotation);
+            drawFourPointStar(ctx, nx, ny, s.size * (s.isPrimary ? 1.25 : 1.05) * (1 + glowPulse * 0.2), s.rotation);
           }
         }
       }

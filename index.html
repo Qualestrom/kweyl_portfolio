@@ -7,6 +7,18 @@
     <meta name="description" content="Portfolio of Christopher Lamera. Specializing in high-performance web architectures, React, TypeScript, Flutter, and modern UI/UX engineering.">
     <meta name="author" content="Christopher Lamera">
     <meta name="theme-color" content="#0A0F1C">
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('portfolio-theme-manual');
+          var theme = (saved === 'dark' || saved === 'light')
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (_) {}
+      })();
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">

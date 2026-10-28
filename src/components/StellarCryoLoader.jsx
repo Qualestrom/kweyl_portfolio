@@ -263,8 +263,12 @@ export default function StellarCryoLoader({
     };
 
     const resize = () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
+      w = window.innerWidth;
+      h = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const palette = PALETTES[getTheme()] || PALETTES.dark;
 
       // 1. Nebulae Clouds
@@ -398,10 +402,10 @@ export default function StellarCryoLoader({
         ctx.restore();
       }
 
-      // Render the Genshin Impact Full Frostmoon (Distant Beacon -> Hyperspace Low-Orbit Approach)
+      // Compute Genshin Impact Full Frostmoon coordinates (Distant Beacon -> Hyperspace Low-Orbit Approach)
       const { radius: targetRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
 
-      const distantRadius = Math.max(24, Math.min(36, w * 0.024)); // Distant Full Moon beacon in deep space
+      const distantRadius = Math.max(24, Math.min(36, w * 0.024));
       const distantX = w * 0.58;
       const distantY = h * 0.16;
 
@@ -410,10 +414,12 @@ export default function StellarCryoLoader({
       const curY = distantY + (targetY - distantY) * approachT;
       const curRadius = distantRadius + (targetRadius - distantRadius) * approachT;
 
-      ctx.save();
-      ctx.globalAlpha = 1;
-      drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
-      ctx.restore();
+      if (isWarpingRef.current) {
+        ctx.save();
+        ctx.globalAlpha = 1;
+        drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
+        ctx.restore();
+      }
 
       // ── 1. Draw Nebula Background Clouds ──
       if (!isWarpingRef.current || warp < 0.45) {
@@ -690,6 +696,7 @@ export default function StellarCryoLoader({
       } else {
         for (let i = 0; i < stars.length; i++) {
           const p = stars[i];
+          if (Math.hypot(p.x - curX, p.y - curY) < curRadius * 1.05) continue;
           p.rotation += p.rotationSpeed;
           const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
           let opacity = p.baseOpacity + breath;
@@ -736,6 +743,10 @@ export default function StellarCryoLoader({
           }
           ctx.globalAlpha = 1;
         }
+        ctx.save();
+        ctx.globalAlpha = 1;
+        drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
+        ctx.restore();
       }
 
       // ── 7. Crystalline Frost Shockwave upon Arrival (100% Clear Center Tunnel) ──

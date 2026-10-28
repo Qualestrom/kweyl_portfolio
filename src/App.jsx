@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
-import InteractiveBackground from './components/InteractiveBackground';
 import PortfolioSPA from './components/PortfolioSPA';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 
@@ -35,9 +34,8 @@ export default function App() {
         />
       )}
 
-      {/* Persistent backgrounds — starfield + circuit constellation grid with section camera parallax */}
+      {/* Persistent celestial background — 3D Full Frostmoon, starfield & procedural constellations */}
       <StellarBackground isWarping={isWarping} activeSection={activeSection} />
-      <InteractiveBackground activeSection={activeSection} />
 
       {/* Theme + Router shell */}
       <ThemeProvider>

@@ -1,9 +1,13 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configure the worker from a reliable CDN matching the installed pdfjs-dist version
-if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
+// Configure the worker using the locally bundled Vite asset matching pdfjs-dist
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 }
+
+// In-memory cache for URL-based PDF page-1 previews so each PDF renders only once per session
+const pdfPreviewCache = new Map();
 
 /**
  * Checks whether a given file or URL is a PDF document
@@ -17,60 +21,80 @@ export function isPdfFile(fileOrUrl) {
 }
 
 /**
- * Renders the first page of a PDF File/Blob or ArrayBuffer to a high-resolution Image Blob
- * @param {File|Blob|ArrayBuffer} pdfSource 
+ * Renders the first page of a PDF File/Blob, ArrayBuffer, or URL string to a high-resolution Image Blob & DataURL
+ * @param {File|Blob|ArrayBuffer|string} pdfSource 
  * @param {number} scale Default 2.0 for crisp retina resolution
  * @returns {Promise<{ blob: Blob, dataUrl: string, width: number, height: number }>}
  */
 export async function renderPdfFirstPageToImage(pdfSource, scale = 2.0) {
-  let arrayBuffer;
-  if (pdfSource instanceof ArrayBuffer) {
-    arrayBuffer = pdfSource;
-  } else if (pdfSource instanceof Blob || pdfSource instanceof File) {
-    arrayBuffer = await pdfSource.arrayBuffer();
-  } else {
-    throw new Error('Invalid PDF source provided');
+  const cacheKey = typeof pdfSource === 'string' ? `${pdfSource}::${scale}` : null;
+  if (cacheKey && pdfPreviewCache.has(cacheKey)) {
+    return pdfPreviewCache.get(cacheKey);
   }
 
-  const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(arrayBuffer),
-    useSystemFonts: true,
-  });
+  const renderPromise = (async () => {
+    let arrayBuffer;
+    if (pdfSource instanceof ArrayBuffer) {
+      arrayBuffer = pdfSource;
+    } else if (pdfSource instanceof Blob || pdfSource instanceof File) {
+      arrayBuffer = await pdfSource.arrayBuffer();
+    } else if (typeof pdfSource === 'string' && pdfSource.trim()) {
+      const res = await fetch(pdfSource);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch PDF (${res.status}): ${pdfSource}`);
+      }
+      arrayBuffer = await res.arrayBuffer();
+    } else {
+      throw new Error('Invalid PDF source provided');
+    }
 
-  const pdf = await loadingTask.promise;
-  const page = await pdf.getPage(1);
-  const viewport = page.getViewport({ scale });
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(arrayBuffer),
+      useSystemFonts: true,
+    });
 
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d', { alpha: false });
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
+    const pdf = await loadingTask.promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale });
 
-  // Fill canvas with clean white background before rendering
-  context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, canvas.width, canvas.height);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { alpha: false });
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
 
-  const renderContext = {
-    canvasContext: context,
-    viewport: viewport,
-  };
+    // Fill canvas with clean white background before rendering
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-  await page.render(renderContext).promise;
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
 
-  return new Promise((resolve) => {
-    canvas.toBlob(
-      (blob) => {
-        resolve({
-          blob,
-          dataUrl: canvas.toDataURL('image/webp', 0.92),
-          width: canvas.width,
-          height: canvas.height,
-        });
-      },
-      'image/webp',
-      0.92
-    );
-  });
+    await page.render(renderContext).promise;
+
+    return new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          resolve({
+            blob,
+            dataUrl: canvas.toDataURL('image/webp', 0.92),
+            width: canvas.width,
+            height: canvas.height,
+          });
+        },
+        'image/webp',
+        0.92
+      );
+    });
+  })();
+
+  if (cacheKey) {
+    pdfPreviewCache.set(cacheKey, renderPromise);
+    renderPromise.catch(() => pdfPreviewCache.delete(cacheKey));
+  }
+
+  return renderPromise;
 }
 
 /**

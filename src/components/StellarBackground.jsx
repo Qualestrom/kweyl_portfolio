@@ -161,14 +161,14 @@ function drawIcePrism(ctx, x, y, size, rotation, palette, stretchFactor = 1) {
 }
 
 // ─── Ethereal Nod-Krai Crescent Frostmoon (Columbina's Celestial Moon) ───────
-export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
+export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark, rotation = -0.48) {
   ctx.save();
 
-  const buoyY = y + Math.sin(frame * 0.015) * 3.0;
+  const buoyY = y + Math.sin(frame * 0.015) * 2.5;
   const R = radius;
 
   ctx.translate(x, buoyY);
-  ctx.rotate(-0.48);
+  ctx.rotate(rotation);
 
   const d = R * 0.44;
   const R2 = R * 0.92;
@@ -177,6 +177,38 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   const alpha1 = Math.atan2(y0, x0);
   const alpha2 = Math.atan2(y0, x0 + d);
 
+  // 1. Ghostly Earthshine (Spherical Totality of the Frostmoon in Deep Space)
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, Math.PI * 2);
+  ctx.fillStyle = isDark
+    ? 'rgba(186, 230, 253, 0.035)'
+    : 'rgba(2, 132, 199, 0.025)';
+  ctx.fill();
+  ctx.strokeStyle = isDark
+    ? 'rgba(186, 230, 253, 0.07)'
+    : 'rgba(2, 132, 199, 0.05)';
+  ctx.lineWidth = 0.65;
+  ctx.stroke();
+
+  // 2. Celestial "Moon Wheel" (Orbital Ring from Ancient Domain Skies)
+  const ringR = R * 1.46;
+  ctx.save();
+  ctx.strokeStyle = isDark
+    ? 'rgba(125, 211, 252, 0.16)'
+    : 'rgba(2, 132, 199, 0.12)';
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Faint micro-sparks on the orbital ring axis
+  const ringSparkAlpha = 0.35 + 0.25 * Math.sin(frame * 0.03);
+  ctx.fillStyle = isDark ? '#FFFFFF' : '#0284C7';
+  ctx.globalAlpha = ringSparkAlpha;
+  drawFourPointStar(ctx, 0, -ringR, 1.8, frame * 0.02);
+  drawFourPointStar(ctx, 0, ringR, 1.8, frame * 0.02 + Math.PI / 4);
+  ctx.restore();
+
   const traceCrescent = () => {
     ctx.beginPath();
     ctx.arc(0, 0, R, -alpha1, alpha1, false);
@@ -184,13 +216,13 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
     ctx.closePath();
   };
 
-  // 1. Soft Atmospheric Corona
+  // 3. Soft Atmospheric Corona (Centered on the Lit Crescent Belly)
   const coronaR = R * 3.8;
   const coronaGrad = ctx.createRadialGradient(R * 0.55, 0, R * 0.1, R * 0.2, 0, coronaR);
   if (isDark) {
-    coronaGrad.addColorStop(0, 'rgba(186, 230, 253, 0.20)');
-    coronaGrad.addColorStop(0.28, 'rgba(56, 189, 248, 0.09)');
-    coronaGrad.addColorStop(0.60, 'rgba(56, 189, 248, 0.025)');
+    coronaGrad.addColorStop(0, 'rgba(186, 230, 253, 0.22)');
+    coronaGrad.addColorStop(0.28, 'rgba(56, 189, 248, 0.10)');
+    coronaGrad.addColorStop(0.60, 'rgba(56, 189, 248, 0.028)');
     coronaGrad.addColorStop(1, 'rgba(5, 8, 17, 0)');
   } else {
     coronaGrad.addColorStop(0, 'rgba(56, 189, 248, 0.18)');
@@ -203,7 +235,7 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   ctx.arc(R * 0.2, 0, coronaR, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Luminous Crescent Body
+  // 4. Luminous Crescent Body
   ctx.save();
   ctx.shadowColor = isDark ? 'rgba(125, 211, 252, 0.65)' : 'rgba(2, 132, 199, 0.35)';
   ctx.shadowBlur = 22;
@@ -225,7 +257,7 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   ctx.fill();
   ctx.restore();
 
-  // 3. Feathered Lunar Maria
+  // 5. Feathered Lunar Maria
   ctx.save();
   traceCrescent();
   ctx.clip();
@@ -249,14 +281,14 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   }
   ctx.restore();
 
-  // 4. Specular Outer Limb
+  // 6. Specular Outer Limb
   ctx.beginPath();
   ctx.arc(0, 0, R, -alpha1 * 0.90, alpha1 * 0.90, false);
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.92)' : 'rgba(2, 132, 199, 0.45)';
   ctx.lineWidth = 1.1;
   ctx.stroke();
 
-  // 5. Cusp Star Spark
+  // 7. Cusp Star Sparks
   const sparkPulse = 0.45 + 0.35 * Math.sin(frame * 0.04);
   ctx.fillStyle = isDark ? '#FFFFFF' : '#0284C7';
   ctx.globalAlpha = sparkPulse;
@@ -405,12 +437,30 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       if (!isWarpingRef.current) {
         ctx.globalAlpha = 1;
         const moonRadius = Math.max(30, Math.min(44, w * 0.030));
+
+        // Orbital spatial tracking across sections
+        const totalSpan = Math.max(w, w * 3.4);
+        const orbitFactor = prefersReducedMotion ? 0 : currentParallaxX / totalSpan; // 0 (Home) to ~ -1.0 (Contact)
+
+        // Orbital X & Y curvature (celestial arch)
         const moonDrawX = prefersReducedMotion
           ? w * 0.65
-          : w * 0.65 + currentParallaxX * 0.145;
-        const zenithProgress = prefersReducedMotion ? 0 : (moonDrawX / w - 0.42) * 2;
-        const moonDrawY = Math.min(82, h * 0.092) + zenithProgress * zenithProgress * 12;
-        drawFrostmoon(ctx, moonDrawX, moonDrawY, moonRadius, palette, frame, isDark);
+          : w * 0.65 + currentParallaxX * 0.135;
+
+        // Orbital elevation: gentle celestial arch as camera revolves around the Frostmoon
+        const arcElevation = prefersReducedMotion ? 0 : Math.sin(Math.abs(orbitFactor) * Math.PI) * 14;
+        const moonDrawY = Math.min(82, h * 0.092) - arcElevation;
+
+        // Slow continuous celestial rotation + orbital perspective tilt
+        const idleRotation = -0.48 + frame * 0.0006;
+        const orbitTilt = prefersReducedMotion ? 0 : orbitFactor * 0.38;
+        const totalRotation = idleRotation + orbitTilt;
+
+        // Subtle depth perspective scaling as camera revolves around the moon
+        const orbitScale = prefersReducedMotion ? 1 : 1 + Math.sin(Math.abs(orbitFactor) * Math.PI) * 0.06;
+        const finalRadius = moonRadius * orbitScale;
+
+        drawFrostmoon(ctx, moonDrawX, moonDrawY, finalRadius, palette, frame, isDark, totalRotation);
       }
 
       // ── Detect exit from hyperspace warp into Hero page ──

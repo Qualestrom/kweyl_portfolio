@@ -388,7 +388,7 @@ export default function StellarCryoLoader({
       const cy = h * 0.48;
       const warp = warpProgressRef.current;
 
-      // ── 0. Smooth Sky-to-Tunnel Backdrop & Nod-Krai Frostmoon ──
+      // ── 0. Smooth Sky-to-Tunnel Backdrop & Nod-Krai Frostmoon Approach ──
       if (isWarpingRef.current && warp < 0.55) {
         const backdropAlpha = Math.max(0, 1 - Math.pow(warp / 0.50, 1.4));
         ctx.save();
@@ -398,18 +398,25 @@ export default function StellarCryoLoader({
         ctx.restore();
       }
 
-      // Render the Nod-Krai Crescent Frostmoon on the Opening Screen sky
-      if (!isWarpingRef.current || warp < 0.28) {
-        const moonAlpha = isWarpingRef.current ? Math.max(0, 1 - warp / 0.28) : 1;
-        ctx.save();
-        ctx.globalAlpha = moonAlpha;
-        const moonRadius = Math.max(30, Math.min(44, w * 0.030));
-        const baseY = Math.min(82, h * 0.092) + 5;
-        const moonX = w * 0.65 + (isWarpingRef.current ? (w * 0.65 - cx) * warp * 1.8 : 0);
-        const moonY = baseY + (isWarpingRef.current ? (baseY - cy) * warp * 1.8 : 0);
-        drawFrostmoon(ctx, moonX, moonY, moonRadius * (1 + warp * 0.8), palette, frame, isDark);
-        ctx.restore();
-      }
+      // Render the Nod-Krai Crescent Frostmoon (Distant Beacon -> Hyperspace Approach)
+      const targetRadius = Math.max(30, Math.min(44, w * 0.030));
+      const targetX = w * 0.65;
+      const targetY = Math.min(82, h * 0.092);
+
+      const distantRadius = Math.max(12, Math.min(17, w * 0.012)); // ~0.36x scale: distant celestial beacon
+      const distantX = w * 0.58;
+      const distantY = h * 0.13;
+
+      const approachT = isWarpingRef.current ? easeInOutQuad(warp) : 0;
+      const curX = distantX + (targetX - distantX) * approachT;
+      const curY = distantY + (targetY - distantY) * approachT;
+      const curRadius = distantRadius + (targetRadius - distantRadius) * approachT;
+      const curRotation = -0.48 + frame * 0.0006;
+
+      ctx.save();
+      ctx.globalAlpha = 1;
+      drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, curRotation);
+      ctx.restore();
 
       // ── 1. Draw Nebula Background Clouds ──
       if (!isWarpingRef.current || warp < 0.45) {

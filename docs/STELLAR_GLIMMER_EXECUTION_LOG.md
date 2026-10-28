@@ -101,4 +101,43 @@ During empirical headless browser inspection of the live application against [`s
      - Adds up to 1 non-intersecting planar cross-facet if `starCount >= 5`.
      - Orders edges via breadth-first search (BFS) from the primary apex star so the trace flows outward like a celestial brushstroke.
 
+---
+
+## 5. Authentic Genshin Frostmoon Visuals & Dynamic Orbital Mechanics
+
+### Implementation & Lore Alignment:
+1. **Authentic Genshin Impact Visual Architecture (`drawFrostmoon`)**:
+   - **Ghostly Earthshine**: Deep space reveals the spherical totality of the moon (`rgba(186, 230, 253, 0.035)` with a delicate `0.65px` atmospheric rim).
+   - **Celestial "Moon Wheel" (Orbital Ring)**: A concentric celestial ring at $r = 1.46R$ with faint Primogem micro-sparks on the orbital axis, inspired by ancient domain celestial mechanics and the Three Moon Sisters' chariot wheels.
+   - **Luminous Sunlit Crescent**: True mathematical crescent body with feathered radial-gradient Lunar Maria and soft outer coronal bloom centered on the illuminated belly.
+   - **Cusp Star Sparks**: 4-point Primogem stars pulsating gently at the northern and southern crescent tips.
+
+2. **Distant Beacon $\rightarrow$ Hyperspace Approach (`StellarCryoLoader.jsx`)**:
+   - **Opening Screen**: Frostmoon appears as a distant celestial beacon at ~`0.36x` scale (`radius: 12–17px` at `x: 58%w, y: 13%h`).
+   - **Hyperspace Plunge**: When hyperdrive commences, the Frostmoon does not vanish; it approaches the viewer along with the 3D star tunnel, scaling continuously via `easeInOutQuad(warp)` to reach full `1.0x` scale (`30–44px`) at `x: 65%w, y: min(82, 0.092h)`.
+   - **Zero-Discontinuity Handoff**: At `warp = 1.0`, `StellarBackground.jsx` seamlessly assumes rendering at the exact coordinates, scale, and rotation.
+
+3. **Hero Page & Section Orbital Revolving (`StellarBackground.jsx`)**:
+   - **Slow Continuous Axial Rotation**: `idleRotation = -0.48 + frame * 0.0006` continuously rotates the moon on its axis.
+   - **Section Navigation Orbital Curve**:
+     - **Zenith Elevation Arch**: $\Delta y = -\sin(|\text{orbitFactor}| \cdot \pi) \cdot 14\text{px}$, creating a celestial arch across horizontal space.
+     - **Orbital Viewpoint Tilt**: $\Delta\theta = \text{orbitFactor} \cdot 0.38\text{ rad}$ (~22° crescent perspective tilt across sections).
+     - **Depth Scale Modulation**: $R_{\text{effective}} = R \cdot (1 + \sin(|\text{orbitFactor}| \cdot \pi) \cdot 0.06)$.
+
+---
+
+## 6. Verification Summary
+
+- **Production Build**: `npm run build` completed with code 0 in 3.84s.
+- **Visual Capture Artifacts**:
+  - `moon_01_loader_distant.png`: Verified distant Frostmoon beacon on opening screen.
+  - `moon_02_midwarp_approaching.png`: Verified approaching Frostmoon inside 3D hyperspace tunnel.
+  - `moon_03_hero_arrival.png`: Verified close-range arrival on Hero section with Earthshine and Moon Wheel ring.
+  - `moon_04_section_revolving_about.png`: Verified orbital tilt and elevation over About bento cards.
+  - `moon_05_section_revolving_projects.png`: Verified celestial arch over Projects section.
+- **Clutter Elimination**: Zero background text labels or subtitles on canvas.
+- **Constellation Animation**: Single slow comet-led trace $\rightarrow$ synchronized starlight glow hold $\rightarrow$ gentle fade.
+- **Collision Clearance**: Radial hitbox clearance guarantees constellations never overlap each other or the Moon corridor.
+
+
 

@@ -11,6 +11,7 @@ export default function App() {
   const [appReady, setAppReady] = useState(false);
   const [loaderExited, setLoaderExited] = useState(false);
   const [isWarping, setIsWarping] = useState(false);
+  const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
     const minDelay = new Promise(resolve => setTimeout(resolve, 5000));
@@ -34,15 +35,23 @@ export default function App() {
         />
       )}
 
-      {/* Persistent backgrounds — starfield + circuit constellation grid */}
-      <StellarBackground isWarping={isWarping} />
-      <InteractiveBackground />
+      {/* Persistent backgrounds — starfield + circuit constellation grid with section camera parallax */}
+      <StellarBackground isWarping={isWarping} activeSection={activeSection} />
+      <InteractiveBackground activeSection={activeSection} />
 
       {/* Theme + Router shell */}
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<PortfolioSPA loaderExited={loaderExited} />} />
+            <Route
+              path="/"
+              element={
+                <PortfolioSPA
+                  loaderExited={loaderExited}
+                  onSectionChange={setActiveSection}
+                />
+              }
+            />
             <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </BrowserRouter>

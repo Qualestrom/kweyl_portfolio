@@ -85,13 +85,18 @@ const MAX_SIMULTANEOUS_GLOWS = 6;
 
 
 
-export default function StellarBackground({ isWarping = false }) {
+export default function StellarBackground({ isWarping = false, activeSection = 0 }) {
   const canvasRef = useRef(null);
   const isWarpingRef = useRef(isWarping);
+  const activeSectionRef = useRef(activeSection);
 
   useEffect(() => {
     isWarpingRef.current = isWarping;
   }, [isWarping]);
+
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -102,10 +107,12 @@ export default function StellarBackground({ isWarping = false }) {
     let constellations = [];
     let raf;
     let frame = 0;
+    let currentParallaxX = 0;
     let nextGlowFrame = 30; // first glow trigger quickly
     let nextConstellationFrame = 90; // delay first constellation
     let mouseX = -1000;
     let mouseY = -1000;
+    const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
 
     const getTheme = () => document.documentElement.getAttribute('data-theme') || 'dark';
 
@@ -179,6 +186,10 @@ export default function StellarBackground({ isWarping = false }) {
 
       const theme = getTheme();
       const palette = PALETTES[theme] || PALETTES.dark;
+
+      // Smooth spring-like parallax offset tied to activeSection camera movement
+      const targetParallaxX = prefersReducedMotion ? 0 : -activeSectionRef.current * 72;
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.085;
 
       // Trigger new glows frequently
       if (frame >= nextGlowFrame) {
@@ -287,11 +298,16 @@ export default function StellarBackground({ isWarping = false }) {
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
+        const depth = p.isStar ? 1.0 : 0.45;
+        const drawX = (((p.x + currentParallaxX * depth) % w) + w) % w;
+        const drawY = p.y;
 
-        p.rotation += p.rotationSpeed;
+        if (!prefersReducedMotion) {
+          p.rotation += p.rotationSpeed;
+        }
 
         // Ambient breathing
-        const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
+        const breath = prefersReducedMotion ? 0 : p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
         let opacity = p.baseOpacity + breath;
 
         // Advance glow state machine
@@ -318,17 +334,17 @@ export default function StellarBackground({ isWarping = false }) {
           const intensity = glowEased;
 
           // Large soft outer halo (radial gradient)
-          const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
+          const outerGrad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, bloomSize);
           outerGrad.addColorStop(0, palette.glowHalo.replace(/[\d.]+\)$/g, `${(intensity * 0.35).toFixed(3)})`));
           outerGrad.addColorStop(0.3, palette.glowHalo.replace(/[\d.]+\)$/g, `${(intensity * 0.15).toFixed(3)})`));
           outerGrad.addColorStop(1, palette.glowHalo.replace(/[\d.]+\)$/g, '0)'));
           ctx.fillStyle = outerGrad;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
+          ctx.arc(drawX, drawY, bloomSize, 0, Math.PI * 2);
           ctx.fill();
 
           // Medium bright halo
-          const midGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize * 0.4);
+          const midGrad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, bloomSize * 0.4);
           // In dark mode glowHalo is rgba(103,232,249,0.6). We'll use a brighter version for the mid halo.
           const midColor = palette.glowHalo.replace(/rgba\((\d+),(\d+),(\d+),[\d.]+\)/, 'rgba($1,$2,$3,');
           midGrad.addColorStop(0, `rgba(255, 255, 255, ${intensity * 0.6})`);
@@ -336,7 +352,7 @@ export default function StellarBackground({ isWarping = false }) {
           midGrad.addColorStop(1, `${midColor}0)`);
           ctx.fillStyle = midGrad;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, bloomSize * 0.4, 0, Math.PI * 2);
+          ctx.arc(drawX, drawY, bloomSize * 0.4, 0, Math.PI * 2);
           ctx.fill();
 
           // Boost star opacity during glow
@@ -347,11 +363,11 @@ export default function StellarBackground({ isWarping = false }) {
 
         if (p.isStar) {
           ctx.fillStyle = isGlowing ? palette.glowCore : p.color;
-          drawFourPointStar(ctx, p.x, p.y, p.size * (isGlowing ? 1 + glowEased * 0.5 : 1), p.rotation);
+          drawFourPointStar(ctx, drawX, drawY, p.size * (isGlowing ? 1 + glowEased * 0.5 : 1), p.rotation);
         } else {
           ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.arc(drawX, drawY, p.size, 0, Math.PI * 2);
           ctx.fill();
         }
       }

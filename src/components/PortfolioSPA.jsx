@@ -9,7 +9,6 @@ import SectionLabels from './SectionLabels';
 import MobileNav from './MobileNav';
 import KeyboardHints from './KeyboardHints';
 import MaintenanceOverlay from './MaintenanceOverlay';
-import SectionWarpFlash from './SectionWarpFlash';
 import PullToRefresh from './PullToRefresh';
 
 // Sections
@@ -19,27 +18,6 @@ import ProjectsSection from '../sections/ProjectsSection';
 import CertificationsSection from '../sections/CertificationsSection';
 import ContactSection from '../sections/ContactSection';
 
-// ─── Section transition variants ─────────────────────────────────────────────────
-const warpVariants = {
-  enter: (direction) => ({
-    x: direction > 0 ? 50 : -50,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction) => ({
-    x: direction > 0 ? -50 : 50,
-    opacity: 0,
-  }),
-};
-
-const slideTransition = {
-  duration: 0.38,
-  ease: [0.22, 1, 0.36, 1], // Smooth and lightweight
-};
-
 const SECTION_COUNT = 5;
 
 // ─── Default config (used before Firebase loads) ─────────────────────────────────
@@ -48,8 +26,8 @@ export const DEFAULT_CONFIG = {
   heroHeadline1: 'PRECISION IN EVERY PIXEL.',
   heroHeadline2: 'PERFORMANCE IN EVERY DEPLOYMENT.',
   heroHighlightedWords: ['PRECISION', 'PERFORMANCE'],
-  heroSub: 'Full-stack developer specializing in React, React Native, and Supabase. I deliver rapid, pixel-perfect web and mobile solutions with 3D interactive graphics and robust cloud architectures.',
-  heroProfileImage: '',
+  heroSub: 'Full-stack developer specializing in React, React Native, and Supabase. I deliver rapid, pixel-perfect web and mobile solutions with interactive graphics and robust cloud architectures.',
+  heroProfileImage: '/assets/recovered/profile/hero-profile.webp',
   heroFrameAnimation: 'orbit',
   heroBtnPrimaryText: 'View Projects',
   heroBtnSecondaryText: 'Download CV',
@@ -61,23 +39,29 @@ export const DEFAULT_CONFIG = {
     { id: '2', url: 'https://linkedin.com', label: 'LinkedIn Profile' }
   ],
   aboutTitle: 'Software Developer & Architect',
-  aboutText1: 'I am a Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile Development. I architect high-performance React front-ends with Three.js graphics, React Native mobile apps, and scalable Supabase backends.',
+  aboutText1: 'I am a Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile Development. I architect high-performance React front-ends, interactive Three.js and Konva.js experiences, React Native mobile apps, and scalable Supabase backends.',
   aboutText2: '',
   aboutStatus: 'Open to Work',
-  aboutSoftwareSkills: ['React', 'TypeScript', 'Three.js', 'React Three Fiber', 'Tailwind CSS', 'Vite', 'Konva.js', 'C#'],
+  aboutSoftwareSkills: ['React', 'TypeScript', 'Three.js', 'Konva.js', 'Tailwind CSS', 'Vite'],
   aboutMobileSkills: ['React Native', 'Expo', 'Flutter', 'Dart', 'Cross-Platform Architecture', 'PWA'],
   aboutCloudSkills: ['Supabase', 'PostgreSQL', 'Firebase', 'Row Level Security', 'Vercel', 'Realtime Sync'],
-  aboutDesignSkills: ['Figma', 'UI/UX Design', '3D Graphics', 'Framer Motion', 'Canvas Confetti', 'Git / CI/CD'],
+  aboutDesignSkills: ['Figma', 'UI/UX Design', 'Framer Motion', 'Design Systems', 'Git / CI/CD'],
 };
 
-// ─── Portfolio SPA (state-based navigation) ──────────────────────────────────────
-export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited = true }) {
+// ─── Portfolio SPA (continuous spatial camera navigation) ────────────────────────
+export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited = true, onSectionChange }) {
   const [currentSection, setCurrentSection] = useState(0);
   const [direction, setDirection] = useState(0);
   const [config, setConfig] = useState(() => {
     try {
       const cached = localStorage.getItem('portfolio_config');
-      return cached ? { ...DEFAULT_CONFIG, ...JSON.parse(cached) } : DEFAULT_CONFIG;
+      if (!cached) return DEFAULT_CONFIG;
+      const parsed = JSON.parse(cached);
+      return {
+        ...DEFAULT_CONFIG,
+        ...parsed,
+        heroProfileImage: parsed.heroProfileImage || DEFAULT_CONFIG.heroProfileImage,
+      };
     } catch (_) {
       return DEFAULT_CONFIG;
     }
@@ -98,7 +82,11 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         .then(({ data, error }) => {
           if (!error && data?.data) {
             setConfig((prev) => {
-              const merged = { ...prev, ...data.data };
+              const merged = {
+                ...prev,
+                ...data.data,
+                heroProfileImage: data.data.heroProfileImage || prev.heroProfileImage || DEFAULT_CONFIG.heroProfileImage,
+              };
               try {
                 localStorage.setItem('portfolio_config', JSON.stringify(merged));
               } catch (_) {}
@@ -185,7 +173,8 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     if (index < 0 || index >= SECTION_COUNT) return;
     setDirection(index > currentSection ? 1 : -1);
     setCurrentSection(index);
-  }, [currentSection]);
+    onSectionChange?.(index);
+  }, [currentSection, onSectionChange]);
 
   // ── Touch swipe & wheel navigation refs ───────────────────────────────────────
   const touchStartRef = useRef({ x: 0, y: 0, time: 0, target: null });
@@ -330,22 +319,11 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     return <MaintenanceOverlay config={config} />;
   }
 
-  // ── Render current section ───────────────────────────────────────────────────
-  const renderSection = () => {
-    const props = { config, isAdmin, onUpdateConfig: handleUpdateConfig };
-    switch (currentSection) {
-      case 0: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
-      case 1: return <AboutSection {...props} onNavigateContact={() => navigateTo(4)} />;
-      case 2: return <ProjectsSection isAdmin={isAdmin} />;
-      case 3: return <CertificationsSection isAdmin={isAdmin} />;
-      case 4: return <ContactSection {...props} />;
-      default: return <HomeHero {...props} onNavigateProjects={() => navigateTo(2)} />;
-    }
-  };
-
   const toggleMaintenanceMode = () => {
     handleUpdateConfig('isMaintenanceMode', !config.isMaintenanceMode);
   };
+
+  const sharedProps = { config, isAdmin, onUpdateConfig: handleUpdateConfig };
 
   return (
     <>
@@ -395,35 +373,39 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         onLogout={onLogout}
       />
 
-      {/* The Warp Flash Overlay (only during user navigation) */}
-      <SectionWarpFlash 
-        direction={direction} 
-        isVisible={!isRedirecting && direction !== 0} 
-        key={`warp-${currentSection}`} 
-      />
-
       <motion.div 
         className="stellar-main stellar-main--full" 
         style={{ overflow: 'hidden' }}
-        initial={{ opacity: 0, y: 14 }}
-        animate={loaderExited ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={loaderExited ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
       >
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.div
-            key={currentSection}
-            className="section-transition-wrapper"
-            custom={direction}
-            variants={warpVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={slideTransition}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {renderSection()}
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          className="stellar-camera-track"
+          animate={{ x: `${-currentSection * 100}vw` }}
+          transition={{
+            type: 'spring',
+            stiffness: 170,
+            damping: 26,
+            mass: 0.9,
+          }}
+        >
+          <div className="stellar-camera-panel" aria-hidden={currentSection !== 0}>
+            <HomeHero {...sharedProps} onNavigateProjects={() => navigateTo(2)} />
+          </div>
+          <div className="stellar-camera-panel" aria-hidden={currentSection !== 1}>
+            <AboutSection {...sharedProps} onNavigateContact={() => navigateTo(4)} />
+          </div>
+          <div className="stellar-camera-panel" aria-hidden={currentSection !== 2}>
+            <ProjectsSection isAdmin={isAdmin} />
+          </div>
+          <div className="stellar-camera-panel" aria-hidden={currentSection !== 3}>
+            <CertificationsSection isAdmin={isAdmin} />
+          </div>
+          <div className="stellar-camera-panel" aria-hidden={currentSection !== 4}>
+            <ContactSection {...sharedProps} />
+          </div>
+        </motion.div>
 
         <KeyboardHints currentSection={currentSection} />
 

@@ -11,12 +11,17 @@ import React, { useEffect, useRef, useState } from 'react';
  * - Pauses cleanly on prefers-reduced-motion.
  */
 
-export default function InteractiveBackground() {
+export default function InteractiveBackground({ activeSection = 0 }) {
   const canvasRef = useRef(null);
+  const activeSectionRef = useRef(activeSection);
   const [isEnabled, setIsEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.innerWidth >= 768;
   });
+
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
 
   useEffect(() => {
     const handleResizeCheck = () => {
@@ -44,6 +49,7 @@ export default function InteractiveBackground() {
     let circuitEdges = []; // [indexA, indexB] pairs for circuit traces
     let mouse = { x: -1000, y: -1000, radius: 150 };
     let frame = 0;
+    let currentParallaxX = 0;
     let rafId = null;
 
     const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
@@ -66,7 +72,7 @@ export default function InteractiveBackground() {
       circuitEdges = [];
       const SPACING = getSpacing(width);
 
-      const cols = Math.floor(width / SPACING) + 2;
+      const cols = Math.floor(width / SPACING) + 8;
       const rows = Math.floor(height / SPACING) + 2;
 
       for (let i = 0; i < cols; i++) {
@@ -103,6 +109,11 @@ export default function InteractiveBackground() {
       ctx.clearRect(0, 0, width, height);
 
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const targetParallaxX = prefersReducedMotion ? 0 : -activeSectionRef.current * 28;
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.085;
+
+      ctx.save();
+      ctx.translate(currentParallaxX, 0);
 
       // Color tokens
       const dotColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.12)';
@@ -163,6 +174,7 @@ export default function InteractiveBackground() {
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       }
       ctx.fill();
+      ctx.restore();
 
       rafId = requestAnimationFrame(animate);
     };

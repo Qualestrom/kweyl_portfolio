@@ -70,10 +70,10 @@ const STATUS_PHASES = [
 // ─── Rotating Tips & Lore ───────────────────────────────────────────────────
 const LORE_TIPS = [
   { tag: "SYSTEM TIP", text: "Precision front-ends engineered with React & Framer Motion for 60 FPS fluidity." },
-  { tag: "NAVIGATION", text: "Use arrow keys or left section labels to seamlessly warp through sections." },
-  { tag: "ARCHITECTURE", text: "Full-stack cloud synchronization powered by real-time Firebase Firestore." },
-  { tag: "CROSS-PLATFORM", text: "Delivering rapid, pixel-perfect experiences across Web and Flutter Mobile." },
-  { tag: "PORTFOLIO TIP", text: "Toggle themes anytime using the stellar mode switch in the top-right corner." },
+  { tag: "NAVIGATION", text: "Use arrow keys, scroll wheel, or left labels to glide across sections." },
+  { tag: "ARCHITECTURE", text: "Full-stack cloud synchronization powered by Supabase & PostgreSQL." },
+  { tag: "CROSS-PLATFORM", text: "Delivering rapid, pixel-perfect experiences across Web and Mobile." },
+  { tag: "PORTFOLIO TIP", text: "Adapts automatically to your device theme, or toggle anytime in the top-right corner." },
 ];
 
 // ─── Canvas Color Palettes ──────────────────────────────────────────────────
@@ -200,18 +200,18 @@ export default function StellarCryoLoader({
     setIsWarping(true);
     onWarpStart?.();
 
-    // Warp sequence:
-    // 1. Star streaks accelerate radially then smoothly decelerate to vanishing point.
-    // 2. Eye-friendly celestial dissolve eases in.
-    // 3. At 1700ms, smoothly fade out loader overlay and reveal homepage seamlessly.
-    
+    // Seamless Warp Handoff Sequence:
+    // 1. 0ms–750ms: Star streaks accelerate radially past the camera while HUD zooms into vanishing point.
+    // 2. At 750ms (peak warp -> deceleration phase): Begin dissolving the loader backdrop while triggering
+    //    the Hero view underneath to scale & emerge directly out of the decelerating star-streaks.
+    // 3. At 1850ms: Unmount loader canvas once deceleration handoff is 100% complete.
     setTimeout(() => {
       setFadingOut(true);
       onExited?.();
       setTimeout(() => {
         setExited(true);
-      }, 700);
-    }, 1700);
+      }, 1100);
+    }, 750);
   }, [isReadyToEnter, onExited, onWarpStart]);
 
   // Global keydown listener for "Press any key to enter"

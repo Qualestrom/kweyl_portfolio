@@ -2,14 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import { spawnRealConstellation } from '../utils/constellations';
 
 /**
- * StellarBackground — Stellar-Glimmer & Nod-Krai Frostmoon Canvas Engine
- * - Renders the ethereal Nod-Krai Crescent Frostmoon (Columbina's Moon) with
- *   authentic lunar maria, earthshine limb, and multi-tier cryo corona.
+ * StellarBackground — Stellar-Glimmer & Nod-Krai Celestial Sky Engine
+ * - Renders the ethereal Nod-Krai Crescent Frostmoon (Columbina's Moon)
  * - 3-Tier Parallax Depth System:
  *   Tier 0 (z: 0.20): Deep cosmic dust & Frostmoon (-18vw to -20vw)
- *   Tier 1 (z: 0.45): Mid astral stars & constellations (-45vw)
+ *   Tier 1 (z: 0.45): Mid astral constellations & filaments (-45vw)
  *   Tier 2 (z: 0.85): Near-field crystalline ice prisms & Primogem stars (-85vw)
- * - Dynamic velocity stretching on near-field particles during section transitions.
+ * - Kinetic Emergent Constellations:
+ *   Comet head tracing, node ignition shockwave ripples, and traveling photon pulses
+ * - Interactive Celestial Astrolabe:
+ *   Cursor resonance with nearby background stars
+ * - High-Altitude Shooting Meteors:
+ *   Rare diagonal starlight streaks across the celestial vault
  */
 
 const PALETTES = {
@@ -29,6 +33,7 @@ const PALETTES = {
     prismFill: 'rgba(56, 189, 248, 0.12)',
     glowCore: '#FFFFFF',
     glowRgb: '56, 189, 248',
+    constellationPulse: '#FFFFFF',
   },
   light: {
     dust: [
@@ -46,6 +51,7 @@ const PALETTES = {
     prismFill: 'rgba(14, 165, 233, 0.10)',
     glowCore: '#0284C7',
     glowRgb: '2, 132, 199',
+    constellationPulse: '#0284C7',
   },
 };
 
@@ -81,7 +87,7 @@ function createStaticParticle(w, h, palette) {
     depth,
     color: isStar ? pick(palette.star) : pick(palette.dust),
     rotation: rand(0, Math.PI * 2),
-    rotationSpeed: (isStar || isPrism) ? rand(0.0015, 0.0045) : 0,
+    rotationSpeed: isStar || isPrism ? rand(0.0015, 0.0045) : 0,
     breathPhase: rand(0, Math.PI * 2),
     breathSpeed: rand(0.008, 0.02),
     breathDepth: rand(0.08, 0.2),
@@ -130,7 +136,6 @@ function drawIcePrism(ctx, x, y, size, rotation, palette, stretchFactor = 1) {
   const rx = size * 0.62;
   const ry = size * 1.15;
 
-  // Outer rhombic crystal facet
   ctx.beginPath();
   ctx.moveTo(0, -ry);
   ctx.lineTo(rx, 0);
@@ -144,7 +149,6 @@ function drawIcePrism(ctx, x, y, size, rotation, palette, stretchFactor = 1) {
   ctx.strokeStyle = palette.prismStroke;
   ctx.stroke();
 
-  // Inner crystalline refraction axis
   ctx.beginPath();
   ctx.moveTo(0, -ry * 0.7);
   ctx.lineTo(0, ry * 0.7);
@@ -160,15 +164,12 @@ function drawIcePrism(ctx, x, y, size, rotation, palette, stretchFactor = 1) {
 export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   ctx.save();
 
-  // Gentle celestial buoyancy
   const buoyY = y + Math.sin(frame * 0.015) * 3.0;
   const R = radius;
 
   ctx.translate(x, buoyY);
-  // Tilt coordinate space (-28 deg) so the waxing crescent cradles the sky naturally
   ctx.rotate(-0.48);
 
-  // Crescent Geometry: Outer sphere (0,0,R) minus shadow sphere (-d,0,R2)
   const d = R * 0.44;
   const R2 = R * 0.92;
   const x0 = (R2 * R2 - R * R - d * d) / (2 * d);
@@ -183,7 +184,7 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
     ctx.closePath();
   };
 
-  // 1. Soft Outer Atmospheric Lunar Corona (Centered on the Lit Crescent Belly)
+  // 1. Soft Atmospheric Corona
   const coronaR = R * 3.8;
   const coronaGrad = ctx.createRadialGradient(R * 0.55, 0, R * 0.1, R * 0.2, 0, coronaR);
   if (isDark) {
@@ -202,7 +203,7 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   ctx.arc(R * 0.2, 0, coronaR, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Luminous Crescent Body with Celestial Bloom
+  // 2. Luminous Crescent Body
   ctx.save();
   ctx.shadowColor = isDark ? 'rgba(125, 211, 252, 0.65)' : 'rgba(2, 132, 199, 0.35)';
   ctx.shadowBlur = 22;
@@ -224,7 +225,7 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   ctx.fill();
   ctx.restore();
 
-  // 3. Subtle Feathered Lunar Maria Clipped Inside the Crescent
+  // 3. Feathered Lunar Maria
   ctx.save();
   traceCrescent();
   ctx.clip();
@@ -248,14 +249,14 @@ export function drawFrostmoon(ctx, x, y, radius, palette, frame, isDark) {
   }
   ctx.restore();
 
-  // 4. Crisp Specular Rim along the Outer Sunlit Limb
+  // 4. Specular Outer Limb
   ctx.beginPath();
   ctx.arc(0, 0, R, -alpha1 * 0.90, alpha1 * 0.90, false);
   ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.92)' : 'rgba(2, 132, 199, 0.45)';
   ctx.lineWidth = 1.1;
   ctx.stroke();
 
-  // 5. Delicate Stellar-Glimmer Star Spark near the Upper Cusp
+  // 5. Cusp Star Spark
   const sparkPulse = 0.45 + 0.35 * Math.sin(frame * 0.04);
   ctx.fillStyle = isDark ? '#FFFFFF' : '#0284C7';
   ctx.globalAlpha = sparkPulse;
@@ -270,8 +271,8 @@ function easeInOutQuad(t) {
 
 const GLOW_RISE_SPEED = 0.025;
 const GLOW_FALL_SPEED = 0.008;
-const GLOW_INTERVAL_MIN = 40;
-const GLOW_INTERVAL_MAX = 120;
+const GLOW_INTERVAL_MIN = 35;
+const GLOW_INTERVAL_MAX = 90;
 const MAX_SIMULTANEOUS_GLOWS = 6;
 
 export default function StellarBackground({ isWarping = false, activeSection = 0 }) {
@@ -295,14 +296,18 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
     let h = window.innerHeight;
     let particles = [];
     let constellations = [];
+    let meteors = [];
     let raf;
     let frame = 0;
     let currentParallaxX = 0;
     let prevParallaxX = 0;
-    let nextGlowFrame = 30;
-    let nextConstellationFrame = 90;
+    let wasWarping = false;
+    let nextGlowFrame = 25;
+    let nextConstellationFrame = 20;
+    let nextMeteorFrame = 80;
     let mouseX = -1000;
     let mouseY = -1000;
+
     const prefersReducedMotion = window.matchMedia
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false;
@@ -319,6 +324,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       const count = Math.max(minCount, Math.floor((w * h) / density));
       particles = Array.from({ length: count }, () => createStaticParticle(w, h, palette));
       constellations = [];
+      meteors = [];
     };
 
     const handleMouseMove = (e) => {
@@ -348,27 +354,29 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
     };
 
     const spawnConstellation = () => {
-      const maxConstellations = w < 768 ? 1 : 3;
+      const maxConstellations = w < 768 ? 1 : 2;
       if (isWarpingRef.current || constellations.length >= maxConstellations) return;
       const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
       const c = spawnRealConstellation(w, h, rand, getStarColor);
-
-      c.progress = 0;
-      c.phase = 'rising';
-      c.holdTimer = 0;
-      c.holdDuration = rand(120, 300);
-      c.riseSpeed = rand(0.008, 0.02);
-      c.fallSpeed = rand(0.004, 0.01);
-
-      let isNearMouse = false;
-      const firstNode = c.nodes[0];
-      if (mouseX >= 0 && mouseY >= 0 && firstNode) {
-        const distToMouse = Math.hypot(firstNode.x - mouseX, firstNode.y - mouseY);
-        if (distToMouse < 300) isNearMouse = true;
-      }
-      c.isNearMouse = isNearMouse;
-
       constellations.push(c);
+    };
+
+    const spawnMeteor = () => {
+      if (isWarpingRef.current || meteors.length >= 2) return;
+      const startX = rand(w * 0.05, w * 0.72);
+      const startY = rand(h * 0.04, h * 0.22);
+      const angle = rand(0.50, 0.72);
+      const speed = rand(15, 23);
+      meteors.push({
+        x: startX,
+        y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        length: rand(90, 160),
+        life: 0,
+        maxLife: rand(35, 52),
+        size: rand(1.6, 2.6),
+      });
     };
 
     const animate = () => {
@@ -381,7 +389,6 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       const isDark = theme === 'dark';
 
       // ── High-Visibility Multi-Tier Parallax System ──
-      // Near-field travel = 85vw per section; Mid = 45vw; Moon & deep dust = 20vw
       const targetParallaxX = prefersReducedMotion ? 0 : -activeSectionRef.current * (w * 0.85);
       currentParallaxX += (targetParallaxX - currentParallaxX) * 0.085;
 
@@ -396,7 +403,6 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       if (!isWarpingRef.current) {
         ctx.globalAlpha = 1;
         const moonRadius = Math.max(30, Math.min(44, w * 0.030));
-        // Positioned in the high sky canopy on Home (0.65w), gliding to (0.16w) on Contact
         const moonDrawX = prefersReducedMotion
           ? w * 0.65
           : w * 0.65 + currentParallaxX * 0.145;
@@ -405,7 +411,14 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
         drawFrostmoon(ctx, moonDrawX, moonDrawY, moonRadius, palette, frame, isDark);
       }
 
-      // Trigger new glows frequently
+      // ── Detect exit from hyperspace warp into Hero page ──
+      if (wasWarping && !isWarpingRef.current) {
+        nextConstellationFrame = frame + 15; // Rapid spawn within ~0.25s of entering Hero!
+        nextMeteorFrame = frame + 45;
+      }
+      wasWarping = Boolean(isWarpingRef.current);
+
+      // Trigger periodic blooms
       if (frame >= nextGlowFrame) {
         triggerRandomGlow();
         nextGlowFrame = frame + rand(GLOW_INTERVAL_MIN, GLOW_INTERVAL_MAX);
@@ -414,54 +427,117 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
       // Spawn constellations
       if (frame >= nextConstellationFrame && !isWarpingRef.current) {
         spawnConstellation();
-        const spawnDelay = w < 768 ? rand(240, 500) : rand(150, 400);
+        const spawnDelay = w < 768 ? rand(300, 600) : rand(200, 450);
         nextConstellationFrame = frame + spawnDelay;
       }
 
-      // ── 2. Update & Draw Constellation Filaments (Tier 1: -45vw) ──
-      if (isWarpingRef.current) {
-        if (constellations.length > 0) {
-          constellations = [];
+      // Spawn high-altitude shooting stars (meteors)
+      if (frame >= nextMeteorFrame && !isWarpingRef.current) {
+        spawnMeteor();
+        nextMeteorFrame = frame + rand(350, 750);
+      }
+
+      // ── 2. Draw Shooting Meteors ──
+      for (let mi = meteors.length - 1; mi >= 0; mi--) {
+        const m = meteors[mi];
+        m.x += m.vx;
+        m.y += m.vy;
+        m.life++;
+        const progress = m.life / m.maxLife;
+        if (progress >= 1) {
+          meteors.splice(mi, 1);
+          continue;
         }
+
+        const alpha = Math.sin(progress * Math.PI);
+        const speedMag = Math.hypot(m.vx, m.vy) || 1;
+        const tailX = m.x - (m.vx / speedMag) * m.length;
+        const tailY = m.y - (m.vy / speedMag) * m.length;
+
+        ctx.save();
+        ctx.shadowColor = `rgba(${palette.glowRgb}, 0.8)`;
+        ctx.shadowBlur = 6;
+        const meteorGrad = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
+        meteorGrad.addColorStop(0, `rgba(${palette.glowRgb}, 0)`);
+        meteorGrad.addColorStop(0.65, `rgba(${palette.glowRgb}, ${(alpha * 0.75).toFixed(3)})`);
+        meteorGrad.addColorStop(1, palette.glowCore);
+
+        ctx.strokeStyle = meteorGrad;
+        ctx.lineWidth = m.size;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(m.x, m.y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.size * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // ── 3. Update & Draw Constellations (Tier 1 Parallax: -45vw) ──
+      if (isWarpingRef.current) {
+        if (constellations.length > 0) constellations = [];
       } else {
         const midShift = currentParallaxX * 0.45;
+
         for (let ci = constellations.length - 1; ci >= 0; ci--) {
           const c = constellations[ci];
 
-          if (c.phase === 'rising') {
-            c.progress += c.riseSpeed;
-            if (c.progress >= 1) {
-              c.progress = 1;
+          // Mouse proximity check
+          c.isNearMouse =
+            mouseX >= 0 &&
+            mouseY >= 0 &&
+            c.nodes.some((n) => {
+              const nx = (((n.x + midShift) % w) + w) % w;
+              return Math.hypot(nx - mouseX, n.y - mouseY) < 140;
+            });
+
+          // Kinetic State Machine
+          if (c.phase === 'drawing') {
+            const currentEdge = c.edges[c.activeEdgeIdx];
+            if (currentEdge) {
+              currentEdge.drawn += c.drawSpeed;
+              if (currentEdge.drawn >= 1) {
+                currentEdge.drawn = 1;
+                // Node ignition shockwave
+                const targetNode = c.nodes[currentEdge.to];
+                if (targetNode) {
+                  c.nodeFlashes.push({ x: targetNode.x, y: targetNode.y, r: 0, maxR: 28, alpha: 1 });
+                }
+                c.activeEdgeIdx++;
+              }
+            } else {
               c.phase = 'holding';
               c.holdTimer = 0;
+              // Initialize traveling photon energy pulses
+              c.energyPulses = [
+                { edgeIdx: 0, t: 0, speed: rand(0.022, 0.035) },
+                { edgeIdx: Math.max(0, Math.floor(c.edges.length / 2)), t: 0, speed: rand(0.022, 0.035) },
+              ];
             }
           } else if (c.phase === 'holding') {
             c.holdTimer++;
             if (c.holdTimer >= c.holdDuration) {
-              c.phase = 'falling';
+              c.phase = 'fading';
             }
-          } else if (c.phase === 'falling') {
-            c.progress -= c.fallSpeed;
-            if (c.progress <= 0) {
+          } else if (c.phase === 'fading') {
+            c.fadeAlpha -= 0.012;
+            if (c.fadeAlpha <= 0) {
               constellations.splice(ci, 1);
               continue;
             }
           }
 
-          const alpha = easeInOutQuad(c.progress);
-          const baseOpacity = c.isNearMouse ? 0.45 : 0.25;
-          const totalEdges = c.edges.length;
-          const edgeProgressRaw = c.phase === 'rising' ? c.progress * totalEdges : totalEdges;
+          const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
 
-          ctx.globalAlpha = 1;
-          ctx.strokeStyle = `rgba(${palette.glowRgb}, ${(alpha * baseOpacity).toFixed(3)})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-
-          for (let ei = 0; ei < totalEdges; ei++) {
-            if (ei > Math.floor(edgeProgressRaw)) continue;
-
+          // Draw Edges & Active Comet Head
+          for (let ei = 0; ei < c.edges.length; ei++) {
             const edge = c.edges[ei];
+            if (edge.drawn <= 0) continue;
+
             const sa = c.nodes[edge.from];
             const sb = c.nodes[edge.to];
             if (!sa || !sb) continue;
@@ -471,55 +547,199 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
             const bx = (((sb.x + midShift) % w) + w) % w;
             const by = sb.y;
 
-            if (Math.abs(bx - ax) < w * 0.5) {
+            if (Math.abs(bx - ax) > w * 0.5) continue;
+
+            const targetX = ax + (bx - ax) * easeInOutQuad(edge.drawn);
+            const targetY = ay + (by - ay) * easeInOutQuad(edge.drawn);
+
+            // Outer starlight filament with bloom
+            ctx.save();
+            ctx.shadowColor = `rgba(${palette.glowRgb}, 0.70)`;
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = `rgba(${palette.glowRgb}, ${(masterAlpha * (c.isNearMouse ? 0.90 : 0.65)).toFixed(3)})`;
+            ctx.lineWidth = c.isNearMouse ? 1.8 : 1.35;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(targetX, targetY);
+            ctx.stroke();
+            ctx.restore();
+
+            // Crisp inner crystalline core for fully-drawn edges
+            if (edge.drawn >= 0.98) {
+              ctx.strokeStyle = `rgba(255, 255, 255, ${(masterAlpha * (c.isNearMouse ? 0.45 : 0.28)).toFixed(3)})`;
+              ctx.lineWidth = 0.65;
+              ctx.beginPath();
               ctx.moveTo(ax, ay);
-              if (ei === Math.floor(edgeProgressRaw) && c.phase === 'rising') {
-                const edgeAlpha = edgeProgressRaw - Math.floor(edgeProgressRaw);
-                const currentX = ax + (bx - ax) * easeInOutQuad(edgeAlpha);
-                const currentY = ay + (by - ay) * easeInOutQuad(edgeAlpha);
-                ctx.lineTo(currentX, currentY);
-              } else {
-                ctx.lineTo(bx, by);
+              ctx.lineTo(bx, by);
+              ctx.stroke();
+            }
+
+            // Leading Comet Head at the active tracing tip
+            if (edge.drawn < 1 && c.phase === 'drawing') {
+              const headGlow = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, 13);
+              headGlow.addColorStop(0, '#FFFFFF');
+              headGlow.addColorStop(0.35, `rgba(${palette.glowRgb}, 0.90)`);
+              headGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
+              ctx.fillStyle = headGlow;
+              ctx.beginPath();
+              ctx.arc(targetX, targetY, 13, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#FFFFFF';
+              drawFourPointStar(ctx, targetX, targetY, 3.8, frame * 0.08);
+            }
+          }
+
+          // Draw Node Ignition Shockwaves
+          for (let fi = c.nodeFlashes.length - 1; fi >= 0; fi--) {
+            const fl = c.nodeFlashes[fi];
+            fl.r += 1.4;
+            fl.alpha = Math.max(0, 1 - fl.r / fl.maxR);
+            if (fl.alpha <= 0) {
+              c.nodeFlashes.splice(fi, 1);
+              continue;
+            }
+            const flx = (((fl.x + midShift) % w) + w) % w;
+            ctx.save();
+            ctx.shadowColor = `rgba(${palette.glowRgb}, 0.75)`;
+            ctx.shadowBlur = 5;
+            ctx.strokeStyle = `rgba(${palette.glowRgb}, ${(fl.alpha * masterAlpha * 0.85).toFixed(3)})`;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(flx, fl.y, fl.r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Draw Traveling Photon Energy Pulses
+          for (let pi = c.energyPulses.length - 1; pi >= 0; pi--) {
+            const pulse = c.energyPulses[pi];
+            pulse.t += pulse.speed;
+            if (pulse.t >= 1) {
+              pulse.t = 0;
+              pulse.edgeIdx = (pulse.edgeIdx + 1) % c.edges.length;
+            }
+            const curEdge = c.edges[pulse.edgeIdx];
+            if (curEdge && curEdge.drawn >= 1) {
+              const sa = c.nodes[curEdge.from];
+              const sb = c.nodes[curEdge.to];
+              if (sa && sb) {
+                const ax = (((sa.x + midShift) % w) + w) % w;
+                const bx = (((sb.x + midShift) % w) + w) % w;
+                if (Math.abs(bx - ax) < w * 0.5) {
+                  const px = ax + (bx - ax) * pulse.t;
+                  const py = sa.y + (sb.y - sa.y) * pulse.t;
+
+                  const pGlow = ctx.createRadialGradient(px, py, 0, px, py, 9);
+                  pGlow.addColorStop(0, '#FFFFFF');
+                  pGlow.addColorStop(0.45, `rgba(${palette.glowRgb}, 0.85)`);
+                  pGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
+                  ctx.fillStyle = pGlow;
+                  ctx.beginPath();
+                  ctx.arc(px, py, 9, 0, Math.PI * 2);
+                  ctx.fill();
+
+                  ctx.fillStyle = '#FFFFFF';
+                  drawFourPointStar(ctx, px, py, 2.8, frame * 0.08);
+                }
               }
             }
           }
-          ctx.stroke();
 
-          // Draw node highlights
+          // Draw Constellation Nodes (Primogem Stars)
           for (let ni = 0; ni < c.nodes.length; ni++) {
-            const nodeAppearThreshold = ni / (c.nodes.length || 1);
-            if (c.phase === 'rising' && c.progress < nodeAppearThreshold) continue;
-
             const s = c.nodes[ni];
-            if (!s) continue;
-            const nodeAlpha =
-              c.phase === 'rising'
-                ? Math.min(1, (c.progress - nodeAppearThreshold) * 4)
-                : alpha;
-            const nodeGlowAlpha = (nodeAlpha * (c.isNearMouse ? 0.45 : 0.25)).toFixed(3);
-
             const nx = (((s.x + midShift) % w) + w) % w;
             const ny = s.y;
 
-            ctx.globalAlpha = 1;
-            const nodeGlow = ctx.createRadialGradient(nx, ny, 0, nx, ny, s.size * 4.5);
+            const nodeGlowAlpha = (masterAlpha * (c.isNearMouse ? 0.70 : s.isPrimary ? 0.55 : 0.35)).toFixed(3);
+            const glowR = s.size * (s.isPrimary ? 5.5 : 4.4);
+            const nodeGlow = ctx.createRadialGradient(nx, ny, 0, nx, ny, glowR);
             nodeGlow.addColorStop(0, `rgba(${palette.glowRgb}, ${nodeGlowAlpha})`);
             nodeGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
             ctx.fillStyle = nodeGlow;
             ctx.beginPath();
-            ctx.arc(nx, ny, s.size * 4.5, 0, Math.PI * 2);
+            ctx.arc(nx, ny, glowR, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.globalAlpha = Math.max(0.02, Math.min(1, nodeAlpha * 0.85));
-            ctx.fillStyle = s.color;
+            ctx.globalAlpha = Math.max(0.04, Math.min(1, masterAlpha * (s.isPrimary ? 1.0 : 0.90)));
+            ctx.fillStyle = s.isPrimary ? palette.glowCore : s.color;
             s.rotation += s.rotationSpeed;
-            drawFourPointStar(ctx, nx, ny, s.size, s.rotation);
+            drawFourPointStar(ctx, nx, ny, s.size * (s.isPrimary ? 1.25 : 1.05), s.rotation);
           }
         }
       }
 
-      // ── 3. Draw 3-Tier Particles (Stars, Crystalline Ice Prisms, & Cosmic Dust) ──
+      // ── 4. Interactive "Celestial Astrolabe" Cursor Resonance ──
       const wrapSpan = w + 240;
+      if (!prefersReducedMotion && mouseX >= 0 && mouseY >= 0 && mouseY < h * 0.72) {
+        let resonanceTargets = [];
+        const maxDist = 220;
+        const midShift = currentParallaxX * 0.45;
+
+        // 1. Resonate with nearby background stars
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          if (!p.isStar) continue;
+          const px = (((p.x + currentParallaxX * (p.depth || 0.85) + 120) % wrapSpan) + wrapSpan) % wrapSpan - 120;
+          const dist = Math.hypot(px - mouseX, p.y - mouseY);
+          if (dist < maxDist) {
+            resonanceTargets.push({ x: px, y: p.y, dist });
+          }
+        }
+
+        // 2. Resonate with nearby active constellation nodes
+        for (const c of constellations) {
+          for (const n of c.nodes) {
+            const nx = (((n.x + midShift) % w) + w) % w;
+            const dist = Math.hypot(nx - mouseX, n.y - mouseY);
+            if (dist < maxDist) {
+              resonanceTargets.push({ x: nx, y: n.y, dist });
+            }
+          }
+        }
+
+        resonanceTargets.sort((a, b) => a.dist - b.dist);
+        const links = resonanceTargets.slice(0, 4);
+
+        ctx.save();
+        ctx.shadowColor = `rgba(${palette.glowRgb}, 0.65)`;
+        ctx.shadowBlur = 4;
+        for (const link of links) {
+          const alpha = (1 - link.dist / maxDist) * (isDark ? 0.50 : 0.40);
+          ctx.strokeStyle = `rgba(${palette.glowRgb}, ${alpha.toFixed(3)})`;
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.moveTo(mouseX, mouseY);
+          ctx.lineTo(link.x, link.y);
+          ctx.stroke();
+        }
+
+        // Central cursor astrolabe bloom
+        const curGlow = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 14);
+        curGlow.addColorStop(0, '#FFFFFF');
+        curGlow.addColorStop(0.35, `rgba(${palette.glowRgb}, 0.70)`);
+        curGlow.addColorStop(1, `rgba(${palette.glowRgb}, 0)`);
+        ctx.fillStyle = curGlow;
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Astrolabe reticle ring
+        ctx.strokeStyle = `rgba(${palette.glowRgb}, 0.40)`;
+        ctx.lineWidth = 0.85;
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 9, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Central Primogem spark
+        ctx.fillStyle = palette.glowCore;
+        ctx.globalAlpha = 0.95;
+        drawFourPointStar(ctx, mouseX, mouseY, 3.8, frame * 0.03);
+        ctx.restore();
+      }
+
+      // ── 5. Draw 3-Tier Particles (Stars, Crystalline Ice Prisms, & Cosmic Dust) ──
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         const depth = p.depth || (p.isStar ? 0.85 : 0.35);

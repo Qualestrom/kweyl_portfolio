@@ -12,8 +12,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  background: #050811;
-  background: radial-gradient(circle at 50% 45%, #0B132B 0%, #050811 75%, #020408 100%);
+  background: transparent;
+  background: radial-gradient(circle at 50% 50%, rgba(5, 8, 17, 0.18) 0%, rgba(5, 8, 17, 0.65) 100%);
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
               visibility 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 1;
@@ -24,8 +24,8 @@
 }
 
 [data-theme='light'] .genshin-loader-overlay {
-  background: #F4F7FB;
-  background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #EDF2F7 70%, #E2E8F0 100%);
+  background: transparent;
+  background: radial-gradient(circle at 50% 50%, rgba(244, 247, 251, 0.18) 0%, rgba(244, 247, 251, 0.65) 100%);
 }
 
 .genshin-loader-overlay.is-ready {

@@ -646,7 +646,12 @@ export function drawFrostmoon(
   const maxFixed = TEX_W * 256;
   const uShiftFixed = ((Math.round((rotLon / (Math.PI * 2)) * maxFixed) % maxFixed) + maxFixed) % maxFixed;
 
-  if (uShiftFixed !== engine.lastUShiftFixed || isDark !== engine.lastThemeDark) {
+  // Rate-limit the heavy 608k CPU pixel projection loop to 30 FPS or when theme changes (halves CPU load with 0 visual loss)
+  const shouldUpdateTexture =
+    (frame % 2 === 0 && uShiftFixed !== engine.lastUShiftFixed) ||
+    isDark !== engine.lastThemeDark;
+
+  if (shouldUpdateTexture) {
     engine.lastUShiftFixed = uShiftFixed;
     engine.lastThemeDark = isDark;
 
@@ -708,8 +713,13 @@ export function drawFrostmoon(
   // ── 3. Crisp 360° Full-Moon Specular Atmospheric Rim ──
   const scale = R / 400;
   ctx.save();
-  ctx.shadowColor = isDark ? 'rgba(125, 211, 252, 0.72)' : 'rgba(2, 132, 199, 0.35)';
-  ctx.shadowBlur = Math.max(8, 20 * scale);
+  // Multi-pass layered limb glow (0ms blur rasterization cost!)
+  ctx.strokeStyle = isDark ? 'rgba(125, 211, 252, 0.28)' : 'rgba(2, 132, 199, 0.18)';
+  ctx.lineWidth = Math.max(2.5, 4.5 * scale);
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, Math.PI * 2);
+  ctx.stroke();
+
   ctx.strokeStyle = isDark ? 'rgba(224, 242, 254, 0.86)' : 'rgba(2, 132, 199, 0.55)';
   ctx.lineWidth = Math.max(1.1, 1.6 * scale);
   ctx.beginPath();
@@ -803,14 +813,27 @@ const GLOW_INTERVAL_MIN = 35;
 const GLOW_INTERVAL_MAX = 90;
 const MAX_SIMULTANEOUS_GLOWS = 6;
 
-export default function StellarBackground({ isWarping = false, activeSection = 0 }) {
+export default function StellarBackground({
+  isWarping = false,
+  loaderExited = true,
+  activeSection = 0,
+}) {
   const canvasRef = useRef(null);
   const isWarpingRef = useRef(isWarping);
+  const loaderExitedRef = useRef(loaderExited);
   const activeSectionRef = useRef(activeSection);
+  const warpStartTimeRef = useRef(0);
 
   useEffect(() => {
+    if (isWarping && !isWarpingRef.current) {
+      warpStartTimeRef.current = performance.now();
+    }
     isWarpingRef.current = isWarping;
   }, [isWarping]);
+
+  useEffect(() => {
+    loaderExitedRef.current = loaderExited;
+  }, [loaderExited]);
 
   useEffect(() => {
     activeSectionRef.current = activeSection;
@@ -845,7 +868,7 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
     const resize = () => {
       w = window.innerWidth;
       h = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -935,9 +958,35 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
         ? 1 + Math.min(Math.abs(velocity) * 0.038, 2.2)
         : 1;
 
-      // ── 1. Compute Colossal 3D Full Frostmoon Orbital Coordinates ──
-      if (!isWarpingRef.current) {
-        const { radius: baseRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
+      // ── 1. Compute Colossal 3D Full Frostmoon Coordinates (Distant Beacon -> Warp Approach -> Orbital Flight) ──
+      const { radius: targetRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
+      const distantRadius = Math.max(26, Math.min(38, w * 0.025));
+      const distantX = w * 0.58;
+      const distantY = h * 0.16;
+
+      let moonX, moonY, moonRadius, moonOrbitLongitude, moonSectionDimming;
+
+      if (!loaderExitedRef.current && !isWarpingRef.current) {
+        // STATE A: Initial loading screen — Moon is a distant beacon in deep space
+        moonX = distantX;
+        moonY = distantY;
+        moonRadius = distantRadius;
+        moonOrbitLongitude = 0;
+        moonSectionDimming = 1.0;
+      } else if (isWarpingRef.current) {
+        // STATE B: Hyperspace warp in flight — Moon smoothly approaches from distant beacon to Hero orbit
+        const WARP_DURATION_MS = 1520;
+        const elapsed = warpStartTimeRef.current > 0 ? performance.now() - warpStartTimeRef.current : 0;
+        const warpProgress = Math.min(1, Math.max(0, elapsed / WARP_DURATION_MS));
+        const approachT = easeInOutQuad(warpProgress);
+
+        moonX = distantX + (targetX - distantX) * approachT;
+        moonY = distantY + (targetY - distantY) * approachT;
+        moonRadius = distantRadius + (targetRadius - distantRadius) * approachT;
+        moonOrbitLongitude = 0;
+        moonSectionDimming = 1.0;
+      } else {
+        // STATE C: Fully arrived on portfolio page — Moon revolves with section parallax
         const totalSpan = Math.max(w, w * 3.4);
         const orbitFactor = prefersReducedMotion ? 0 : currentParallaxX / totalSpan;
 
@@ -948,19 +997,23 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
         const moonDrawY = targetY - arcElevation;
         const orbitLongitude = prefersReducedMotion ? 0 : orbitFactor * 1.45;
         const orbitScale = prefersReducedMotion ? 1 : 1 + Math.sin(Math.abs(orbitFactor) * Math.PI) * 0.06;
-        const finalRadius = baseRadius * orbitScale;
+        const finalRadius = targetRadius * orbitScale;
         const sectionDimming = activeSectionRef.current >= 2 ? 0.92 : 1.0;
 
-        activeMoonInfo = {
-          x: moonDrawX,
-          y: moonDrawY,
-          radius: finalRadius,
-          orbitLongitude,
-          sectionDimming,
-        };
-      } else {
-        activeMoonInfo = null;
+        moonX = moonDrawX;
+        moonY = moonDrawY;
+        moonRadius = finalRadius;
+        moonOrbitLongitude = orbitLongitude;
+        moonSectionDimming = sectionDimming;
       }
+
+      activeMoonInfo = {
+        x: moonX,
+        y: moonY,
+        radius: moonRadius,
+        orbitLongitude: moonOrbitLongitude,
+        sectionDimming: moonSectionDimming,
+      };
 
       // ── Detect exit from hyperspace warp into Hero page ──
       if (wasWarping && !isWarpingRef.current) {
@@ -1048,7 +1101,8 @@ export default function StellarBackground({ isWarping = false, activeSection = 0
           opacity = Math.min(1, opacity + glowEased * 0.75);
         }
 
-        ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity));
+        const warpDim = isWarpingRef.current ? 0.35 : 1.0;
+        ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity * warpDim));
         const particleStretch = p.tier === 2 && isMovingFast ? stretchFactor : 1;
 
         if (p.isStar) {

@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Compass, User, FolderGit2, Award, Send, Sparkles, Moon } from 'lucide-react';
-import { spawnRealConstellation } from '../utils/constellations';
-import { drawFrostmoon, getHeroMoonMetrics } from './StellarBackground';
+import { Compass, User, FolderGit2, Award, Send, Moon, Sparkles } from 'lucide-react';
 import './StellarCryoLoader.css';
 
 /**
@@ -228,25 +226,18 @@ export default function StellarCryoLoader({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isReadyToEnter, isWarping, handleEnter]);
 
-  // ─── Canvas Starfield & Live Connect-a-Dot Constellations Engine ───────────
+  // ─── 3D Relativistic Hyperspace Tunnel Engine ──────────────────────────────
   useEffect(() => {
     if (exited) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let w, h;
-    let stars = [];
+    let w = window.innerWidth;
+    let h = window.innerHeight;
     let warpTunnelStars = [];
-    let starIndices = [];
-    let constellations = [];
-    let meteors = [];
-    let nebulae = [];
     let frame = 0;
     let raf;
-    let nextGlowFrame = 25;
-    let nextConstellationFrame = 35;
-    let nextMeteorFrame = 80;
 
     const getTheme = () => document.documentElement.getAttribute('data-theme') || 'dark';
 
@@ -269,182 +260,16 @@ export default function StellarCryoLoader({
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const palette = PALETTES[getTheme()] || PALETTES.dark;
 
-      // 1. Nebulae Clouds
-      nebulae = [
-        { x: w * 0.25, y: h * 0.35, radius: Math.min(w, h) * 0.45, colorIdx: 0, driftX: 0.08, driftY: 0.05 },
-        { x: w * 0.75, y: h * 0.65, radius: Math.min(w, h) * 0.50, colorIdx: 1, driftX: -0.06, driftY: 0.07 },
-        { x: w * 0.50, y: h * 0.45, radius: Math.min(w, h) * 0.40, colorIdx: 2, driftX: 0.05, driftY: -0.04 },
-      ];
-
-      // 2. Ambient Stars
-      const count = Math.max(120, Math.floor((w * h) / 8500));
-      stars = Array.from({ length: count }, () => {
-        const isStar = Math.random() > 0.58;
-        const x = rand(0, w);
-        const y = rand(0, h);
-        return {
-          x,
-          y,
-          originX: x,
-          originY: y,
-          size: isStar ? rand(3.0, 7.5) : rand(1.0, 2.2),
-          isStar,
-          color: isStar ? pick(palette.star) : pick(palette.dust),
-          rotation: rand(0, Math.PI * 2),
-          rotationSpeed: isStar ? rand(0.0015, 0.005) : 0,
-          breathPhase: rand(0, Math.PI * 2),
-          breathSpeed: rand(0.015, 0.035),
-          breathDepth: rand(0.2, 0.45),
-          baseOpacity: isStar ? rand(0.35, 0.75) : rand(0.12, 0.32),
-          glowProgress: 0,
-          glowPhase: 'idle',
-        };
-      });
-
-      // 3. True 3D (x, y, z) Hyperspace Tunnel Star Pool
+      // True 3D (x, y, z) Hyperspace Tunnel Star Pool
       warpTunnelStars = Array.from({ length: 240 }, () => createWarpTunnelStar(true));
-
-      starIndices = stars.map((s, i) => (s.isStar ? i : -1)).filter((i) => i >= 0);
-      constellations = [];
-      meteors = [];
-    };
-
-    const triggerStarGlow = () => {
-      const eligible = stars.filter((s) => s.isStar && s.glowPhase === 'idle');
-      if (eligible.length === 0) return;
-      const target = eligible[Math.floor(Math.random() * eligible.length)];
-      target.glowPhase = 'rising';
-      target.glowProgress = 0;
-    };
-
-    const spawnMeteor = () => {
-      if (meteors.length >= 3) return;
-      const startX = rand(w * 0.1, w * 0.9);
-      const startY = rand(0, h * 0.4);
-      const angle = rand(Math.PI * 0.2, Math.PI * 0.35);
-      const speed = rand(12, 22);
-      meteors.push({
-        x: startX,
-        y: startY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        length: rand(80, 160),
-        life: 0,
-        maxLife: rand(35, 55),
-        size: rand(1.8, 3.2),
-      });
-    };
-
-    // ── Alive "Connect-a-Dot" Constellation Spawner ──
-    const spawnConstellation = () => {
-      if (isWarpingRef.current || constellations.length >= 4) return;
-      const getStarColor = () => pick(PALETTES[getTheme()]?.star || PALETTES.dark.star);
-      const c = spawnRealConstellation(w, h, rand, getStarColor);
-
-      c.activeEdgeIdx = 0;
-      c.phase = 'drawing'; // 'drawing' -> 'holding' -> 'fading'
-      c.holdTimer = 0;
-      c.holdDuration = rand(90, 180);
-      c.drawSpeed = rand(0.04, 0.075);
-      c.fadeAlpha = 1;
-      c.nodeFlashes = []; // Shockwave ripples when connected
-      c.energyPulses = []; // Pulsing starlight traveling along lines
-      
-      constellations.push(c);
     };
 
     const animate = () => {
       frame++;
       const theme = getTheme();
-      const isDark = theme === 'dark';
-      const palette = PALETTES[theme] || PALETTES.dark;
 
-      // ── Handle 3D Hyperspace Velocity with Acceleration, Tunnel Cruise, & Braking ──
-      let warpSpeed3D = 0;
-      let streakFactor = 0;
-
-      if (isWarpingRef.current) {
-        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.0115);
-        const p = warpProgressRef.current;
-
-        if (p < 0.20) {
-          // 1. Plunge into hyperspace
-          const accel = p / 0.20;
-          streakFactor = Math.sin(accel * (Math.PI / 2));
-          warpSpeed3D = 8 + streakFactor * 52;
-        } else if (p < 0.72) {
-          // 2. Relativistic 3D warp tunnel cruise
-          streakFactor = 1.0;
-          warpSpeed3D = 60;
-        } else {
-          // 3. Inertial camera braking upon destination arrival
-          const decel = (p - 0.72) / 0.28;
-          streakFactor = Math.pow(1 - decel, 1.8);
-          warpSpeed3D = streakFactor * 55 + 1.5;
-        }
-      }
-
-      ctx.clearRect(0, 0, w, h);
-
-      const cx = w * 0.5;
-      const cy = h * 0.48;
-      const warp = warpProgressRef.current;
-
-      // ── 0. Smooth Sky-to-Tunnel Backdrop & Nod-Krai Frostmoon Approach ──
-      if (isWarpingRef.current && warp < 0.55) {
-        const backdropAlpha = Math.max(0, 1 - Math.pow(warp / 0.50, 1.4));
-        ctx.save();
-        ctx.globalAlpha = backdropAlpha;
-        ctx.fillStyle = isDark ? '#050811' : '#F4F7FB';
-        ctx.fillRect(0, 0, w, h);
-        ctx.restore();
-      }
-
-      // Compute Genshin Impact Full Frostmoon coordinates (Distant Beacon -> Hyperspace Low-Orbit Approach)
-      const { radius: targetRadius, targetX, targetY } = getHeroMoonMetrics(w, h);
-
-      const distantRadius = Math.max(24, Math.min(36, w * 0.024));
-      const distantX = w * 0.58;
-      const distantY = h * 0.16;
-
-      const approachT = isWarpingRef.current ? easeInOutQuad(warp) : 0;
-      const curX = distantX + (targetX - distantX) * approachT;
-      const curY = distantY + (targetY - distantY) * approachT;
-      const curRadius = distantRadius + (targetRadius - distantRadius) * approachT;
-
-      if (isWarpingRef.current) {
-        ctx.save();
-        ctx.globalAlpha = 1;
-        drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
-        ctx.restore();
-      }
-
-      // ── 1. Draw Nebula Background Clouds ──
-      if (!isWarpingRef.current || warp < 0.45) {
-        const nebAlpha = isWarpingRef.current ? Math.max(0, 1 - warp / 0.45) : 1;
-        ctx.save();
-        ctx.globalAlpha = nebAlpha;
-        for (const neb of nebulae) {
-          neb.x += neb.driftX;
-          neb.y += neb.driftY;
-          if (neb.x < 0 || neb.x > w) neb.driftX *= -1;
-          if (neb.y < 0 || neb.y > h) neb.driftY *= -1;
-
-          const nebColor = palette.nebulaColors[neb.colorIdx] || palette.nebulaColors[0];
-          const grad = ctx.createRadialGradient(neb.x, neb.y, 0, neb.x, neb.y, neb.radius);
-          grad.addColorStop(0, nebColor);
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(neb.x, neb.y, neb.radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // ── 2. Percentage Step Interpolation ──
+      // ── 1. Percentage Step Interpolation (Smooth Genshin HUD progression) ──
       const elapsed = Date.now() - startTimeRef.current;
       let targetPercent;
       if (loadingDoneRef.current) {
@@ -457,193 +282,47 @@ export default function StellarCryoLoader({
       const stepSpeed = loadingDoneRef.current ? 0.09 : 0.038;
       percentRef.current += (targetPercent - percentRef.current) * stepSpeed;
       const displayPercent = Math.min(100, Math.round(percentRef.current));
-      
+
       if (frame % 2 === 0) {
         setPercent(displayPercent);
       }
 
-      // ── 3. Glow & Spawners ──
-      if (frame >= nextGlowFrame && !isWarpingRef.current) {
-        triggerStarGlow();
-        nextGlowFrame = frame + rand(20, 50);
-      }
-      if (frame >= nextConstellationFrame && !isWarpingRef.current) {
-        spawnConstellation();
-        nextConstellationFrame = frame + rand(70, 150);
-      }
-      if (frame >= nextMeteorFrame && !isWarpingRef.current) {
-        spawnMeteor();
-        nextMeteorFrame = frame + rand(120, 240);
-      }
+      // ── 2. Render Hyperspace Warp Tunnel (ONLY when Warping) ──
+      ctx.clearRect(0, 0, w, h);
 
-      // ── 4. Draw Alive Connect-a-Dot Constellations ──
       if (isWarpingRef.current) {
-        // Immediately halt constellations and clear stationary stars/lines during hyper-warp
-        if (constellations.length > 0) {
-          constellations = [];
-        }
-      } else {
-        for (let ci = constellations.length - 1; ci >= 0; ci--) {
-          const c = constellations[ci];
+        warpProgressRef.current = Math.min(1, warpProgressRef.current + 0.0115);
+        const p = warpProgressRef.current;
 
-          if (c.phase === 'drawing') {
-            const currentEdge = c.edges[c.activeEdgeIdx];
-            if (currentEdge) {
-              currentEdge.drawn += c.drawSpeed;
-              if (currentEdge.drawn >= 1) {
-                currentEdge.drawn = 1;
-                // Node ignition ripple at target star
-                const targetStar = c.nodes[currentEdge.to];
-                if (targetStar) {
-                  c.nodeFlashes.push({ x: targetStar.x, y: targetStar.y, r: 0, maxR: 24, alpha: 1 });
-                }
-                c.activeEdgeIdx++;
-              }
-            } else {
-              c.phase = 'holding';
-              c.holdTimer = 0;
-              // Spawn an energy pulse
-              c.energyPulses.push({ edgeIdx: 0, t: 0, speed: 0.03 });
-            }
-          } else if (c.phase === 'holding') {
-            c.holdTimer++;
-            if (c.holdTimer >= c.holdDuration || isWarpingRef.current) {
-              c.phase = 'fading';
-            }
-          } else if (c.phase === 'fading') {
-            c.fadeAlpha -= 0.02;
-            if (c.fadeAlpha <= 0) {
-              constellations.splice(ci, 1);
-              continue;
-            }
-          }
+        let warpSpeed3D = 0;
+        let streakFactor = 0;
 
-          const masterAlpha = easeInOutQuad(Math.max(0, c.fadeAlpha));
-          
-          // Draw constellation nodes
-          for (let ni = 0; ni < c.nodes.length; ni++) {
-            const s = c.nodes[ni];
-            ctx.globalAlpha = Math.max(0.02, Math.min(1, masterAlpha * 0.8));
-            ctx.fillStyle = s.color;
-            s.rotation += s.rotationSpeed;
-            drawFourPointStar(ctx, s.x, s.y, s.size, s.rotation);
-          }
-
-          // Draw active connecting lines (Connect-a-Dot laser trace)
-          for (let ei = 0; ei < c.edges.length; ei++) {
-            const edge = c.edges[ei];
-            if (edge.drawn <= 0) continue;
-
-            const sa = c.nodes[edge.from];
-            const sb = c.nodes[edge.to];
-            if (!sa || !sb) continue;
-
-            const targetX = sa.x + (sb.x - sa.x) * edge.drawn;
-            const targetY = sa.y + (sb.y - sa.y) * edge.drawn;
-
-            // Glowing laser beam
-            ctx.strokeStyle = palette.constellationLine + (masterAlpha * 0.45).toFixed(3) + ')';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(sa.x, sa.y);
-            ctx.lineTo(targetX, targetY);
-            ctx.stroke();
-
-            // Leading starlight head while drawing
-            if (edge.drawn < 1) {
-              ctx.fillStyle = palette.constellationPulse;
-              ctx.shadowColor = palette.constellationPulse;
-              ctx.shadowBlur = 10;
-              ctx.beginPath();
-              ctx.arc(targetX, targetY, 3, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.shadowBlur = 0;
-            }
-          }
-
-          // Draw Node Ripples
-          for (let fi = c.nodeFlashes.length - 1; fi >= 0; fi--) {
-            const fl = c.nodeFlashes[fi];
-            fl.r += 1.2;
-            fl.alpha = Math.max(0, 1 - fl.r / fl.maxR);
-            if (fl.alpha <= 0) {
-              c.nodeFlashes.splice(fi, 1);
-              continue;
-            }
-            ctx.strokeStyle = palette.starGlow + (fl.alpha * masterAlpha * 0.7).toFixed(3) + ')';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          // Draw Energy Pulses traveling along lines
-          for (let pi = c.energyPulses.length - 1; pi >= 0; pi--) {
-            const pulse = c.energyPulses[pi];
-            pulse.t += pulse.speed;
-            if (pulse.t >= 1) {
-              pulse.t = 0;
-              pulse.edgeIdx = (pulse.edgeIdx + 1) % c.edges.length;
-            }
-            const curEdge = c.edges[pulse.edgeIdx];
-            if (curEdge && curEdge.drawn >= 1) {
-              const sa = c.nodes[curEdge.from];
-              const sb = c.nodes[curEdge.to];
-              if (sa && sb) {
-                const px = sa.x + (sb.x - sa.x) * pulse.t;
-                const py = sa.y + (sb.y - sa.y) * pulse.t;
-                ctx.fillStyle = palette.constellationPulse;
-                ctx.shadowColor = palette.constellationPulse;
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.arc(px, py, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-              }
-            }
-          }
-        }
-      }
-
-      // ── 5. Draw Meteors (Shooting Stars) ──
-      for (let mi = meteors.length - 1; mi >= 0; mi--) {
-        const m = meteors[mi];
-        m.x += m.vx;
-        m.y += m.vy;
-        m.life++;
-
-        const progress = m.life / m.maxLife;
-        if (progress >= 1) {
-          meteors.splice(mi, 1);
-          continue;
+        if (p < 0.20) {
+          // Accelerate into warp
+          const accel = p / 0.20;
+          streakFactor = Math.sin(accel * (Math.PI / 2));
+          warpSpeed3D = 8 + streakFactor * 52;
+        } else if (p < 0.72) {
+          // Cruise through 3D warp tunnel
+          streakFactor = 1.0;
+          warpSpeed3D = 60;
+        } else {
+          // Inertial braking upon arrival
+          const decel = (p - 0.72) / 0.28;
+          streakFactor = Math.pow(1 - decel, 1.8);
+          warpSpeed3D = streakFactor * 55 + 1.5;
         }
 
-        const alpha = Math.sin(progress * Math.PI);
-        const tailX = m.x - (m.vx / Math.hypot(m.vx, m.vy)) * m.length;
-        const tailY = m.y - (m.vy / Math.hypot(m.vx, m.vy)) * m.length;
-
-        const meteorGrad = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
-        meteorGrad.addColorStop(0, palette.meteorTail + '0)');
-        meteorGrad.addColorStop(0.7, palette.meteorTail + (alpha * 0.6).toFixed(3) + ')');
-        meteorGrad.addColorStop(1, palette.meteorHead);
-
-        ctx.strokeStyle = meteorGrad;
-        ctx.lineWidth = m.size;
-        ctx.beginPath();
-        ctx.moveTo(tailX, tailY);
-        ctx.lineTo(m.x, m.y);
-        ctx.stroke();
-      }
-
-      // ── 6. Draw Stars OR True 3D (x, y, z) Hyperspace Warp Tunnel ──
-      if (isWarpingRef.current && warp > 0.01) {
+        const cx = w * 0.5;
+        const cy = h * 0.48;
         const fov = 460;
+
         ctx.save();
         for (let i = 0; i < warpTunnelStars.length; i++) {
           const ws = warpTunnelStars[i];
           ws.z3d -= warpSpeed3D;
 
-          // Continuously respawn stars behind the camera deep into the 3D tunnel
+          // Continuously respawn stars deep in tunnel
           if (ws.z3d <= 22) {
             const next = createWarpTunnelStar(false);
             ws.x3d = next.x3d;
@@ -653,7 +332,6 @@ export default function StellarCryoLoader({
             ws.isBrightCyan = next.isBrightCyan;
           }
 
-          // 3D Perspective Projection: x_proj = cx + (x / z) * fov
           const sx = cx + (ws.x3d / ws.z3d) * fov;
           const sy = cy + (ws.y3d / ws.z3d) * fov;
 
@@ -693,78 +371,24 @@ export default function StellarCryoLoader({
           ctx.stroke();
         }
         ctx.restore();
-      } else {
-        for (let i = 0; i < stars.length; i++) {
-          const p = stars[i];
-          if (Math.hypot(p.x - curX, p.y - curY) < curRadius * 1.05) continue;
-          p.rotation += p.rotationSpeed;
-          const breath = p.breathDepth * Math.sin(p.breathSpeed * frame + p.breathPhase);
-          let opacity = p.baseOpacity + breath;
 
-          if (p.glowPhase === 'rising') {
-            p.glowProgress += 0.04;
-            if (p.glowProgress >= 1) {
-              p.glowProgress = 1;
-              p.glowPhase = 'falling';
-            }
-          } else if (p.glowPhase === 'falling') {
-            p.glowProgress -= 0.015;
-            if (p.glowProgress <= 0) {
-              p.glowProgress = 0;
-              p.glowPhase = 'idle';
-            }
-          }
+        // ── 3. Crystalline Frost Shockwave upon Arrival ──
+        if (p > 0.52) {
+          const shockProgress = (p - 0.52) / 0.48;
+          const maxR = Math.hypot(w, h) * 0.95;
+          const shockRadius = maxR * Math.pow(shockProgress, 0.78);
+          const shockAlpha = Math.sin(shockProgress * Math.PI) * 0.55;
 
-          const glowEased = easeInOutQuad(p.glowProgress);
-          const isGlowing = p.glowPhase !== 'idle' && p.glowProgress > 0.01;
-
-          if (isGlowing) {
-            const bloomSize = p.size * (3.5 + glowEased * 9);
-            const outerGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, bloomSize);
-            outerGrad.addColorStop(0, palette.starGlow + (glowEased * 0.6).toFixed(3) + ')');
-            outerGrad.addColorStop(1, palette.starGlow + '0)');
-            ctx.fillStyle = outerGrad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, bloomSize, 0, Math.PI * 2);
-            ctx.fill();
-            opacity = Math.min(1, opacity + glowEased * 0.85);
-          }
-
-          ctx.globalAlpha = Math.max(0.06, Math.min(1, opacity));
-
-          if (p.isStar) {
-            ctx.fillStyle = isGlowing ? palette.coreColor : p.color;
-            drawFourPointStar(ctx, p.x, p.y, p.size * (isGlowing ? 1 + glowEased * 0.5 : 1), p.rotation);
-          } else {
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, shockRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = theme === 'light'
+            ? `rgba(2, 132, 199, ${shockAlpha.toFixed(3)})`
+            : `rgba(125, 211, 252, ${shockAlpha.toFixed(3)})`;
+          ctx.lineWidth = Math.max(1.5, 5.0 * (1 - shockProgress));
+          ctx.stroke();
+          ctx.restore();
         }
-        ctx.save();
-        ctx.globalAlpha = 1;
-        drawFrostmoon(ctx, curX, curY, curRadius, palette, frame, isDark, 0, 1);
-        ctx.restore();
-      }
-
-      // ── 7. Crystalline Frost Shockwave upon Arrival (100% Clear Center Tunnel) ──
-      if (isWarpingRef.current && warp > 0.52) {
-        const shockProgress = (warp - 0.52) / 0.48;
-        const maxR = Math.hypot(w, h) * 0.95;
-        const shockRadius = maxR * Math.pow(shockProgress, 0.78);
-        const shockAlpha = Math.sin(shockProgress * Math.PI) * 0.55;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, shockRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = theme === 'light'
-          ? `rgba(2, 132, 199, ${shockAlpha.toFixed(3)})`
-          : `rgba(125, 211, 252, ${shockAlpha.toFixed(3)})`;
-        ctx.lineWidth = Math.max(1.5, 5.0 * (1 - shockProgress));
-        ctx.stroke();
-        ctx.restore();
       }
 
       raf = requestAnimationFrame(animate);

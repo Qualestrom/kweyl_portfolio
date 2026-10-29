@@ -13,9 +13,12 @@ export default function App() {
   const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
-    const minDelay = new Promise(resolve => setTimeout(resolve, 5000));
+    const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
+    const fontsTimeout = new Promise(resolve => setTimeout(resolve, 2500));
+    const fontsReady = Promise.race([document.fonts.ready, fontsTimeout]);
+
     Promise.all([
-      document.fonts.ready,
+      fontsReady,
       minDelay,
     ]).then(() => setAppReady(true));
   }, []);
@@ -35,7 +38,11 @@ export default function App() {
       )}
 
       {/* Persistent celestial background — 3D Full Frostmoon, starfield & procedural constellations */}
-      <StellarBackground isWarping={isWarping} activeSection={activeSection} />
+      <StellarBackground
+        isWarping={isWarping}
+        loaderExited={loaderExited}
+        activeSection={activeSection}
+      />
 
       {/* Theme + Router shell */}
       <ThemeProvider>

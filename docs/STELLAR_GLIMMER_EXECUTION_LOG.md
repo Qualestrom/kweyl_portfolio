@@ -480,6 +480,43 @@ During empirical headless browser inspection of the live application against [`s
 | **Hydrated State Cross-fade** | 1440x900 | Seamless transition to live data at ~600ms with 0 layout shift | Verified in `12_reload_hydrated_complete.png` (600ms) | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 4.39s | ✅ PASS |
 
+---
+
+## 13. Snezhnayan Crystalline Dispatch Terminal (Anti-AI Contact Revamp)
+
+### Context & User Directive
+- **User Directive**: "Now, check the contacts page. How can we change its layout and content? It looks too generic and AI-ish."
+- **Problem**: The previous contact page suffered from 4 classic AI slop mannerisms:
+  1. Generic ChatGPT headline: *"Let's Build Something Exceptional"* with formulaic blue highlight.
+  2. Monospace eyebrow and badge spam: `"INITIATE CONTACT"` stacked right next to `"Open to Work"`.
+  3. SaaS box monoculture: Chopping every contact detail into identical, isolated dark rounded boxes that fragmented the layout and occluded the 3D Frostmoon craters behind an opaque slab.
+  4. Pseudo-form friction: A 3-field form that simply called `mailto:`, triggering OS errors or losing messages for users without a configured default desktop email client.
+
+### Architectural & Design Implementation
+1. **Human-Centric Editorial Presence** ([`src/sections/ContactSection.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/sections/ContactSection.jsx)):
+   - Replaced AI cliché with confident, direct copy: *"Have a project in mind, or an open role on your team? Let's talk."*
+   - Honest, grounded logistics: *"Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile development (React, React Native, Flutter, Supabase). Based in the Philippines (UTC+8) and open to remote worldwide and hybrid opportunities."*
+   - Integrated **Direct Email Hub**: Large selectable email (`chrislamera0408@gmail.com`), one-click copy with instant `"Copied!"` tactile confirmation, direct Gmail Web compose shortcut, and clear response SLA (*"Typically replies within 24 hours"*).
+2. **Crystalline Dispatch Terminal** ([`src/sections/ContactSection.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/sections/ContactSection.css)):
+   - **4 Instant Inquiry Intent Chips**: `[Full-Time Role]`, `[Contract / Project]`, `[Collaboration]`, `[General Inquiry]`. Selecting an intent dynamically contextualizes the subject and message placeholder without any decorative emoji bloat.
+   - **Translucent Cryo-Glass Surface**: Replaced opaque box with `backdrop-filter: blur(18px)` and delicate ice-sheen border (`rgba(56, 189, 248, 0.2)`), allowing the lunar maria and craters of the 3D Frostmoon to illuminate smoothly through the panel.
+   - **Dual Frictionless Actions**:
+     - `Send via Email Client`: Launches pre-filled mail composer.
+     - `Copy Draft Text`: Copies fully formatted email draft with sender, subject, and body to the clipboard with visual checkmark toast, allowing webmail users (Gmail, Outlook.com) to paste without losing their drafted writing.
+3. **Responsive Clearance & Contrast Protection**:
+   - Desktop ($\ge 1024\text{px}$): Calibrated `padding-left: clamp(210px, 16vw, 270px)` ensuring complete clearance and zero overlap with the floating `SectionLabels` sidebar.
+   - Mobile ($< 1024\text{px}$): Added soft radial vignette backdrop and typography shadow guaranteeing WCAG AA contrast ($\ge 4.5:1$) over bright lunar craters. Enforced `padding-bottom: calc(var(--mobile-nav-height, 72px) + 40px)` so submit buttons never clip under the mobile navigation bar.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Desktop Layout** | 1440x900 | Symmetrical 2-column split; 160px clearance from `SectionLabels`; translucent terminal over Frostmoon | Verified in `15_contact_desktop_revamped.png` | ✅ PASS |
+| **Mobile Legibility** | 390x844 | WCAG AA contrast over bright lunar craters; clean editorial presence | Verified in `16_contact_mobile_revamped.png` | ✅ PASS |
+| **Mobile Scrolled Bottom** | 390x844 | Full terminal visible; submit and copy buttons clear above mobile navigation bar | Verified in `18_contact_mobile_bottom.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 7.55s | ✅ PASS |
+
+
 
 
 

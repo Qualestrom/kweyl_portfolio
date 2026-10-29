@@ -12,7 +12,11 @@ import {
   Trash2, 
   Move,
   Layers,
-  CircleDot
+  CircleDot,
+  Orbit,
+  Atom,
+  Gem,
+  Shield
 } from 'lucide-react';
 import './ImageCropperModal.css';
 
@@ -21,31 +25,31 @@ export const FRAME_ANIMATIONS = [
     id: 'orbit',
     name: 'Cosmic Orbit',
     desc: 'Rotating orbital dashed ring with smooth float',
-    icon: '🪐',
+    icon: Orbit,
   },
   {
     id: 'pulse',
     name: 'Pulse Glow',
     desc: 'Breathing radiant halo glow with wave float',
-    icon: '✨',
+    icon: Sparkles,
   },
   {
     id: 'quantum',
     name: 'Quantum Spin',
     desc: 'Dual counter-rotating cyber rings',
-    icon: '⚛️',
+    icon: Atom,
   },
   {
     id: 'hologram',
     name: 'Cryo Hologram',
     desc: 'Futuristic scanline sheen & elevation',
-    icon: '💎',
+    icon: Gem,
   },
   {
     id: 'static',
     name: 'Static Sleek',
     desc: 'Clean, elegant frosted glass frame',
-    icon: '🛡️',
+    icon: Shield,
   },
 ];
 
@@ -353,7 +357,13 @@ export default function ImageCropperModal({
                       className={`cropper-anim-card ${isSelected ? 'active' : ''}`}
                       onClick={() => setSelectedAnimation(anim.id)}
                     >
-                      <div className="cropper-anim-card-icon">{anim.icon}</div>
+                      <div className="cropper-anim-card-icon">
+                        {typeof anim.icon === 'function' || typeof anim.icon === 'object' ? (
+                          <anim.icon size={18} className="cropper-anim-icon-svg" />
+                        ) : (
+                          anim.icon
+                        )}
+                      </div>
                       <div className="cropper-anim-card-text">
                         <div className="cropper-anim-name">{anim.name}</div>
                         <div className="cropper-anim-desc">{anim.desc}</div>

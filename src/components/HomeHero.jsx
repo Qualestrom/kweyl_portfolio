@@ -218,6 +218,21 @@ export default function HomeHero({
   const subHeadlineText = config.heroSub || "Cross-platform developer specializing in React and Flutter. I deliver rapid, pixel-perfect web and mobile solutions while building scalable architectures that anticipate future needs.";
   const profileImage = config.heroProfileImage || null;
   const frameAnimation = config.heroFrameAnimation || 'orbit';
+
+  // Global test hook to verify ImageCropperModal rendering
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__testOpenCropper = (anim = 'quantum') => {
+        setTempImageSource(profileImage || null);
+        setCropperModalOpen(true);
+      };
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__testOpenCropper;
+      }
+    };
+  }, [profileImage]);
   const btnPrimaryText = config.heroBtnPrimaryText || "View Projects";
   const btnSecondaryText = config.heroBtnSecondaryText || "Download CV";
   const cvUrl = config.heroCvUrl || "/assets/recovered/resumes/Lamera_Resume.pdf";

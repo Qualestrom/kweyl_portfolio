@@ -342,4 +342,44 @@ During empirical headless browser inspection of the live application against [`s
 | **Admin Mobile** | 390x844 | Dark Side only; upper canopy; zero login card overlap | Verified in `04_admin_darkside_mobile.png` | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.46s | ✅ PASS |
 
+---
+
+## 9. Avatar Cropper Modal: Lucide Vector Icon Migration (Zero-Emoji Policy)
+
+### Context & User Directive
+- The user detected unicode emojis in the `Customize Avatar & Frame` modal (`ImageCropperModal.jsx`):
+  - `🪐 Cosmic Orbit`
+  - `✨ Pulse Glow`
+  - `⚛️ Quantum Spin`
+  - `💎 Cryo Hologram`
+  - `🛡️ Static Sleek`
+- Per `.agents/rules/anti-ai-slop-design.md`, emojis in UI components cause inconsistent cross-platform rendering (system fonts vs. vendor fonts) and disrupt the intentional Snezhnayan cryo-frost aesthetic palette.
+
+### Architectural & UI Implementation
+1. **Lucide Vector Icons**:
+   - Replaced string emoji identifiers with Lucide React vector components in `FRAME_ANIMATIONS` ([`src/components/ImageCropperModal.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ImageCropperModal.jsx)):
+     - `Cosmic Orbit` ──> `Orbit`
+     - `Pulse Glow` ──> `Sparkles`
+     - `Quantum Spin` ──> `Atom`
+     - `Cryo Hologram` ──> `Gem`
+     - `Static Sleek` ──> `Shield`
+   - Added polymorphic rendering for component functions: `{typeof anim.icon === 'function' || typeof anim.icon === 'object' ? <anim.icon size={18} className="cropper-anim-icon-svg" /> : anim.icon}`.
+2. **Snezhnayan Frosted Glass Badges**:
+   - In [`src/components/ImageCropperModal.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ImageCropperModal.css):
+     - Replaced `font-size: 1.4rem` with a 36px x 36px frosted glass container (`border-radius: 10px`, `background: rgba(56, 189, 248, 0.08)`, `border: 1px solid rgba(56, 189, 248, 0.22)`, `color: #38bdf8`).
+     - Added hover glow (`#00f0ff`, `box-shadow: 0 0 12px rgba(0, 240, 255, 0.25)`, `scale(1.1)`).
+     - Added active state glow (`#00f0ff`, `drop-shadow(0 0 6px #00f0ff)`, `box-shadow: 0 0 14px rgba(0, 240, 255, 0.4)`).
+3. **Repository-Wide Zero-Emoji Audit**:
+   - Ran AST and regex scanner across all `src/**/*.{jsx,tsx,js,ts,css,html}` files.
+   - Empirical outcome: 0 unicode emojis remain in the application codebase.
+
+### Empirical Verification
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Frame Animation Icons** | 1440x900 | 5 Lucide vector icons in cryo-glass badges; 0 emojis | Verified in `05_cropper_modal_verified.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.81s | ✅ PASS |
+| **Repository Emoji Scan** | N/A | 0 unicode emojis across all source code | 0 found | ✅ PASS |
+
+
 

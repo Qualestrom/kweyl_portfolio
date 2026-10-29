@@ -287,8 +287,44 @@
 }
 
 .cropper-anim-card-icon {
-  font-size: 1.4rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #38bdf8;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.cropper-anim-icon-svg {
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.cropper-anim-card:hover .cropper-anim-card-icon {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+}
+
+.cropper-anim-card:hover .cropper-anim-icon-svg {
+  transform: scale(1.1);
+}
+
+.cropper-anim-card.active .cropper-anim-card-icon {
+  background: rgba(0, 240, 255, 0.18);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+}
+
+.cropper-anim-card.active .cropper-anim-icon-svg {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 6px #00f0ff);
 }
 
 .cropper-anim-card-text {

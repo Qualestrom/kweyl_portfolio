@@ -516,6 +516,32 @@ During empirical headless browser inspection of the live application against [`s
 | **Mobile Scrolled Bottom** | 390x844 | Full terminal visible; submit and copy buttons clear above mobile navigation bar | Verified in `18_contact_mobile_bottom.png` | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 7.55s | ✅ PASS |
 
+---
+
+## 14. Contact Container Hue Alignment with About Bento System
+
+### Context & User Directive
+- **User Directive**: "Some texts can't be seen due to the moon. Have the containers have the same hue as the containers on the about page."
+- **Issue**: The previous terminal container was too translucent (`rgba(15, 23, 42, 0.55)` with 18px blur) and the left column lacked a desktop container. In viewports where the Frostmoon is rendered directly behind the content, the bright lunar craters and atmospheric corona glared through the panel, reducing legibility on form labels, intent chips, and paragraph text.
+
+### Architectural & Surface Harmonization
+1. **Identical Bento Container Hue** ([`src/sections/ContactSection.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/sections/ContactSection.css#L70-L100)):
+   - Unified both the Left (Presence) and Right (Terminal) columns into twin `.contact-bento-card` containers matching the exact surface hue of the About page (`AboutSection.jsx` bento cards):
+     - Dark Mode: `background: rgba(15, 23, 42, 0.78)` (`bg-slate-900/80`), `border: 1px solid rgba(255, 255, 255, 0.10)`, `backdrop-filter: blur(24px)`, and `box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55)`.
+     - Light Mode: `background: rgba(255, 255, 255, 0.95)`, `border: 1px solid rgba(226, 232, 240, 0.90)`, and `box-shadow: 0 12px 36px -6px rgba(15, 23, 42, 0.07)`.
+2. **Total Optical Contrast & Protection**:
+   - The headline, bio lead, status badge, direct email hub, intent pills, and form inputs are now completely protected from lunar glare with high-contrast text rendering exceeding WCAG AA standards.
+   - Symmetrical card heights and corner radii (`24px` / `rounded-3xl`) harmonize with the About section layout.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Desktop Symmetrical Bento** | 1440x900 | Twin bento containers with exact About page hue (`rgba(15, 23, 42, 0.78)`); zero text washed out by moon | Verified in `19_contact_desktop_about_hue.png` | ✅ PASS |
+| **Mobile Protected View** | 390x844 | Presence card solidly shields text from lunar glare; clear contrast | Verified in `20_contact_mobile_about_hue.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 3.52s | ✅ PASS |
+
+
 
 
 

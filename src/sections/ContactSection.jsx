@@ -122,37 +122,37 @@ export default function ContactSection({ config, isAdmin, isLoading = false }) {
 
   return (
     <section className="section-viewport contact-viewport overflow-y-auto lg:overflow-hidden" id="contact-section">
-      <div className="section-content contact-section-content w-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-[230px] xl:pl-[270px] lg:pr-8 xl:pr-14 max-w-[1480px] my-auto">
+      <div className="section-content contact-section-content w-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-[210px] xl:pl-[250px] lg:pr-8 xl:pr-14 max-w-[1480px] my-auto">
         
         <div className="contact-grid">
           
-          {/* ─── Left Column: Presence, Status, & Direct Channels ─── */}
+          {/* ─── Left Bento Card: Presence, Status, & Direct Channels ─── */}
           <motion.div
-            className="contact-presence-column"
+            className="contact-bento-card contact-presence-card"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Live Availability Status */}
-            <div className="contact-status-beacon">
-              <span className="contact-status-dot" />
-              <span className="contact-status-text">
-                {config?.aboutStatus || 'Available for Full-Time Roles & High-Impact Contracts'}
-              </span>
+            {/* Top Group: Status + Headline + Bio */}
+            <div className="contact-presence-header-group">
+              <div className="contact-status-beacon">
+                <span className="contact-status-dot" />
+                <span className="contact-status-text">
+                  {config?.aboutStatus || 'Available for Full-Time Roles & High-Impact Contracts'}
+                </span>
+              </div>
+
+              <h2 className="contact-headline">
+                Have a project in mind, or an open role on your team?{' '}
+                <span className="contact-headline-accent">Let's talk.</span>
+              </h2>
+
+              <p className="contact-bio-lead">
+                Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile development (React, React Native, Flutter, Supabase). Based in the Philippines (UTC+8) and open to remote worldwide and hybrid opportunities.
+              </p>
             </div>
 
-            {/* Confident, Human-Crafted Headline */}
-            <h2 className="contact-headline">
-              Have a project in mind, or an open role on your team?{' '}
-              <span className="contact-headline-accent">Let's talk.</span>
-            </h2>
-
-            {/* Authentic Bio Context */}
-            <p className="contact-bio-lead">
-              Computer Engineering graduate specializing in Full-Stack Web and Cross-Platform Mobile development (React, React Native, Flutter, Supabase). Based in the Philippines (UTC+8) and open to remote worldwide and hybrid opportunities.
-            </p>
-
-            {/* Direct Email Hub (High-Tactility Primary Channel) */}
+            {/* Middle: Direct Email Hub */}
             <div className="contact-email-hub">
               <div className="contact-email-header">
                 <span className="contact-email-label">
@@ -215,7 +215,7 @@ export default function ContactSection({ config, isAdmin, isLoading = false }) {
               </div>
             </div>
 
-            {/* Profiles & External Links */}
+            {/* Bottom: Profiles & Verification Links */}
             <div className="contact-channels-block">
               <span className="contact-channels-title">Profiles &amp; Verification</span>
               <div className="contact-channels-list">
@@ -250,147 +250,144 @@ export default function ContactSection({ config, isAdmin, isLoading = false }) {
 
           </motion.div>
 
-          {/* ─── Right Column: Crystalline Dispatch Terminal ─── */}
+          {/* ─── Right Bento Card: Crystalline Dispatch Terminal ─── */}
           <motion.div
-            className="contact-terminal-column"
+            className="contact-bento-card contact-terminal-card"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="contact-terminal-panel">
+            {/* Terminal Header */}
+            <div className="contact-terminal-header">
+              <div className="contact-terminal-title-wrap">
+                <div className="contact-terminal-icon">
+                  <MessageSquare size={16} />
+                </div>
+                <div>
+                  <h3 className="contact-terminal-heading">Crystalline Dispatch Terminal</h3>
+                  <p className="contact-terminal-sub">Select your inquiry intent or draft a direct message</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Inquiry Intent Selector Chips */}
+            <div className="contact-intents-wrapper">
+              <span className="contact-intents-label">Inquiry Intent</span>
+              <div className="contact-intents-chips">
+                {CONTACT_INTENTS.map((intent) => {
+                  const isSelected = selectedIntentId === intent.id;
+                  const IntentIcon = intent.icon;
+                  return (
+                    <button
+                      key={intent.id}
+                      type="button"
+                      onClick={() => handleSelectIntent(intent.id)}
+                      className={`contact-intent-chip ${isSelected ? 'active' : ''}`}
+                    >
+                      <IntentIcon size={12} className={isSelected ? 'text-sky-300' : 'text-slate-400'} />
+                      <span>{intent.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Dispatch Form */}
+            <form onSubmit={handleSubmit} className="contact-form">
               
-              {/* Terminal Header */}
-              <div className="contact-terminal-header">
-                <div className="contact-terminal-title-wrap">
-                  <div className="contact-terminal-icon">
-                    <MessageSquare size={16} />
-                  </div>
-                  <div>
-                    <h3 className="contact-terminal-heading">Crystalline Dispatch Terminal</h3>
-                    <p className="contact-terminal-sub">Select your inquiry intent or draft a direct message</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Inquiry Intent Selector Chips */}
-              <div className="contact-intents-wrapper">
-                <span className="contact-intents-label">Inquiry Intent</span>
-                <div className="contact-intents-chips">
-                  {CONTACT_INTENTS.map((intent) => {
-                    const isSelected = selectedIntentId === intent.id;
-                    const IntentIcon = intent.icon;
-                    return (
-                      <button
-                        key={intent.id}
-                        type="button"
-                        onClick={() => handleSelectIntent(intent.id)}
-                        className={`contact-intent-chip ${isSelected ? 'active' : ''}`}
-                      >
-                        <IntentIcon size={12} className={isSelected ? 'text-sky-300' : 'text-slate-400'} />
-                        <span>{intent.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Dispatch Form */}
-              <form onSubmit={handleSubmit} className="contact-form">
-                
-                <div className="contact-form-row">
-                  <div className="contact-input-group">
-                    <label htmlFor="contact-sender-name" className="contact-input-label">
-                      Your Name
-                    </label>
-                    <input
-                      id="contact-sender-name"
-                      type="text"
-                      name="name"
-                      className="contact-input"
-                      placeholder="e.g. Christopher"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="contact-input-group">
-                    <label htmlFor="contact-sender-email" className="contact-input-label">
-                      Your Email Address
-                    </label>
-                    <input
-                      id="contact-sender-email"
-                      type="email"
-                      name="email"
-                      className="contact-input"
-                      placeholder="your.email@domain.com"
-                      required
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
+              <div className="contact-form-row">
                 <div className="contact-input-group">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="contact-sender-message" className="contact-input-label">
-                      Message Body
-                    </label>
-                    <span className="contact-input-hint">
-                      Topic: {activeIntent.label}
-                    </span>
-                  </div>
-                  <textarea
-                    id="contact-sender-message"
-                    name="message"
-                    className="contact-textarea"
-                    placeholder={activeIntent.placeholder}
+                  <label htmlFor="contact-sender-name" className="contact-input-label">
+                    Your Name
+                  </label>
+                  <input
+                    id="contact-sender-name"
+                    type="text"
+                    name="name"
+                    className="contact-input"
+                    placeholder="e.g. Christopher"
                     required
-                    rows={4}
-                    value={formData.message}
+                    value={formData.name}
                     onChange={handleChange}
                   />
                 </div>
 
-                {/* Dual-Action Dispatch Row */}
-                <div className="contact-actions-row">
-                  <button
-                    type="submit"
-                    className="contact-btn-submit"
-                    disabled={isSending}
-                  >
-                    <Send size={14} />
-                    <span>{isSending ? 'Opening Mail Client...' : 'Send via Email Client'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCopyDraft}
-                    className={`contact-btn-copy-draft ${copiedDraft ? 'contact-btn-copy-draft--success' : ''}`}
-                    title="Copy formatted draft to paste in browser webmail (Gmail / Outlook)"
-                  >
-                    {copiedDraft ? (
-                      <>
-                        <CheckCircle2 size={14} className="text-emerald-400" />
-                        <span>Draft Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={14} />
-                        <span>Copy Draft Text</span>
-                      </>
-                    )}
-                  </button>
+                <div className="contact-input-group">
+                  <label htmlFor="contact-sender-email" className="contact-input-label">
+                    Your Email Address
+                  </label>
+                  <input
+                    id="contact-sender-email"
+                    type="email"
+                    name="email"
+                    className="contact-input"
+                    placeholder="your.email@domain.com"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
                 </div>
+              </div>
 
-                {/* Webmail assistance notice */}
-                <div className="contact-form-footer-hint">
-                  <span>* Using browser webmail? Click <strong>Copy Draft Text</strong> to paste directly into your open Gmail or Outlook tab.</span>
+              <div className="contact-input-group">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="contact-sender-message" className="contact-input-label">
+                    Message Body
+                  </label>
+                  <span className="contact-input-hint">
+                    Topic: {activeIntent.label}
+                  </span>
                 </div>
+                <textarea
+                  id="contact-sender-message"
+                  name="message"
+                  className="contact-textarea"
+                  placeholder={activeIntent.placeholder}
+                  required
+                  rows={4}
+                  value={formData.message}
+                  onChange={handleChange}
+                />
+              </div>
 
-              </form>
+              {/* Dual-Action Dispatch Row */}
+              <div className="contact-actions-row">
+                <button
+                  type="submit"
+                  className="contact-btn-submit"
+                  disabled={isSending}
+                >
+                  <Send size={14} />
+                  <span>{isSending ? 'Opening Mail Client...' : 'Send via Email Client'}</span>
+                </button>
 
-            </div>
+                <button
+                  type="button"
+                  onClick={handleCopyDraft}
+                  className={`contact-btn-copy-draft ${copiedDraft ? 'contact-btn-copy-draft--success' : ''}`}
+                  title="Copy formatted draft to paste in browser webmail (Gmail / Outlook)"
+                >
+                  {copiedDraft ? (
+                    <>
+                      <CheckCircle2 size={14} className="text-emerald-400" />
+                      <span>Draft Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} />
+                      <span>Copy Draft Text</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Webmail assistance notice */}
+              <div className="contact-form-footer-hint">
+                <span>* Using browser webmail? Click <strong>Copy Draft Text</strong> to paste directly into your open Gmail or Outlook tab.</span>
+              </div>
+
+            </form>
+
           </motion.div>
 
         </div>

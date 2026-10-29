@@ -676,6 +676,16 @@ export default function CertificatesCarousel({ isAdmin = false }) {
   // Fetch certificates from Supabase or Firestore
   useEffect(() => {
     let isMounted = true;
+    const startTime = Date.now();
+
+    const finishLoading = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 600 - elapsed);
+      setTimeout(() => {
+        if (isMounted) setLoading(false);
+      }, remaining);
+    };
+
     const fetchCertificates = async () => {
       try {
         if (isSupabaseConfigured && supabase) {
@@ -696,7 +706,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
                 try {
                   localStorage.setItem('portfolio_certificates', JSON.stringify(list));
                 } catch (_) {}
-                setLoading(false);
+                finishLoading();
                 return;
               }
             }
@@ -729,7 +739,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
         console.warn('Fetch certificates fallback:', err);
         if (isMounted) setCertificates(FALLBACK_CERTIFICATES);
       } finally {
-        if (isMounted) setLoading(false);
+        finishLoading();
       }
     };
 
@@ -1008,7 +1018,7 @@ export default function CertificatesCarousel({ isAdmin = false }) {
     }
   };
 
-  if (loading && (!certificates || certificates.length === 0)) {
+  if (loading) {
     return <CertificatesScaffold />;
   }
 

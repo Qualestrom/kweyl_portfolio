@@ -177,7 +177,16 @@ export default function HomeHero({
   isAdmin = false,
   onUpdateConfig,
   onNavigateProjects = null,
+  isLoading = false,
 }) {
+  if (isLoading) {
+    return (
+      <section className="home-hero-viewport" id="hero-section">
+        <HeroScaffold />
+      </section>
+    );
+  }
+
   const [imageError, setImageError] = useState(false);
 
   // Modals state

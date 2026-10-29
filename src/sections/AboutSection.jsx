@@ -19,8 +19,8 @@ const STATUS_OPTIONS = [
   { label: 'Not Available', available: false },
 ];
 
-export default function AboutSection({ config, isAdmin, onUpdateConfig, onNavigateContact }) {
-  if (!config) {
+export default function AboutSection({ config, isAdmin, onUpdateConfig, onNavigateContact, isLoading = false }) {
+  if (isLoading || !config) {
     return (
       <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="about-section">
         <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-[190px] xl:pl-[240px] lg:pr-8 xl:pr-14 max-w-[1480px] pt-8 sm:pt-14 pb-24 sm:pb-28 lg:py-0 my-auto">

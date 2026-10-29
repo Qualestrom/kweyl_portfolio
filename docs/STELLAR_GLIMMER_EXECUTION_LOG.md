@@ -448,6 +448,39 @@ During empirical headless browser inspection of the live application against [`s
 | **About Scaffold** | 1440x900 | Role headline, status pill, 4 domain skill card skeletons | Verified in `10_scaffold_about_live.png` | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.66s | ✅ PASS |
 
+---
+
+## 12. Reload Scaffold Hydration & Active State Synchronization
+
+### Context & User Directive
+- **User Directive**: "The scaffolds are not showing when the website reloads. The scaffolds should show while the website is loading the data."
+- **Issue**: On page refresh (F5/Cmd+R), components popped in abruptly without showing the crystalline loading scaffolds because initial state was pre-populated with fallback constants or cached `localStorage` data, making conditions like `if (loading && projects.length === 0)` evaluate to `false`.
+
+### Root Cause Analysis
+1. **Fallback Initial State**: `ProjectsShowcase` and `CertificatesCarousel` initialized their `projects` and `certificates` states with fallback arrays (`FALLBACK_PROJECTS`, `FALLBACK_CERTIFICATES`) or `localStorage`. As a result, array lengths were $> 0$ at mount time.
+2. **Missing Active Config State**: `PortfolioSPA` lacked an explicit `isConfigLoading` state, assuming instantaneous local fallback without giving `HomeHero` or `AboutSection` a signal to display their respective scaffolds during initial database queries.
+
+### Resolution & Synchronization Architecture
+1. **Strict Active Loading Gate**:
+   - In `ProjectsShowcase.jsx`: Changed condition to `if (loading) return <ProjectsScaffold />;`.
+   - In `CertificatesCarousel.jsx`: Changed condition to `if (loading) return <CertificatesScaffold />;`.
+2. **Hydration Window Calibration (`finishLoading`)**:
+   - Added a calibrated minimum 600ms display window in `PortfolioSPA.jsx`, `ProjectsShowcase.jsx`, and `CertificatesCarousel.jsx`.
+   - This ensures the cryo-scaffolds visibly bridge the asynchronous hydration gap smoothly with zero flicker before cross-fading into live data.
+3. **Piped `isLoading` Prop**:
+   - In `PortfolioSPA.jsx`: Added `const [isConfigLoading, setIsConfigLoading] = useState(true);` and passed `isLoading: isConfigLoading` in `sharedProps`.
+   - In `HomeHero.jsx`: Added `isLoading` prop; returns `<HeroScaffold />` when `isLoading === true`.
+   - In `AboutSection.jsx`: Added `isLoading` prop; returns `<AboutScaffold />` when `isLoading || !config`.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Page Reload Scaffold** | 1440x900 | Active Hero & Section scaffolds render immediately upon reload | Verified in `11_reload_scaffold_active.png` (240ms) | ✅ PASS |
+| **Hydrated State Cross-fade** | 1440x900 | Seamless transition to live data at ~600ms with 0 layout shift | Verified in `12_reload_hydrated_complete.png` (600ms) | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 4.39s | ✅ PASS |
+
+
 
 
 

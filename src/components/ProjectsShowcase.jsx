@@ -506,6 +506,16 @@ export default function ProjectsShowcase({ isAdmin = false }) {
   // Fetch projects from Supabase or Firestore
   useEffect(() => {
     let isMounted = true;
+    const startTime = Date.now();
+
+    const finishLoading = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 600 - elapsed);
+      setTimeout(() => {
+        if (isMounted) setLoading(false);
+      }, remaining);
+    };
+
     const fetchProjects = async () => {
       try {
         // 1. Try Supabase first if configured
@@ -525,7 +535,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
                 setProjects(list);
                 try { localStorage.setItem('portfolio_projects', JSON.stringify(list)); } catch (_) {}
                 setIndex(0);
-                setLoading(false);
+                finishLoading();
                 return;
               }
             }
@@ -571,7 +581,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
           setIndex(0);
         }
       } finally {
-        if (isMounted) setLoading(false);
+        finishLoading();
       }
     };
 
@@ -1076,7 +1086,7 @@ export default function ProjectsShowcase({ isAdmin = false }) {
     }
   };
 
-  if (loading && (!displayedProjects || displayedProjects.length === 0)) {
+  if (loading) {
     return <ProjectsScaffold />;
   }
 

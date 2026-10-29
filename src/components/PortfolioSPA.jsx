@@ -67,6 +67,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
       return DEFAULT_CONFIG;
     }
   });
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   const { triggerMainframeAccess } = useMainframe();
   const konamiIndexRef = useRef(0);
@@ -74,6 +75,17 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
 
   // Real-time Supabase / Firestore sync
   useEffect(() => {
+    let isMounted = true;
+    const startTime = Date.now();
+
+    const finishLoading = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 600 - elapsed);
+      setTimeout(() => {
+        if (isMounted) setIsConfigLoading(false);
+      }, remaining);
+    };
+
     if (isSupabaseConfigured && supabase) {
       supabase
         .from('config')
@@ -94,8 +106,10 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
               return merged;
             });
           }
-        });
-      return;
+          finishLoading();
+        })
+        .catch(finishLoading);
+      return () => { isMounted = false; };
     }
 
     const docRef = doc(db, 'config', 'main');
@@ -112,13 +126,22 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
             return merged;
           });
         }
+        finishLoading();
       },
       (err) => {
         console.warn('Firestore real-time sync notice:', err);
+        finishLoading();
       }
     );
 
-    return () => unsubscribe();
+    // Fallback safety timeout so scaffolds never stay indefinitely
+    const safety = setTimeout(finishLoading, 1500);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safety);
+      unsubscribe();
+    };
   }, []);
 
   // Update config in state, local cache, and Supabase / Firestore
@@ -327,7 +350,12 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     handleUpdateConfig('isMaintenanceMode', !config.isMaintenanceMode);
   };
 
-  const sharedProps = { config, isAdmin, onUpdateConfig: handleUpdateConfig };
+  const sharedProps = { 
+    config, 
+    isAdmin, 
+    onUpdateConfig: handleUpdateConfig,
+    isLoading: isConfigLoading 
+  };
 
   return (
     <>

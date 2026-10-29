@@ -31,6 +31,7 @@ import { isPdfFile, renderPdfFirstPageToImage, extractPdfCertificateMetadata } f
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 import useInputDevice from '../utils/useInputDevice';
+import { CertificatesScaffold } from './common/LoadingScaffold';
 
 const FALLBACK_CERTIFICATES = [
   {
@@ -1006,6 +1007,10 @@ export default function CertificatesCarousel({ isAdmin = false }) {
       alert('Error pushing defaults to database.');
     }
   };
+
+  if (loading && (!certificates || certificates.length === 0)) {
+    return <CertificatesScaffold />;
+  }
 
   return (
     <div className="w-full flex flex-col justify-center select-none py-3 sm:py-5">

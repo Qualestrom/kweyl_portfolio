@@ -29,6 +29,7 @@ import { isGitHubRepoUrl, fetchGitHubRepoMetadata } from '../utils/githubUtils';
 import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 import useInputDevice from '../utils/useInputDevice';
+import { ProjectsScaffold } from './common/LoadingScaffold';
 
 // Status badge configurations for projects (Deployed, In Progress, Confidential)
 const PROJECT_STATUS_CONFIG = {
@@ -1074,6 +1075,10 @@ export default function ProjectsShowcase({ isAdmin = false }) {
       window.open(ensureAbsoluteUrl(targetUrl), '_blank', 'noopener,noreferrer');
     }
   };
+
+  if (loading && (!displayedProjects || displayedProjects.length === 0)) {
+    return <ProjectsScaffold />;
+  }
 
   return (
     <div className="w-full h-full flex flex-col justify-center max-w-6xl mx-auto">

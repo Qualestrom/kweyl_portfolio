@@ -22,6 +22,7 @@ import ResumeUploadModal from './ResumeUploadModal';
 import ResumeViewerOverlay from './ResumeViewerOverlay';
 import { subscribeToActiveResume } from '../utils/resumeDb';
 import { getLinkIconType, ensureAbsoluteUrl } from '../utils/imageUtils';
+import { HeroScaffold } from './common/LoadingScaffold';
 import './HomeHero.css';
 
 // ─── Crisp Vector Social / Platform Icons ────────────────────────────────────────

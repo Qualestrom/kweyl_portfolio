@@ -9,6 +9,7 @@ import {
   X
 } from 'lucide-react';
 import EditableText from '../components/EditableText';
+import { AboutScaffold } from '../components/common/LoadingScaffold';
 
 // Predefined statuses the admin can cycle through
 const STATUS_OPTIONS = [
@@ -19,6 +20,16 @@ const STATUS_OPTIONS = [
 ];
 
 export default function AboutSection({ config, isAdmin, onUpdateConfig, onNavigateContact }) {
+  if (!config) {
+    return (
+      <section className="section-viewport overflow-y-auto lg:overflow-hidden" id="about-section">
+        <div className="section-content w-full min-h-full flex flex-col justify-start lg:justify-center items-center px-4 sm:px-8 lg:pl-[190px] xl:pl-[240px] lg:pr-8 xl:pr-14 max-w-[1480px] pt-8 sm:pt-14 pb-24 sm:pb-28 lg:py-0 my-auto">
+          <AboutScaffold />
+        </div>
+      </section>
+    );
+  }
+
   // Admin-only state for inline skill adding
   const [addingTo, setAddingTo] = useState(null);
   const [newSkillText, setNewSkillText] = useState('');

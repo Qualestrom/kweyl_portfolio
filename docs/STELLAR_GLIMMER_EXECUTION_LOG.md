@@ -416,6 +416,39 @@ During empirical headless browser inspection of the live application against [`s
 | **Main Bundle Shrinkage** | N/A | Reduced from 1,938 kB to 1,508 kB (Gzip: 445 kB) | Built in 2.21s with split `pdf` and `AdminDashboard` chunks | ✅ PASS |
 | **Project Image Weight** | N/A | Raw PNGs replaced by WebP (~88% payload reduction) | 5.0 MB -> 628 KB | ✅ PASS |
 
+---
+
+## 11. Snezhnayan Crystalline Loading Scaffolds Architecture
+
+### Context & User Directive
+- The user observed that without structured loading visual feedback, asynchronous data hydration (Firestore queries, image decoding, remote fonts) causes perceived sluggishness or pop-in.
+- Requested the addition of systematic **loading scaffolds** across the portfolio to provide instantaneous spatial structure and eliminate layout shifts.
+
+### Architectural & Component Implementation
+1. **Universal Cryo-Frost Skeleton System** ([`src/components/common/LoadingScaffold.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/common/LoadingScaffold.jsx) / [`.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/common/LoadingScaffold.css)):
+   - **`ScaffoldBlock`**: Atomic primitive with theme-adaptive cryo-glass surfaces (`rgba(15, 23, 42, 0.45)` dark / `rgba(226, 232, 240, 0.65)` light) and an angled 105° celestial laser sweep animation (`@keyframes cryo-scaffold-laser`).
+   - **`ScaffoldPanel`**: Frosted glass card container with cyan constellation micro-nodes at all four corners.
+   - **`ScaffoldText`**: Multi-line typography skeleton with organic varying line widths.
+2. **Dedicated Section Scaffolds**:
+   - **`<ProjectsScaffold />`**: Mirrors `ProjectsShowcase` with filter tabs, eyebrow tag, project headline, category/status pills, description lines, tech chips, action buttons, 16:10 media screen with rotating dashed quantum aperture, and thumbnail strip.
+   - **`<CertificatesScaffold />`**: Mirrors `CertificatesCarousel` with 3D stacked deck perspective (center card with diamond accreditation seal, title bar, frame; left/right 3D tilted peek cards; navigation controls).
+   - **`<HeroScaffold />`**: Mirrors `HomeHero` with greeting pill, display headline rows, bio paragraph, action buttons, social badges, and circular avatar frame with rotating dashed orbital ring.
+   - **`<AboutScaffold />`**: Mirrors `AboutSection` with status badge, role title, bio, and 4 domain skill category panels.
+3. **Integration**:
+   - Wired into `ProjectsShowcase` (`loading && projects.length === 0`), `CertificatesCarousel` (`loading && certificates.length === 0`), `AboutSection` (`!config`), `HomeHero` (`!config`), and `App.jsx` (`AdminDashboard` Suspense fallback).
+   - Added interactive `/scaffolds` preview route ([`src/pages/ScaffoldsPreview.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/pages/ScaffoldsPreview.jsx)) for design verification.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Projects Scaffold** | 1440x900 | Filter tabs, media screen with aperture, info column, thumbs | Verified in `07_scaffold_projects_live.png` | ✅ PASS |
+| **Certificates Scaffold** | 1440x900 | 3D stacked deck with tilted peek cards, accreditation seal | Verified in `08_scaffold_certificates_live.png` | ✅ PASS |
+| **Hero Scaffold** | 1440x900 | Headline rows, action buttons, avatar orbit ring skeleton | Verified in `09_scaffold_hero_live.png` | ✅ PASS |
+| **About Scaffold** | 1440x900 | Role headline, status pill, 4 domain skill card skeletons | Verified in `10_scaffold_about_live.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.66s | ✅ PASS |
+
+
 
 
 

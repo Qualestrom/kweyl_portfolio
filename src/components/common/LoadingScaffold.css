@@ -1,0 +1,331 @@
+/* ============================================================
+   Snezhnayan Cryo-Frost Loading Scaffolds & Skeletons
+   Systematic Design Tokens & Theme Adaptive Architecture
+   ============================================================ */
+
+/* Base Skeleton Primitive */
+.cryo-scaffold-base {
+  position: relative;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+[data-theme='light'] .cryo-scaffold-base {
+  background: rgba(226, 232, 240, 0.65);
+  border-color: rgba(8, 145, 178, 0.16);
+}
+
+/* 45-degree Angled Laser Sheen Sweep */
+.cryo-scaffold-base::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(56, 189, 248, 0.04) 30%,
+    rgba(0, 240, 255, 0.18) 50%,
+    rgba(56, 189, 248, 0.04) 70%,
+    transparent 85%
+  );
+  transform: translateX(-120%);
+  animation: cryo-scaffold-laser 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+[data-theme='light'] .cryo-scaffold-base::after {
+  background: linear-gradient(
+    105deg,
+    transparent 15%,
+    rgba(8, 145, 178, 0.04) 30%,
+    rgba(8, 145, 178, 0.22) 50%,
+    rgba(8, 145, 178, 0.04) 70%,
+    transparent 85%
+  );
+}
+
+@keyframes cryo-scaffold-laser {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* Micro Crystalline Pulse for Major Panels */
+.cryo-scaffold-panel {
+  position: relative;
+  background: rgba(7, 12, 24, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(56, 189, 248, 0.04);
+  backdrop-filter: blur(16px);
+}
+
+[data-theme='light'] .cryo-scaffold-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(8, 145, 178, 0.22);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08), inset 0 0 20px rgba(8, 145, 178, 0.04);
+}
+
+/* Constellation Corner Nodes for Scaffolds */
+.cryo-scaffold-corner-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #00f0ff;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cryo-scaffold-corner-node.tl { top: 8px; left: 8px; }
+.cryo-scaffold-corner-node.tr { top: 8px; right: 8px; }
+.cryo-scaffold-corner-node.bl { bottom: 8px; left: 8px; }
+.cryo-scaffold-corner-node.br { bottom: 8px; right: 8px; }
+
+/* ─── Projects Section Scaffold Layout ─── */
+.projects-scaffold-container {
+  width: 100%;
+  height: 100%;
+  max-width: 1152px; /* max-w-6xl */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px;
+  gap: 20px;
+}
+
+.projects-scaffold-top-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.projects-scaffold-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .projects-scaffold-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+.projects-scaffold-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.projects-scaffold-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.projects-scaffold-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.projects-scaffold-media-aperture {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border: 1.5px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+  animation: cryo-scaffold-spin 10s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projects-scaffold-media-aperture::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #00f0ff;
+}
+
+@keyframes cryo-scaffold-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.projects-scaffold-thumbs {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ─── Certificates Section Scaffold Layout ─── */
+.certificates-scaffold-container {
+  width: 100%;
+  height: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  gap: 24px;
+}
+
+.certificates-scaffold-deck {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.certificates-scaffold-card-center {
+  width: 100%;
+  max-width: 520px;
+  height: 340px;
+  border-radius: 20px;
+  z-index: 10;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.certificates-scaffold-card-peek {
+  position: absolute;
+  width: 440px;
+  height: 290px;
+  border-radius: 16px;
+  opacity: 0.35;
+  filter: blur(1px);
+}
+
+.certificates-scaffold-card-peek.left {
+  left: 0;
+  transform: translateX(-15%) scale(0.88) rotate(-4deg);
+}
+
+.certificates-scaffold-card-peek.right {
+  right: 0;
+  transform: translateX(15%) scale(0.88) rotate(4deg);
+}
+
+.certificates-scaffold-seal {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Hero Section Scaffold Layout ─── */
+.hero-scaffold-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+  gap: 60px;
+}
+
+@media (max-width: 1024px) {
+  .hero-scaffold-container {
+    flex-direction: column-reverse;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 32px;
+  }
+}
+
+.hero-scaffold-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+}
+
+.hero-scaffold-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-scaffold-avatar-circle {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .hero-scaffold-avatar-circle {
+    width: 340px;
+    height: 340px;
+  }
+}
+
+.hero-scaffold-avatar-ring {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(56, 189, 248, 0.3);
+  animation: cryo-scaffold-spin 14s linear infinite;
+}
+
+/* ─── About Section Scaffold Layout ─── */
+.about-scaffold-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px;
+}
+
+.about-scaffold-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.about-scaffold-category-card {
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

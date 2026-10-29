@@ -219,7 +219,7 @@ export default function HomeHero({
   const frameAnimation = config.heroFrameAnimation || 'orbit';
   const btnPrimaryText = config.heroBtnPrimaryText || "View Projects";
   const btnSecondaryText = config.heroBtnSecondaryText || "Download CV";
-  const cvUrl = config.heroCvUrl || "/cv.pdf";
+  const cvUrl = config.heroCvUrl || "/assets/recovered/resumes/Lamera_Resume.pdf";
   const socials = Array.isArray(config.heroSocials) && config.heroSocials.length > 0 
     ? config.heroSocials 
     : [

@@ -176,7 +176,7 @@ function AdminDashboard() {
                         </form>
 
                         {error && (
-                            <div style={{ color: '#ef4444', marginTop: '16px', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
+                            <div className="admin-error-message" style={{ color: '#ef4444', marginTop: '16px', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
                                 {error}
                             </div>
                         )}

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import './ResumeViewerOverlay.css';
 
-export default function ResumeViewerOverlay({ isOpen, onClose, resumeData, defaultCvUrl = '/cv.pdf' }) {
+export default function ResumeViewerOverlay({ isOpen, onClose, resumeData, defaultCvUrl = '/assets/recovered/resumes/Lamera_Resume.pdf' }) {
   const [zoomLevel, setZoomLevel] = useState(1);
 
   // Close on Escape key

@@ -7,12 +7,14 @@ import PortfolioSPA from './components/PortfolioSPA';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 
 export default function App() {
-  const [appReady, setAppReady] = useState(false);
-  const [loaderExited, setLoaderExited] = useState(false);
+  const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const [appReady, setAppReady] = useState(isAdminRoute);
+  const [loaderExited, setLoaderExited] = useState(isAdminRoute);
   const [isWarping, setIsWarping] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
+    if (isAdminRoute) return;
     const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
     const fontsTimeout = new Promise(resolve => setTimeout(resolve, 2500));
     const fontsReady = Promise.race([document.fonts.ready, fontsTimeout]);
@@ -21,12 +23,12 @@ export default function App() {
       fontsReady,
       minDelay,
     ]).then(() => setAppReady(true));
-  }, []);
+  }, [isAdminRoute]);
 
   return (
     <>
       {/* Loading screen */}
-      {!loaderExited && (
+      {!loaderExited && !isAdminRoute && (
         <StellarCryoLoader
           isLoading={!appReady}
           onWarpStart={() => setIsWarping(true)}

@@ -179,6 +179,65 @@ During empirical headless browser inspection of the live application against [`s
   - `hyperspace_04_destination_locked.png`: Moon locks into Hero coordinates without fading or popping.
   - `desktop_1440_verified.png` & `mobile_390_verified.png`: 100% WCAG AA contrast and optical clearance.
 
+---
+
+## 5. Comprehensive Portfolio Functionality Audit & Remediation Log
+
+> **Audit Date**: 2026-10-29  
+> **Suite**: Automated Headless Edge CDP Harness (`scratch/test_all_functions.mjs`)  
+> **Final Pass Rate**: 28 / 28 Automated Verification Checks Passed (100%)  
+> **Build Result**: `npm run build` exited with code 0 (2.49s, 0 errors)
+
+### Bugs Discovered & Root Cause Remediations
+
+1. **Bug 1: Fullscreen Cryo Loader Overlay Blocking `/admin` Direct Route**
+   - **File**: [`src/App.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/App.jsx)
+   - **Root Cause**: `StellarCryoLoader` was rendered unconditionally at root whenever `!loaderExited`. When a user directly visited `/admin`, `loaderExited` was initialized to `false`, causing the fullscreen Genshin loader (`z-index: 999999`) to cover the admin login form and block all inputs.
+   - **Fix Applied**: Evaluated `const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')` and initialized `loaderExited` to `isAdminRoute`. Added `!isAdminRoute` check to loader rendering so admin direct route renders directly without loader obstruction.
+
+2. **Bug 2: Broken Fallback CV Download 404**
+   - **Files**: [`src/components/ResumeViewerOverlay.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ResumeViewerOverlay.jsx), [`src/components/HomeHero.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/HomeHero.jsx), and [`public/cv.pdf`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/public/cv.pdf)
+   - **Root Cause**: The portfolio defaulted fallback CV downloads to `/cv.pdf`, but the actual resume asset on disk was located at `/assets/recovered/resumes/Lamera_Resume.pdf`. `/cv.pdf` did not exist in `public/`, resulting in an HTTP 404 broken download whenever Firestore config had no custom URL.
+   - **Fix Applied**: Copied `Lamera_Resume.pdf` to `public/cv.pdf` and updated default fallback paths in `HomeHero.jsx` and `ResumeViewerOverlay.jsx` to `/assets/recovered/resumes/Lamera_Resume.pdf`. Both URLs now resolve with HTTP 200.
+
+3. **Bug 3: Test Selector Case Sensitivity & Missing Semantic Class in Admin Form**
+   - **Files**: [`src/pages/AdminDashboard.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/pages/AdminDashboard.jsx), [`scratch/test_all_functions.mjs`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/scratch/test_all_functions.mjs)
+   - **Root Cause**: The admin error container lacked a semantic CSS class name, causing test suites to rely on brittle hex color attribute matching (`[style*="ef4444"]`), which failed because Chromium normalizes inline hex colors to `rgb(239, 68, 68)`.
+   - **Fix Applied**: Added `className="admin-error-message"` to the error container in `AdminDashboard.jsx` and updated test harness to inspect `.admin-error-message`.
+
+### Verification Suite Summary (28 / 28 Passed)
+
+| Phase | Test Description | Status | Evidence / Outcome |
+| :--- | :--- | :--- | :--- |
+| **Phase 1** | Loading Screen Entry Prompt Ready | ✅ PASS | `#hud-click-prompt` detected and interactive |
+| **Phase 1** | Loader Unmounted & Exited Cleanly | ✅ PASS | Canvas overlay unmounted after warp |
+| **Phase 1** | Home Hero Mounted After Warp | ✅ PASS | Hero tagline and greeting rendered in viewport |
+| **Phase 2** | CTA "View Projects" Navigation | ✅ PASS | Advances stage directly to Projects section (index 2) |
+| **Phase 2** | CTA "Download CV" Resume Viewer Modal | ✅ PASS | Opens `ResumeViewerOverlay` with authentic document |
+| **Phase 2** | Resume Viewer Escape Key Dismissal | ✅ PASS | Modal closes cleanly on `Escape` key |
+| **Phase 2** | Social Links Target `_blank` | ✅ PASS | All social links open in secure external tabs |
+| **Phase 3** | Desktop Nav: Navigate to "About" | ✅ PASS | Section indicator updates to ABOUT |
+| **Phase 3** | Desktop Nav: Navigate to "Projects" | ✅ PASS | Section indicator updates to PROJECTS |
+| **Phase 3** | Desktop Nav: Navigate to "Certifications" | ✅ PASS | Section indicator updates to CERTIFICATIONS |
+| **Phase 3** | Desktop Nav: Navigate to "Contact" | ✅ PASS | Section indicator updates to CONTACT |
+| **Phase 3** | Desktop Nav: Navigate to "Home" | ✅ PASS | Section indicator updates to HOME |
+| **Phase 4** | Keyboard `ArrowRight` Navigation | ✅ PASS | Advances section from 0 to 1 |
+| **Phase 4** | Keyboard `ArrowLeft` Navigation | ✅ PASS | Decrements section from 1 to 0 |
+| **Phase 5** | About Section Skills Rendered | ✅ PASS | 51 skill chips rendered across 4 Bento categories |
+| **Phase 6** | Projects Section Showcase Rendered | ✅ PASS | Project cards and media carousel active |
+| **Phase 7** | Certifications Section Rendered | ✅ PASS | Certificate cards, PDF badges, and modal active |
+| **Phase 8** | Contact Form Fields Present | ✅ PASS | Name, email, and message inputs mounted |
+| **Phase 8** | Contact Form Values Controlled | ✅ PASS | Controlled inputs accept text without desync |
+| **Phase 8** | Direct Email Copy Interaction | ✅ PASS | Clipboard write triggered with visual feedback |
+| **Phase 9** | Theme Toggle: Dark to Light | ✅ PASS | `data-theme="light"` set on root |
+| **Phase 9** | Theme Toggle: Light to Dark | ✅ PASS | `data-theme="dark"` set on root |
+| **Phase 10** | Konami Code Secret Sequence | ✅ PASS | Secret combo navigates cleanly to `/admin` |
+| **Phase 10** | Admin Login Bad Credentials Handling | ✅ PASS | Displays secure error message on invalid attempt |
+| **Phase 11** | Direct Asset `/cv.pdf` Resolvable | ✅ PASS | HTTP 200 OK |
+| **Phase 11** | Direct Asset `/assets/.../Lamera_Resume.pdf` | ✅ PASS | HTTP 200 OK |
+| **Phase 11** | Direct `/admin` Route Bypasses Loader | ✅ PASS | Admin dashboard renders immediately on direct URL |
+| **Phase 12** | Console & Runtime Exceptions Audit | ✅ PASS | 0 critical runtime exceptions or errors |
+
 
 
 

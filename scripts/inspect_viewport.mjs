@@ -125,3 +125,4 @@ main().catch((err) => {
   console.error('Visual verification error:', err);
   process.exit(1);
 });
+

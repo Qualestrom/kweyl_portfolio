@@ -21,6 +21,7 @@ Every coding, UI, styling, and architectural task in this repository must follow
 ## Active Rules & Aesthetic References
 - **Autonomous Critique Loop**: [`.agents/rules/autonomous-critique-loop.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agents/rules/autonomous-critique-loop.md)
 - **Anti-AI Slop Design**: [`.agents/rules/anti-ai-slop-design.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agents/rules/anti-ai-slop-design.md)
-- **Design System Tokens**: [`.agent/skills/design-system/SKILL.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agent/skills/design-system/SKILL.md)
-- **UI/UX Intelligence**: [`.agent/skills/ui-ux-pro-max/SKILL.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agent/skills/ui-ux-pro-max/SKILL.md)
+- **Design System Tokens**: [`.agents/skills/design-system/SKILL.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agents/skills/design-system/SKILL.md)
+- **UI/UX Intelligence**: [`.agents/skills/ui-ux-pro-max/SKILL.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/.agents/skills/ui-ux-pro-max/SKILL.md)
 - **Execution Audit Log**: [`docs/STELLAR_GLIMMER_EXECUTION_LOG.md`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/docs/STELLAR_GLIMMER_EXECUTION_LOG.md)
+

@@ -109,11 +109,22 @@
   background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
 }
 
-/* ─── Left Column: Presence & Direct Channels ──────────────── */
+/* ─── Left Column: Presence & Direct Channels (Unboxed, Airy) ─ */
+.contact-presence-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
 .contact-presence-header-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* Live Availability Status */
@@ -181,11 +192,17 @@
 /* Bio Lead */
 .contact-bio-lead {
   font-family: 'Inter', sans-serif;
-  font-size: 0.86rem;
-  line-height: 1.6;
-  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #e2e8f0;
   max-width: 520px;
   margin: 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95), 0 2px 14px rgba(0, 0, 0, 0.95);
+}
+
+[data-theme='light'] .contact-bio-lead {
+  color: #334155;
+  text-shadow: none;
 }
 
 /* ─── Direct Email Hub ──────────────────────────────────────── */
@@ -193,15 +210,19 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
 [data-theme='light'] .contact-email-hub {
-  background: rgba(241, 245, 249, 0.75);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(226, 232, 240, 0.90);
+  box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.08);
 }
 
 .contact-email-header {
@@ -221,7 +242,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-muted);
+  color: var(--text-main);
 }
 
 .contact-email-sla {
@@ -231,7 +252,6 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.72rem;
   color: var(--text-muted);
-  opacity: 0.85;
 }
 
 .contact-email-box {
@@ -239,10 +259,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 9px 13px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   flex-wrap: wrap;
 }
 
@@ -255,9 +275,13 @@
   font-family: 'Fira Code', monospace;
   font-size: clamp(0.82rem, 1.2vw, 0.92rem);
   font-weight: 600;
-  color: var(--text-main);
+  color: #ffffff;
   user-select: all;
   letter-spacing: -0.01em;
+}
+
+[data-theme='light'] .contact-email-address {
+  color: #0f172a;
 }
 
 .contact-email-actions {
@@ -360,29 +384,33 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 14px;
-  border-radius: 10px;
+  padding: 8px 15px;
+  border-radius: 12px;
   font-family: 'Inter', sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: #ffffff;
   text-decoration: none;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme='light'] .contact-channel-pill {
-  background: rgba(241, 245, 249, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(226, 232, 240, 0.95);
   color: #1e293b;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 }
 
 .contact-channel-pill:hover {
   border-color: var(--cryo-accent);
   color: var(--cryo-accent);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.18);
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.25);
 }
 
 .contact-channel-pill-arrow {

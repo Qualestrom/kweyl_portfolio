@@ -1315,9 +1315,14 @@ export default function StellarBackground({
       // Base public portfolio coordinates
       const totalSpan = Math.max(w, w * 3.4);
       const orbitFactor = prefersReducedMotion ? 0 : currentParallaxX / totalSpan;
+      
+      // On Section 4 (Contact), smoothly move the moon further to the left per user directive
+      const contactShiftT = prefersReducedMotion ? 0 : Math.max(0, Math.min(1, (-currentParallaxX / (w * 0.85) - 2.8) / 1.2));
+      const contactExtraShiftX = -w * 0.62 * contactShiftT;
+
       const moonDrawX = prefersReducedMotion
         ? targetX
-        : targetX + currentParallaxX * 0.095;
+        : targetX + currentParallaxX * 0.095 + contactExtraShiftX;
       const arcElevation = prefersReducedMotion ? 0 : Math.sin(Math.abs(orbitFactor) * Math.PI) * 38;
       const moonDrawY = targetY - arcElevation;
       const orbitLongitude = prefersReducedMotion ? 0 : orbitFactor * 0.35; // Subtle section libration (Light Side only)
@@ -1424,7 +1429,7 @@ export default function StellarBackground({
         moonY = moonDrawY;
         moonRadius = finalRadius;
         moonOrbitLongitude = orbitLongitude; // Strictly within [-0.15, +0.15] -> Pure Light Side!
-        moonSectionDimming = activeSectionRef.current >= 2 ? 0.92 : 1.0;
+        moonSectionDimming = activeSectionRef.current >= 4 ? 0.78 : activeSectionRef.current >= 2 ? 0.92 : 1.0;
       }
 
       activeMoonInfo = {

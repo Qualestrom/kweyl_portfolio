@@ -541,6 +541,36 @@ During empirical headless browser inspection of the live application against [`s
 | **Mobile Protected View** | 390x844 | Presence card solidly shields text from lunar glare; clear contrast | Verified in `20_contact_mobile_about_hue.png` | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 3.52s | ✅ PASS |
 
+---
+
+## 15. Far-Left Lunar Orbital Horizon & Unboxed Contact Presence
+
+### Context & User Directive
+- **User Directive**: "Too much noise and unnecessary spaces. Instead of having a container, how about we just move the moon further on the left?"
+- **Problem**: Enclosing both the left and right columns in giant bento boxes felt heavy, cluttered, and boxy, creating unnecessary padding and noise. Rather than trapping the left presence in an artificial container, the user directed that the moon should move further to the left, allowing the content to breathe freely.
+
+### Architectural & Motion Implementation
+1. **Unboxed, Airy Left Presence** ([`src/sections/ContactSection.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/sections/ContactSection.jsx#L129-L135) / [`.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/sections/ContactSection.css#L112-L135)):
+   - Removed the outer container, heavy border, and box-shadow from the left column (`.contact-presence-column`).
+   - Clean, organic whitespace with bold typography and zero nested box fatigue.
+   - Preserved the compact, frosted **Direct Email Hub** card and verification pills with crisp borders and deep obsidian glass.
+2. **Far-Left Celestial Orbital Glide** ([`src/components/StellarBackground.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/StellarBackground.jsx#L1318-L1325)):
+   - Engineered a smooth section-approach glide (`contactShiftT = Math.max(0, Math.min(1, (-currentParallaxX / (w * 0.85) - 2.8) / 1.2))`).
+   - On Section 4 (Contact), applies `contactExtraShiftX = -w * 0.62 * contactShiftT`, shifting the colossal Frostmoon gracefully onto the far left horizon (`moonX = -0.198 * w`).
+   - The bright planetary craters and lunar rays now exit the content zone completely, framing the far-left screen as a majestic celestial horizon while leaving the entire content area (`x = 240px` to `1400px`) in the deep, clear starfield.
+3. **Contrast Calibration & `SectionLabels` Protection** ([`src/components/SectionLabels.css`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/SectionLabels.css#L39-L46)):
+   - Calibrated bio typography to `#e2e8f0` with layered text shadow (`text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95), 0 2px 14px rgba(0, 0, 0, 0.95)`).
+   - Elevated `.section-label` contrast to `#e2e8f0` (`opacity: 0.85`) with deep shadow, ensuring all navigation words (`HOME`, `ABOUT`, `PROJECTS`, `CERTIFICATIONS`, `CONTACT`) remain razor-sharp over the setting lunar arc.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Desktop Unboxed + Far-Left Moon** | 1440x900 | Moon glides to far-left horizon; left column unboxed and airy; zero glare on content or terminal | Verified in `23_contact_desktop_far_left_moon.png` | ✅ PASS |
+| **Mobile Far-Left Moon** | 390x844 | Moon gracefully frames mobile left edge; typography razor-sharp in dark sky | Verified in `24_contact_mobile_far_left_moon.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.41s | ✅ PASS |
+
+
 
 
 

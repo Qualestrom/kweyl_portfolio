@@ -36,12 +36,13 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  opacity: 0.65;
+  color: #e2e8f0;
+  opacity: 0.85;
   transition: opacity 0.3s ease, color 0.3s ease, transform 0.3s ease;
   white-space: nowrap;
   text-align: left;
   line-height: 1;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95), 0 2px 14px rgba(0, 0, 0, 0.95);
 }
 
 [data-theme='light'] .section-label {

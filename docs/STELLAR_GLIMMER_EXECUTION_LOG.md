@@ -238,6 +238,61 @@ During empirical headless browser inspection of the live application against [`s
 | **Phase 11** | Direct `/admin` Route Bypasses Loader | ✅ PASS | Admin dashboard renders immediately on direct URL |
 | **Phase 12** | Console & Runtime Exceptions Audit | ✅ PASS | 0 critical runtime exceptions or errors |
 
+---
+
+## 7. Dark Side of the Frostmoon Engine, Portal Architecture for All Modals, & Mainframe Access Telemetry Revamp
+
+### User Problem & Bug Report
+1. **Modal Positioning Bug**: Modals and pop-up containers (Resume Viewer, Headline Editor, Image Cropper, Resume Upload, Manage Links, Certificate Inspector) were only centered on the middle section (Projects). When opened from the Home, About, Certifications, or Contact pages, the modal was pushed off-screen or invisible.
+2. **Admin Login Moon Collision Bug**: The 3D Moon was rendered in front of or directly over the Admin Login container card, obscuring form inputs.
+3. **Lore & Animation Feature Request**: Revamp the "Accessing Mainframe..." animation so that rather than a flat solid wipe curtain, the Moon physically rotates 180° on its 3D axis to reveal its authentic **Dark Side** (symbolizing the hidden logic core of the website, grounded in the Genshin Impact Nod-Krai / Project Moongazer / ancient celestial lore where the Frostmoon's reverse side houses the planetary logic construct).
+
+### Root Cause Analysis & Engineering Remediation
+
+1. **Modal Stacking Context & W3C Transform Containing Block Rule**:
+   - **Root Cause**: In [`src/components/PortfolioSPA.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/PortfolioSPA.jsx), the horizontal camera slider uses `<motion.div className="stellar-camera-track" style={{ width: '500vw', transform: 'translateX(...)' }}>`. Under W3C CSS specifications, applying `transform` establishes a new containing block for all descendant elements, even those with `position: fixed`. Consequently, all modals sized `width: 100vw; position: fixed; inset: 0` were sized relative to the `500vw` track and centered at `250vw` (the exact center of Section 2: Projects). On Home (`0vw`), About (`100vw`), or Certifications (`300vw`), the modals were rendered far off-screen.
+   - **Remediation**: Re-architected all modals across the codebase to mount directly onto `document.body` using `ReactDOM.createPortal(modalNode, document.body)`:
+     - [`src/components/ResumeViewerOverlay.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ResumeViewerOverlay.jsx)
+     - [`src/components/HeadlineEditorModal.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/HeadlineEditorModal.jsx)
+     - [`src/components/ImageCropperModal.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ImageCropperModal.jsx)
+     - [`src/components/ResumeUploadModal.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/ResumeUploadModal.jsx)
+     - [`src/components/HomeHero.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/HomeHero.jsx) (Manage Links Modal)
+     - [`src/components/CertificatesCarousel.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/CertificatesCarousel.jsx) (`CertificateModal`)
+   - **Empirical Verification**: Automated CDP bounding rect check confirmed:
+     `modalRect: { left: 247, top: 32, width: 920, height: 742 }, viewportWidth: 1414`. `(1414 - 920) / 2 = 247px` (100% mathematically centered on true viewport from Home, Projects, or Certifications).
+
+2. **Admin Login Stacking & High-Sky Celestial Framing**:
+   - **Root Cause**: In [`src/pages/AdminDashboard.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/pages/AdminDashboard.jsx), `.portfolio-wrapper` was statically positioned without an explicit z-index, allowing the fixed full-screen canvas to render over it.
+   - **Remediation**: Added `position: 'relative', zIndex: 10` to `.portfolio-wrapper` and `position: 'relative', zIndex: 20` to `.glass-panel` with backdrop-filter blur. In [`src/components/StellarBackground.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/StellarBackground.jsx), repositioned the Moon on `/admin` to the high-canopy upper right sky (`moonX = Math.max(w * 0.86, w - adminRadius - 32)`, `moonY = Math.max(adminRadius + 24, h * 0.18)`), completely clearing the center login card with zero visual collision.
+
+3. **Authentic Dark Side of the Frostmoon Engine (`getLunarEngine` & `drawFrostmoon`)**:
+   - **Lore Research**: In Snezhnaya / Nod-Krai celestial lore, the Frostmoon is a divine construct whose light side faces Teyvat, while its permanent dark side houses *Project Moongazer*—an ancient planetary-scale logic core and high-tech facility.
+   - **Procedural Texture Implementation**:
+     In `getLunarEngine()`, for coordinates on the reverse hemisphere ($nz_{\text{dark}} = -nz > -0.18$):
+     - **Obsidian / Abyssal Basalt Crust**: Deep titanium-charcoal tones (`#050811` - `#0c152a`) replacing the front-side bright ice.
+     - **Central Logic Singularity Core**: High-radiance core emission singularity at $r_{\text{tan}} < 0.055$.
+     - **6-Fold Concentric Hexagonal Logic Matrix Rings**: Full 6-fold symmetric polygonal iris bands at $r \in [0.08, 0.14, 0.22, 0.32, 0.44, 0.60]$.
+     - **12 Radial Data Highways**: Cardinal and bisecting energy conduits connecting the central core to peripheral nodes.
+     - **Moongazer Transmission Facility Stations**: 8 integrated crater facilities with concentric glowing perimeters and beacon emitters.
+     - **Spherical Graticule Logic Bus**: Planetary latitude and longitude bus lines with junction nodes.
+   - **Dynamic Dark Side Overlays in `drawFrostmoon()`**:
+     - **Radar Scanning Sector**: 360-degree rotating radar beam with cyan gradient sweep cone.
+     - **Archeolunar Shockwave Pulse**: Expanding concentric cryogenic energy wave radiating from the logic core every 150 frames.
+     - **Hexadecimal Astrolabe Logic Dials**: Outer Welkin ring transforms into 12 cryptographic hex telemetry addresses (`0x00`, `0x15`, `0x2A`, `0x3F`, `0x54`, `0x69`, `0x7E`, `0x93`, `0xA8`, `0xBD`, `0xD2`, `0xE7`).
+     - **Dark Eclipse Corona**: Inverted celestial eclipse aura framing the dark obsidian sphere with an electric cyan limb glow.
+
+4. **Cinematic Holographic Mainframe Access HUD**:
+   - Replaced the old flat turquoise wipe curtains with [`src/components/MainframeAccessHUD.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/components/MainframeAccessHUD.jsx) and [`src/context/MainframeContext.jsx`](file:///c:/Users/Christopher/Documents/GitHub/kweyl_portfolio/src/context/MainframeContext.jsx):
+     - Soft transparent dark glass backdrop (`rgba(4, 9, 23, 0.45)` with `backdrop-filter: blur(5px)`), allowing the user to watch the 3D Moon physically spin 180° directly on screen!
+     - Orbital targeting reticle with corner brackets (`+`), holographic grid, and live hex decryption ticker (`0x7E4A9F`, `0x88CE12`, `0x00F0FF`).
+     - Sequential terminal telemetry:
+       - `[0.1s] TARGET LOCK: ARCHEOLUNAR LOGIC CORE`
+       - `[0.5s] ROTATING CELESTIAL AXIS -> HEMISPHERE: DARK SIDE`
+       - `[1.0s] INITIALIZING SNEZHNAYA SECURE TERMINAL & TELEMETRY`
+       - `[1.5s] CIPHER DECRYPTED: WELCOME, ADMINISTRATOR`
+     - Smooth 180° rotation back to the Light Side when clicking `&larr; Back to Portfolio` or logging out!
+
+
 
 
 

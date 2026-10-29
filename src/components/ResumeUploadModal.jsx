@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -113,7 +114,7 @@ export default function ResumeUploadModal({ isOpen, onClose, onSaveSuccess }) {
 
   const isReplacing = Boolean(activeResume && stagedFile);
 
-  return (
+  const modalNode = (
     <div className="resume-upload-backdrop" onClick={onClose}>
       <motion.div 
         className="resume-upload-panel"
@@ -367,4 +368,6 @@ export default function ResumeUploadModal({ isOpen, onClose, onSaveSuccess }) {
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 }

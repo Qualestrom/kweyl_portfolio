@@ -1,0 +1,204 @@
+.mainframe-hud-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(4, 9, 23, 0.4) 0%, rgba(2, 6, 18, 0.75) 100%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  pointer-events: all;
+  font-family: 'JetBrains Mono', 'Outfit', monospace;
+  overflow: hidden;
+}
+
+/* Subtle holographic grid lines in background */
+.mainframe-hud-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Holographic corner tech brackets */
+.mainframe-hud-bracket {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: rgba(56, 189, 248, 0.5);
+  pointer-events: none;
+}
+.mainframe-hud-bracket--tl {
+  top: 24px;
+  left: 24px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.mainframe-hud-bracket--tr {
+  top: 24px;
+  right: 24px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+}
+.mainframe-hud-bracket--bl {
+  bottom: 24px;
+  left: 24px;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+}
+.mainframe-hud-bracket--br {
+  bottom: 24px;
+  right: 24px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+
+/* Top Telemetry Header */
+.mainframe-hud-header {
+  position: absolute;
+  top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #38BDF8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.mainframe-hud-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.mainframe-hud-header-dot {
+  width: 6px;
+  height: 6px;
+  background: #00F0FF;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00F0FF;
+  animation: hud-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes hud-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Center Telemetry Card */
+.mainframe-hud-card {
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  max-width: 540px;
+  padding: 24px 28px;
+  background: rgba(8, 15, 30, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 16px;
+  box-shadow: 
+    0 0 40px rgba(0, 240, 255, 0.15),
+    inset 0 0 20px rgba(56, 189, 248, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mainframe-hud-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  padding-bottom: 12px;
+}
+
+.mainframe-hud-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #FFFFFF;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mainframe-hud-title-icon {
+  color: #00F0FF;
+  filter: drop-shadow(0 0 6px #00F0FF);
+}
+
+.mainframe-hud-code-block {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mainframe-hud-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mainframe-hud-line--active {
+  color: #38BDF8;
+  font-weight: 600;
+}
+
+.mainframe-hud-line--success {
+  color: #34D399;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+.mainframe-hud-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.mainframe-hud-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mainframe-hud-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284C7, #00F0FF, #E0F2FE);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8);
+  transition: width 0.05s linear;
+}
+
+.mainframe-hud-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #64748B;
+  letter-spacing: 0.05em;
+}
+
+.mainframe-hud-hex-stream {
+  color: #38BDF8;
+  font-family: monospace;
+}

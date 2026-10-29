@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { MainframeProvider, useMainframe } from './context/MainframeContext';
+import MainframeAccessHUD from './components/MainframeAccessHUD';
 import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
 import PortfolioSPA from './components/PortfolioSPA';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 
-export default function App() {
-  const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+function AppContent() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const { isAccessingMainframe, mainframeProgress, isReturning, returnProgress } = useMainframe();
+
   const [appReady, setAppReady] = useState(isAdminRoute);
   const [loaderExited, setLoaderExited] = useState(isAdminRoute);
   const [isWarping, setIsWarping] = useState(false);
@@ -44,26 +49,41 @@ export default function App() {
         isWarping={isWarping}
         loaderExited={loaderExited}
         activeSection={activeSection}
+        isAdminRoute={isAdminRoute}
+        isAccessingMainframe={isAccessingMainframe}
+        mainframeProgress={mainframeProgress}
+        isReturning={isReturning}
+        returnProgress={returnProgress}
       />
 
-      {/* Theme + Router shell */}
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <PortfolioSPA
-                  loaderExited={loaderExited}
-                  isWarping={isWarping}
-                  onSectionChange={setActiveSection}
-                />
-              }
+      {/* Cinematic Mainframe Access HUD */}
+      <MainframeAccessHUD />
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <PortfolioSPA
+              loaderExited={loaderExited}
+              isWarping={isWarping}
+              onSectionChange={setActiveSection}
             />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
+          }
+        />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <BrowserRouter>
+        <MainframeProvider>
+          <AppContent />
+        </MainframeProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

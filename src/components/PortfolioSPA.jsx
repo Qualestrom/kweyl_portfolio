@@ -5,6 +5,7 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { supabase, isSupabaseConfigured } from '../supabase';
 import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
+import { useMainframe } from '../context/MainframeContext';
 import SectionLabels from './SectionLabels';
 import MobileNav from './MobileNav';
 import KeyboardHints from './KeyboardHints';
@@ -67,7 +68,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     }
   });
   const [saveStatus, setSaveStatus] = useState('');
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const { triggerMainframeAccess } = useMainframe();
   const konamiIndexRef = useRef(0);
   const navigate = useNavigate();
 
@@ -193,10 +194,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
         if (pressedKey === expectedKey) {
           konamiIndexRef.current++;
           if (konamiIndexRef.current === konamiCode.length) {
-            setIsRedirecting(true);
-            setTimeout(() => {
-              navigate('/admin');
-            }, 1200);
+            triggerMainframeAccess();
             konamiIndexRef.current = 0;
             return;
           }
@@ -327,45 +325,6 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
 
   return (
     <>
-      <AnimatePresence>
-        {isRedirecting && (
-          <motion.div 
-            initial={{ scaleY: 0 }}
-            animate={{ scaleY: 1 }}
-            exit={{ scaleY: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              position: 'fixed',
-              top: 0, 
-              left: 0, 
-              width: '100vw', 
-              height: '100vh',
-              background: 'var(--cryo-accent, var(--accent))',
-              zIndex: 999999,
-              transformOrigin: 'bottom',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.3 }}
-              style={{ 
-                color: '#0A0F1C', 
-                fontFamily: 'Outfit, sans-serif', 
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-                fontWeight: 700,
-                letterSpacing: '1px'
-              }}
-            >
-              Accessing Mainframe...
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div 
         className="stellar-viewport-stage"
         style={{

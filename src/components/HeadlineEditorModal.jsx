@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Check, Sparkles, RefreshCw } from 'lucide-react';
 import './HeadlineEditorModal.css';
@@ -68,7 +69,7 @@ export default function HeadlineEditorModal({
     onClose();
   };
 
-  return (
+  const modalNode = (
     <div className="hl-editor-modal-backdrop" onClick={onClose}>
       <motion.div 
         className="hl-editor-modal-panel"
@@ -236,4 +237,6 @@ export default function HeadlineEditorModal({
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 }

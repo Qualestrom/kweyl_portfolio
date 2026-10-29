@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -98,7 +99,7 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
     !modalImgError
   );
 
-  return (
+  const modalNode = (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md"
       onClick={onClose}
@@ -281,6 +282,8 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 };
 
 // Individual High-Resolution Landscape Stacked Deck Certificate Card (Theme-Adaptive)

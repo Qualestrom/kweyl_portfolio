@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -47,7 +48,7 @@ export default function ResumeViewerOverlay({ isOpen, onClose, resumeData, defau
     document.body.removeChild(link);
   };
 
-  return (
+  const modalNode = (
     <div className="resume-overlay-backdrop" onClick={onClose}>
       <motion.div 
         className="resume-overlay-modal"
@@ -175,4 +176,6 @@ export default function ResumeViewerOverlay({ isOpen, onClose, resumeData, defau
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 }

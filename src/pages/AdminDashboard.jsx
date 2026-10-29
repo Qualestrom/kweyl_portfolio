@@ -9,40 +9,16 @@ import { auth, db } from '../firebase';
 import { supabase, isSupabaseConfigured } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMainframe } from '../context/MainframeContext';
 import PortfolioSPA from '../components/PortfolioSPA';
 
-const TransitionOverlay = () => (
-    <motion.div
-        initial={{ scaleY: 1 }}
-        animate={{ scaleY: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
-        style={{
-            position: 'fixed',
-            top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'var(--accent)',
-            zIndex: 99999,
-            transformOrigin: 'top',
-            pointerEvents: 'none'
-        }}
-    >
-        <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', fontFamily: 'Outfit', fontSize: '3rem', width: '100%', textAlign: 'center' }}
-        >
-            Accessing Mainframe...
-        </motion.div>
-    </motion.div>
-);
-
 function AdminDashboard() {
+    const { triggerReturnToPortfolio } = useMainframe();
     const [user, setUser] = useState(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -97,55 +73,22 @@ function AdminDashboard() {
         }
     };
 
-    const handleLogout = () => {
-        setIsLoggingOut(true);
-        setTimeout(async () => {
-            if (isSupabaseConfigured && supabase) {
-                await supabase.auth.signOut();
-            } else {
-                await signOut(auth);
-            }
-            setIsLoggingOut(false);
-            navigate('/');
-        }, 800);
+    const handleLogout = async () => {
+        if (isSupabaseConfigured && supabase) {
+            await supabase.auth.signOut();
+        } else {
+            await signOut(auth);
+        }
+        triggerReturnToPortfolio();
     };
 
     return (
         <>
-            <TransitionOverlay />
-            
-            <AnimatePresence>
-                {isLoggingOut && (
-                    <motion.div 
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        exit={{ scaleY: 0 }}
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        style={{
-                            position: 'fixed',
-                            top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'var(--accent)',
-                            zIndex: 99999,
-                            transformOrigin: 'bottom'
-                        }}
-                    >
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.3 }}
-                            style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', fontFamily: 'Outfit', fontSize: '3rem', width: '100%', textAlign: 'center' }}
-                        >
-                            Logging Out...
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {loading ? (
-                <div className="admin-container" style={{ textAlign: 'center', paddingTop: '100px' }}>Loading...</div>
+                <div className="admin-container" style={{ textAlign: 'center', paddingTop: '100px', position: 'relative', zIndex: 10 }}>Loading...</div>
             ) : !user ? (
-                <div className="portfolio-wrapper" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                    <div className="glass-panel" style={{ padding: '40px', width: '100%', maxWidth: '420px', background: 'var(--bg-secondary)', border: '1px solid var(--cryo-glass-border)', borderRadius: '24px', boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+                <div className="portfolio-wrapper" style={{ position: 'relative', zIndex: 10, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div className="glass-panel" style={{ position: 'relative', zIndex: 20, padding: '40px', width: '100%', maxWidth: '420px', background: 'var(--bg-secondary)', border: '1px solid var(--cryo-glass-border)', borderRadius: '24px', boxShadow: '0 24px 70px rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
                         <h2 style={{ marginBottom: '8px', textAlign: 'center', fontFamily: 'Outfit', fontSize: '1.8rem', color: 'var(--text-main)' }}>
                             Admin Login
                         </h2>
@@ -182,9 +125,21 @@ function AdminDashboard() {
                         )}
 
                         <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.85rem' }}>
-                            <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', transition: 'color 0.2s ease' }}>
+                            <button
+                                type="button"
+                                onClick={triggerReturnToPortfolio}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    transition: 'color 0.2s ease',
+                                    fontFamily: 'inherit'
+                                }}
+                            >
                                 &larr; Back to Portfolio
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>

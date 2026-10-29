@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { 
   X, 
@@ -229,7 +230,7 @@ export default function ImageCropperModal({
     }
   };
 
-  return (
+  const modalNode = (
     <div className="cropper-modal-backdrop" onClick={onClose}>
       <motion.div 
         className="cropper-modal-panel"
@@ -387,4 +388,6 @@ export default function ImageCropperModal({
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 }

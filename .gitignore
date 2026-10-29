@@ -43,3 +43,6 @@ dist-ssr/
 # Agent skills
 .agent/skills/
 .agents/skills/
+
+# Scratch & test scripts
+scratch/

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, 
@@ -661,7 +662,7 @@ export default function HomeHero({
 
       {/* ─── MODAL 3: Manage Links & Auto Icon Detection ────────────── */}
       <AnimatePresence>
-        {linksModalOpen && (
+        {linksModalOpen && (typeof document !== 'undefined' ? createPortal(
           <div className="stellar-modal-backdrop" onClick={() => setLinksModalOpen(false)}>
             <motion.div 
               className="stellar-modal-panel stellar-modal-panel-wide"
@@ -763,8 +764,9 @@ export default function HomeHero({
                 </div>
               </div>
             </motion.div>
-          </div>
-        )}
+          </div>,
+          document.body
+        ) : null)}
       </AnimatePresence>
 
       {/* ─── RESUME DATABASE UPLOAD & REPLACEMENT MODAL (ADMIN) ─────── */}

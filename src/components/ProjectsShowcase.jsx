@@ -416,9 +416,9 @@ const FALLBACK_PROJECTS = [
     githubUrl: 'https://github.com/Qualestrom/kweyl_portfolio',
     status: 'deployed',
     photos: [
-      '/assets/recovered/projects/Screenshot 2026-09-06 112431.png',
-      '/assets/recovered/projects/Screenshot 2026-09-06 112550.png',
-      '/assets/recovered/projects/Screenshot 2026-09-06 112739.png'
+      '/assets/recovered/projects/Screenshot 2026-09-06 112431.webp',
+      '/assets/recovered/projects/Screenshot 2026-09-06 112550.webp',
+      '/assets/recovered/projects/Screenshot 2026-09-06 112739.webp'
     ]
   },
   {
@@ -432,10 +432,10 @@ const FALLBACK_PROJECTS = [
     githubUrl: 'https://github.com/Qualestrom/creotec-mechalab-x',
     status: 'confidential',
     photos: [
-      '/assets/recovered/projects/Screenshot 2026-08-29 213630.png',
-      '/assets/recovered/projects/image (1).png',
-      '/assets/recovered/projects/image (2).png',
-      '/assets/recovered/projects/image.png'
+      '/assets/recovered/projects/Screenshot 2026-08-29 213630.webp',
+      '/assets/recovered/projects/image (1).webp',
+      '/assets/recovered/projects/image (2).webp',
+      '/assets/recovered/projects/image.webp'
     ]
   },
   {
@@ -449,8 +449,8 @@ const FALLBACK_PROJECTS = [
     githubUrl: 'https://github.com/Qualestrom/CRADLE_PROJECT',
     status: 'confidential',
     photos: [
-      '/assets/recovered/projects/Screenshot 2026-09-06 101759.png',
-      '/assets/recovered/projects/Screenshot 2026-09-06 101834.png'
+      '/assets/recovered/projects/Screenshot 2026-09-06 101759.webp',
+      '/assets/recovered/projects/Screenshot 2026-09-06 101834.webp'
     ]
   }
 ];

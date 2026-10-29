@@ -14,6 +14,7 @@ export default function ImageWithPlaceholder({
   height,
   fetchPriority,
   decoding = 'async',
+  loading = 'lazy',
   style = {},
   onClick,
 }) {
@@ -74,6 +75,7 @@ export default function ImageWithPlaceholder({
           height={height}
           fetchPriority={fetchPriority}
           decoding={decoding}
+          loading={loading}
           style={style}
           draggable={draggable}
           onLoad={() => setLoaded(true)}

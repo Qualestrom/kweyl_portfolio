@@ -381,5 +381,41 @@ During empirical headless browser inspection of the live application against [`s
 | **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.81s | ✅ PASS |
 | **Repository Emoji Scan** | N/A | 0 unicode emojis across all source code | 0 found | ✅ PASS |
 
+---
+
+## 10. Live Performance Optimization: Instant Refresh & Asset Weight Reduction
+
+### Context & Empirical Diagnostics
+- Live site audit on `kweyl-portfolio.me` revealed an initial payload of **3.6 MB transferred (8.4 MB uncompressed)** on a single cold refresh, causing page refreshes to feel noticeably heavy.
+- **Root Cause Analysis**:
+  1. **Hardcoded Timer in `App.jsx`**: An artificial 2,000ms delay + 600ms percentage step interpolation + 1,650ms warp animation forced users to wait 4.5–5.0s on *every* refresh.
+  2. **Monolithic Bundle (1.94 MB JS)**: `AdminDashboard`, Firebase Auth, and the full `pdfjs-dist` (~1 MB) were bundled synchronously into `index.js`.
+  3. **Heavy Raw PNG Screenshots (2.06 MB)**: 3 uncompressed project screenshots (including a 1.04 MB PNG) were downloaded on mount.
+  4. **Immediate PDF Pre-rendering**: `CertificatesCarousel` downloaded 3 PDF certificates (~590 KB) and spawned a 1.26 MB PDF.js Web Worker on page load.
+
+### Engineering Interventions
+1. **Smart Session Awareness (`sessionStorage`)**:
+   - `sessionStorage.getItem('kweyl_stellar_entered')` enables instant mount on page refresh. First visits enjoy the full cinematic entrance loader; refreshes in the same session bypass the 2-second timer and mount the Hero section immediately.
+   - Reduced initial session font wait baseline from 2,000ms to 400ms.
+2. **Code-Split `AdminDashboard`**:
+   - Replaced synchronous import with `React.lazy(() => import('./pages/AdminDashboard.jsx'))` wrapped in `Suspense`. Separates admin authentication and CRUD operations into a separate lazy chunk (`AdminDashboard-*.js`).
+3. **Dynamic Import of `pdfjs-dist`**:
+   - Converted `src/utils/pdfUtils.js` to dynamically load `pdfjs-dist` and its Web Worker on-demand via `getPdfJs()`. Main bundle reduced from 1,937 kB to 1,508 kB.
+4. **Pre-Rendered WebP Certificate Previews**:
+   - Generated WebP previews (`ccna_preview.webp`, `python_essentials_1_preview.webp`, `intro_iot_preview.webp`, ~85 KB each) for default certificates. Eliminates the need to download 600 KB of PDFs or spawn Web Workers on initial load.
+5. **Lossless-Fidelity WebP Conversion for Project Screenshots**:
+   - Converted all 9 project screenshots in `public/assets/recovered/projects/` from raw PNGs to WebP, dropping total image weight from ~5 MB to 628 KB (88% reduction). Updated `resolveAssetUrl` in `src/utils/imageUtils.js` and `ProjectsShowcase.jsx`.
+   - Added `loading="lazy"` prop with default `'lazy'` to `ImageWithPlaceholder.jsx`.
+
+### Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **First Session Entrance** | 1440x900 | Cinematic loader prompt ready in ~1.5s (down from 2.8s) | Prompt ready at 1600ms | ✅ PASS |
+| **Page Refresh (Session)** | 1440x900 | Instant Hero mount; 0 PDFs downloaded; 0 PDF workers | Verified in `06_fast_refresh_verified.png` | ✅ PASS |
+| **Main Bundle Shrinkage** | N/A | Reduced from 1,938 kB to 1,508 kB (Gzip: 445 kB) | Built in 2.21s with split `pdf` and `AdminDashboard` chunks | ✅ PASS |
+| **Project Image Weight** | N/A | Raw PNGs replaced by WebP (~88% payload reduction) | 5.0 MB -> 628 KB | ✅ PASS |
+
+
 
 

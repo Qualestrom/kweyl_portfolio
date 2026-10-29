@@ -169,15 +169,15 @@ export function resolveAssetUrl(url = '') {
 
   if (url.includes('firebasestorage.googleapis.com')) {
     const decoded = decodeURIComponent(url);
-    if (decoded.includes('Screenshot 2026-09-06 112431.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112431.png';
-    if (decoded.includes('Screenshot 2026-09-06 112550.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112550.png';
-    if (decoded.includes('Screenshot 2026-09-06 112739.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 112739.png';
-    if (decoded.includes('Screenshot 2026-08-29 213630.png')) return '/assets/recovered/projects/Screenshot 2026-08-29 213630.png';
-    if (decoded.includes('Screenshot 2026-09-06 101759.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 101759.png';
-    if (decoded.includes('Screenshot 2026-09-06 101834.png')) return '/assets/recovered/projects/Screenshot 2026-09-06 101834.png';
-    if (decoded.includes('image (1).png')) return '/assets/recovered/projects/image (1).png';
-    if (decoded.includes('image (2).png')) return '/assets/recovered/projects/image (2).png';
-    if (decoded.includes('image.png')) return '/assets/recovered/projects/image.png';
+    if (decoded.includes('Screenshot 2026-09-06 112431')) return '/assets/recovered/projects/Screenshot 2026-09-06 112431.webp';
+    if (decoded.includes('Screenshot 2026-09-06 112550')) return '/assets/recovered/projects/Screenshot 2026-09-06 112550.webp';
+    if (decoded.includes('Screenshot 2026-09-06 112739')) return '/assets/recovered/projects/Screenshot 2026-09-06 112739.webp';
+    if (decoded.includes('Screenshot 2026-08-29 213630')) return '/assets/recovered/projects/Screenshot 2026-08-29 213630.webp';
+    if (decoded.includes('Screenshot 2026-09-06 101759')) return '/assets/recovered/projects/Screenshot 2026-09-06 101759.webp';
+    if (decoded.includes('Screenshot 2026-09-06 101834')) return '/assets/recovered/projects/Screenshot 2026-09-06 101834.webp';
+    if (decoded.includes('image (1)')) return '/assets/recovered/projects/image (1).webp';
+    if (decoded.includes('image (2)')) return '/assets/recovered/projects/image (2).webp';
+    if (decoded.includes('image.png') || decoded.includes('image.webp')) return '/assets/recovered/projects/image.webp';
 
     // Certificates
     if (decoded.includes('CCNA') || decoded.includes('Switching')) return '/assets/recovered/certificates/CCNA Switching Routing Wireless Essentials.pdf';

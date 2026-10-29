@@ -38,7 +38,7 @@ const FALLBACK_CERTIFICATES = [
     title: 'CCNA: Switching, Routing, and Wireless',
     issuer: 'Cisco Networking Academy',
     date: '28 May 2025',
-    imageUrl: '',
+    imageUrl: '/assets/recovered/certificates/ccna_preview.webp',
     pdfUrl: '/assets/recovered/certificates/CCNA Switching Routing Wireless Essentials.pdf',
     verifyUrl: ''
   },
@@ -47,7 +47,7 @@ const FALLBACK_CERTIFICATES = [
     title: 'Python Essentials 1',
     issuer: 'Cisco Networking Academy',
     date: '04 Aug 2026',
-    imageUrl: '',
+    imageUrl: '/assets/recovered/certificates/python_essentials_1_preview.webp',
     pdfUrl: '/assets/recovered/certificates/Python Essentials 1.pdf',
     verifyUrl: ''
   },
@@ -56,7 +56,7 @@ const FALLBACK_CERTIFICATES = [
     title: 'Introduction to IoT and Digital Transformation',
     issuer: 'Cisco Networking Academy',
     date: '04 Aug 2026',
-    imageUrl: '',
+    imageUrl: '/assets/recovered/certificates/intro_iot_preview.webp',
     pdfUrl: '/assets/recovered/certificates/Introduction to IOT and Digital Transformation.pdf',
     verifyUrl: ''
   }
@@ -95,7 +95,6 @@ const CertificateModal = ({ cert, isOpen, onClose }) => {
   const isPdf = Boolean(cert.pdfUrl && (cert.pdfUrl.toLowerCase().endsWith('.pdf') || cert.pdfUrl.includes('.pdf?')));
   const hasModalImage = Boolean(
     cert.imageUrl &&
-    !cert.imageUrl.includes('firebasestorage.googleapis.com') &&
     !modalImgError
   );
 
@@ -318,7 +317,6 @@ const LandscapeCarouselCard = ({
 
   const hasValidDirectImage = Boolean(
     cert.imageUrl &&
-    !cert.imageUrl.includes('firebasestorage.googleapis.com') &&
     !imgFailed
   );
 

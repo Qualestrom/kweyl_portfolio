@@ -1,9 +1,20 @@
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
-// Configure the worker using the locally bundled Vite asset matching pdfjs-dist
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// Lazy-load pdfjs-dist and worker only when PDF operations are actually requested
+let pdfjsInitPromise = null;
+export async function getPdfJs() {
+  if (!pdfjsInitPromise) {
+    pdfjsInitPromise = (async () => {
+      const [pdfjsLibModule, workerUrlModule] = await Promise.all([
+        import('pdfjs-dist'),
+        import('pdfjs-dist/build/pdf.worker.min.mjs?url')
+      ]);
+      const pdfjs = pdfjsLibModule.default || pdfjsLibModule;
+      if (typeof window !== 'undefined') {
+        pdfjs.GlobalWorkerOptions.workerSrc = workerUrlModule.default;
+      }
+      return pdfjs;
+    })();
+  }
+  return pdfjsInitPromise;
 }
 
 // In-memory cache for URL-based PDF page-1 previews so each PDF renders only once per session
@@ -48,7 +59,8 @@ export async function renderPdfFirstPageToImage(pdfSource, scale = 2.0) {
       throw new Error('Invalid PDF source provided');
     }
 
-    const loadingTask = pdfjsLib.getDocument({
+    const pdfjs = await getPdfJs();
+    const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(arrayBuffer),
       useSystemFonts: true,
     });
@@ -113,7 +125,8 @@ export async function extractPdfCertificateMetadata(pdfSource) {
   }
 
   try {
-    const loadingTask = pdfjsLib.getDocument({
+    const pdfjs = await getPdfJs();
+    const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(arrayBuffer),
       useSystemFonts: true,
     });

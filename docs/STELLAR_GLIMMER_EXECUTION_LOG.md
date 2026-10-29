@@ -290,10 +290,56 @@ During empirical headless browser inspection of the live application against [`s
        - `[0.5s] ROTATING CELESTIAL AXIS -> HEMISPHERE: DARK SIDE`
        - `[1.0s] INITIALIZING SNEZHNAYA SECURE TERMINAL & TELEMETRY`
        - `[1.5s] CIPHER DECRYPTED: WELCOME, ADMINISTRATOR`
-     - Smooth 180° rotation back to the Light Side when clicking `&larr; Back to Portfolio` or logging out!
+     - Smooth 180° rotation back to the Light Side when clicking `&larr; Back to Portfolio` or logging out!---
 
+## 8. Dark Side 3D Genshin Relief, Synchronous Hemisphere Locking, & Orbital Approach Mainframe Transition
 
+### User Problem & Requirements
+1. **Hemisphere Visibility Enforcement**:
+   - The Light Side must ONLY be visible in viewer mode (public portfolio).
+   - The Dark Side must ONLY be visible in admin mode (`/admin`).
+2. **Volumetric Surface Relief (Anti-Flatness)**:
+   - The Dark Side surface looked too flat. Refactor with reference to the 3D celestial details of the Moon in Genshin Impact (volumetric impact craters, high-contrast basalt topography, dendritic glowing cryo-fissures, and 3D beveled Archeolunar megastructures).
+3. **Cinematic Fly-In Transition**:
+   - The mainframe transition felt like it had no transitions because the Moon shrank into the corner while a center card blocked the view.
+   - Choreograph the transition so the camera physically moves directly in front of the colossal Dark Side of the Moon before docking into the admin layout.
 
+### Root Cause Analysis & Engineering Solutions
 
+1. **Synchronous Tidal Locking (Eliminating Continuous 360° Spin)**:
+   - **Root Cause**: In `drawFrostmoon()`, `const rotLon = frame * 0.0020 + rotation;` added a continuous frame rate increment, causing the Moon to spin 360° every ~26 seconds. As a result, the dark side periodically rotated into view on the public site, and the light side periodically rotated into view on `/admin`.
+   - **Remediation**: Implemented synchronous tidal locking:
+     `const libration = prefersReducedMotion ? 0 : Math.sin(frame * 0.0006) * 0.025;`
+     `const rotLon = rotation + libration;`
+     - **Viewer Mode**: `rotation` is tied to section parallax libration centered at `0` ($[-8^\circ, +8^\circ]$). `darkFacing` is mathematically `0.000` at all times—guaranteeing 100% Light Side visibility.
+     - **Admin Mode**: `rotation` is centered at $\pi$ ($180^\circ \pm 8^\circ$). `darkFacing` is mathematically `1.000` at all times—guaranteeing 100% Dark Side visibility.
+     - **Transition**: `rotation` animates smoothly between $0$ and $\pi$, performing an axis flip directly in front of the viewer.
+
+2. **Genshin Impact-Inspired Volumetric Dark Side Engine (`getLunarEngine`)**:
+   - **Root Cause**: `darkObsidianR = lum * 14` crushed 95% of terrain relief and crater elevation into a dynamic range of 14 values. The megastructures and stations were flat 2D color blends without 3D normal perturbations or shadow cast.
+   - **Remediation**:
+     - **Volumetric Basalt Topography**: High dynamic range volcanic basalt (`#050a16` to `#1e2b48`) with directional sunward crater rim crests (`craterSlope * 1.8`, `#475d84` to `#7dd3fc`) and deep cast shadows in crater floors (`#020408`).
+     - **Dendritic Cryo-Lithospheric Fissures**: Two-frequency ridged multi-fractal noise on the unit sphere generates branching fracture chasms across the basalt crust, glowing with white-cyan cores (`#e0f2fe`) and wide electric cyan emissive halos (`#00f0ff`).
+     - **3D Embossed Megastructure Trenches**: The 6 concentric hexagonal logic rings and 12 radial highways have directional bevel highlights on their sunward rims (`#7dd3fc` / `#a5f3fc`) and ambient occlusion shadow grooves on opposing rims (`#010409`), with glowing superconductor channels in the trench beds.
+     - **8 Moongazer Caldera Stations**: Stepped hexagonal terraces descending into dark calderas with central quantum beacon spires emitting white-hot radiation.
+
+3. **Cinematic 3-Stage Orbital Approach HUD & Camera Movement**:
+   - **Root Cause**: The Moon shrank from 400px down to 100px towards the corner, while `.mainframe-hud-card` sat in the center with a semi-opaque background and blur, completely hiding the celestial body.
+   - **Remediation**:
+     - **Stage 1 (0.00 -> 0.62)**: The camera accelerates forward in hyper-spatial flight (star particles streak radially with `accessWarp = 1.0 + sin(t * pi) * 2.2`). The Moon moves directly into the center of the viewport (`w * 0.50`, `h * 0.44`) and expands colossal (`flyRadius = Math.max(finalRadius * 1.30, Math.min(w * 0.40, h * 0.44))`), spinning 180° ($\pi$ rad) around its axis directly in front of the viewer.
+     - **Stage 2 (0.62 -> 0.80)**: The colossal Dark Side hovers in front of the camera. A central holographic targeting reticle locks onto the central logic singularity core with rotating azimuth dials.
+     - **Stage 3 (0.80 -> 1.00)**: The Moon smoothly glides and docks into the admin canopy position (`adminX, adminY, adminRadius`), allowing the admin login card to materialize cleanly.
+     - **HUD Redesign**: Repositioned the telemetry terminal to the bottom of the screen (`margin-bottom: 24px; max-width: 580px`), keeping the central and upper 75% of the viewport crystal clear.
+     - **Mobile Optimization**: Configured responsive admin canopy coordinates on mobile (`adminRadius = 54-70px`, `adminY = adminRadius + 18px`), creating a clean 42px celestial gap above the mobile login card.
+
+### Verification Matrix
+
+| Test Item | Viewport | Expected Behavior | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Public Hero Moon** | 1440x900 | Serene Light Side only; 0% dark side visible | Verified in `01_hero_lightside_verified.png` | ✅ PASS |
+| **Mainframe Fly-In** | 1440x900 | Colossal Moon centered, 180° spin to Dark Side, targeting reticle | Verified in `02_mainframe_flyin_darkside.png` | ✅ PASS |
+| **Admin Desktop** | 1440x900 | Dark Side only; upper sky canopy; 0% login card overlap | Verified in `03_admin_darkside_desktop.png` | ✅ PASS |
+| **Admin Mobile** | 390x844 | Dark Side only; upper canopy; zero login card overlap | Verified in `04_admin_darkside_mobile.png` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` exits 0 with 0 errors | Built in 2.46s | ✅ PASS |
 
 

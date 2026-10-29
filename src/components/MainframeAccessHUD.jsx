@@ -53,11 +53,25 @@ export default function MainframeAccessHUD() {
             <span>// CELESTIAL LOGIC BUS: ACTIVE</span>
           </div>
 
-          {/* Center Telemetry Card */}
+          {/* Centered Holographic Targeting Reticle */}
+          <div className="mainframe-hud-reticle">
+            <div className="mainframe-hud-reticle-ring" />
+            <div className="mainframe-hud-reticle-ring--outer" />
+            <div className="mainframe-hud-reticle-crosshair-h" />
+            <div className="mainframe-hud-reticle-crosshair-v" />
+            <div className="mainframe-hud-reticle-lock-text">
+              {pct < 28 && "ORBITAL FLY-BY // APPROACHING..."}
+              {pct >= 28 && pct < 62 && "CELESTIAL AXIS SHIFT // 180°"}
+              {pct >= 62 && pct < 82 && "IN FRONT OF DARK SIDE // TARGET LOCKED"}
+              {pct >= 82 && "TERMINAL DOCKING // SNEZHNAYA SECURE"}
+            </div>
+          </div>
+
+          {/* Bottom Telemetry Card */}
           <motion.div
             className="mainframe-hud-card"
-            initial={{ scale: 0.92, y: 14 }}
-            animate={{ scale: 1, y: 0 }}
+            initial={{ scale: 0.94, y: 24, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
@@ -74,18 +88,18 @@ export default function MainframeAccessHUD() {
             <div className="mainframe-hud-code-block">
               <div className="mainframe-hud-line">
                 <span style={{ color: '#64748B' }}>[0.1s]</span>
-                <span>TARGET LOCK: ARCHEOLUNAR LOGIC CORE</span>
+                <span>HYPER-SPATIAL ORBITAL APPROACH ENGAGED</span>
               </div>
-              <div className={`mainframe-hud-line ${pct >= 30 ? 'mainframe-hud-line--active' : ''}`}>
-                <span style={{ color: '#64748B' }}>[0.5s]</span>
+              <div className={`mainframe-hud-line ${pct >= 28 ? 'mainframe-hud-line--active' : ''}`}>
+                <span style={{ color: '#64748B' }}>[0.6s]</span>
                 <span>ROTATING CELESTIAL AXIS -&gt; HEMISPHERE: DARK SIDE</span>
               </div>
-              <div className={`mainframe-hud-line ${pct >= 65 ? 'mainframe-hud-line--active' : ''}`}>
-                <span style={{ color: '#64748B' }}>[1.0s]</span>
-                <span>INITIALIZING SNEZHNAYA SECURE TERMINAL &amp; TELEMETRY</span>
+              <div className={`mainframe-hud-line ${pct >= 62 ? 'mainframe-hud-line--active' : ''}`}>
+                <span style={{ color: '#64748B' }}>[1.4s]</span>
+                <span>APPROACH COMPLETE: IN FRONT OF ARCHEOLUNAR LOGIC CORE</span>
               </div>
-              <div className={`mainframe-hud-line ${pct >= 90 ? 'mainframe-hud-line--success' : ''}`}>
-                <span style={{ color: '#64748B' }}>[1.5s]</span>
+              <div className={`mainframe-hud-line ${pct >= 82 ? 'mainframe-hud-line--success' : ''}`}>
+                <span style={{ color: '#64748B' }}>[1.9s]</span>
                 <span>CIPHER DECRYPTED: WELCOME, ADMINISTRATOR</span>
               </div>
             </div>

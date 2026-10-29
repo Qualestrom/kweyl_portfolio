@@ -188,10 +188,16 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
     const handleKeyDown = (e) => {
       // Check Konami Code
       if (!isAdmin) {
-        const pressedKey = e.key.toLowerCase();
+        const pressedKey = (e.key || '').toLowerCase();
+        const pressedCode = (e.code || '').toLowerCase();
         const expectedKey = konamiCode[konamiIndexRef.current];
 
-        if (pressedKey === expectedKey) {
+        const isMatch = pressedKey === expectedKey ||
+          (expectedKey === 'b' && pressedCode === 'keyb') ||
+          (expectedKey === 'a' && pressedCode === 'keya') ||
+          (expectedKey === 'enter' && pressedCode === 'enter');
+
+        if (isMatch) {
           konamiIndexRef.current++;
           if (konamiIndexRef.current === konamiCode.length) {
             triggerMainframeAccess();
@@ -200,7 +206,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
           }
         } else {
           konamiIndexRef.current = 0;
-          if (pressedKey === konamiCode[0]) {
+          if (pressedKey === konamiCode[0] || pressedCode === 'arrowup') {
             konamiIndexRef.current = 1;
           }
         }

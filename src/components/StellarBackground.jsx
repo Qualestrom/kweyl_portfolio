@@ -517,62 +517,116 @@ function getLunarEngine() {
         const rTan = Math.sqrt(xTan * xTan + yTan * yTan);
         const phiTan = Math.atan2(yTan, xTan);
 
-        // 1. Dark Basalt Obsidian Crust
-        const darkObsidianR = Math.round(lum * 14);
-        const darkObsidianG = Math.round(lum * 22);
-        const darkObsidianB = Math.round(lum * 44);
+        // 1. High-Relief Obsidian & Abyssal Basalt Crust (Genshin impact craters & 3D topography)
+        // High-contrast terrain slope and crater rim highlights/shadows
+        const sunRelief = craterSlope * 1.8 + terrainSlope * 0.9;
+        const sunHighlight = Math.max(0, sunRelief);
+        const shadowOcclusion = Math.max(0, -sunRelief);
+        
+        // Base crust: Rich volcanic basalt with slate-indigo plateaus and illuminated crater crests
+        const baseElevation = Math.max(0, Math.min(1, 0.30 + h * 0.50 - mVal * 0.30));
+        let crustR = Math.round(6 + baseElevation * 28 + sunHighlight * 65 - shadowOcclusion * 8);
+        let crustG = Math.round(12 + baseElevation * 42 + sunHighlight * 95 - shadowOcclusion * 12);
+        let crustB = Math.round(24 + baseElevation * 68 + sunHighlight * 145 - shadowOcclusion * 20);
 
-        const lightObsidianR = Math.round(20 + lum * 40);
-        const lightObsidianG = Math.round(35 + lum * 55);
-        const lightObsidianB = Math.round(55 + lum * 75);
+        // 2. Branching Cryo-Lithospheric Fissures (Genshin celestial fracture veins)
+        // Two-frequency ridged multi-fractal noise along the sphere
+        const crackNoise1 = 1.0 - Math.abs(fbm3D(nx * 7.5 + 3.1, ny * 7.5 + 1.8, (nzDark + 1.1) * 7.5, 4) * 2 - 1);
+        const crackNoise2 = 1.0 - Math.abs(fbm3D(nx * 18.0 + 7.3, ny * 18.0 + 4.9, (nzDark + 1.1) * 18.0, 3) * 2 - 1);
+        const combinedCrack = crackNoise1 * 0.70 + crackNoise2 * 0.30;
+        
+        let fissureGlow = 0;
+        let fissureCore = 0;
+        if (combinedCrack > 0.67 && rTan < 0.92) {
+          const uCrack = (combinedCrack - 0.67) / 0.33;
+          fissureGlow = Math.pow(uCrack, 2.2);
+          if (uCrack > 0.58) {
+            fissureCore = Math.pow((uCrack - 0.58) / 0.42, 1.8);
+          }
+          // Chasm shadow along fissure borders
+          const chasmShadow = Math.min(1.0, fissureGlow * 0.5);
+          crustR = Math.round(crustR * (1 - chasmShadow * 0.4));
+          crustG = Math.round(crustG * (1 - chasmShadow * 0.4));
+          crustB = Math.round(crustB * (1 - chasmShadow * 0.4));
+        }
 
-        // 2. Central Logic Singularity Core
-        const coreGlow = Math.exp(-Math.pow(rTan / 0.055, 2));
-
-        // 3. Concentric Hexagonal Logic Matrix Rings (Full 6-fold symmetry)
+        // 3. 3D Embossed Concentric Hexagonal Logic Matrix (6-fold cyclopean trenches)
         const normAngle = ((phiTan % (Math.PI / 3)) + (Math.PI / 3)) % (Math.PI / 3);
         const hexCos = Math.cos(normAngle - Math.PI / 6);
         const rHex = rTan * hexCos;
-        let hexGlow = 0;
+        
+        let hexBevelHighlight = 0;
+        let hexBevelShadow = 0;
+        let hexCoreGlow = 0;
+        const HEX_TRENCH_W = 0.0075;
         for (let rhIdx = 0; rhIdx < DARK_HEX_RINGS.length; rhIdx++) {
           const rh = DARK_HEX_RINGS[rhIdx];
-          const d = Math.abs(rHex - rh);
-          if (d < 0.0055) {
-            const gVal = 1 - d / 0.0055;
-            if (gVal > hexGlow) hexGlow = gVal;
+          const distToRim = rHex - rh;
+          const absDist = Math.abs(distToRim);
+          if (absDist < HEX_TRENCH_W) {
+            if (distToRim > 0.0012) {
+              const u = (distToRim - 0.0012) / (HEX_TRENCH_W - 0.0012);
+              if (u > hexBevelHighlight) hexBevelHighlight = u;
+            } else if (distToRim < -0.0012) {
+              const u = (-distToRim - 0.0012) / (HEX_TRENCH_W - 0.0012);
+              if (u > hexBevelShadow) hexBevelShadow = u;
+            }
+            if (absDist < 0.0030) {
+              const g = 1 - absDist / 0.0030;
+              if (g > hexCoreGlow) hexCoreGlow = g;
+            }
           }
         }
 
-        // 4. Primary Radial Data Highways (12 spokes)
+        // 4. Primary 3D Radial Data Highways (12 spokes with beveled rails)
         const normAngle12 = ((phiTan % (Math.PI / 6)) + (Math.PI / 6)) % (Math.PI / 6);
-        const spokeAngle = Math.abs(normAngle12 - Math.PI / 12);
-        let spokeGlow = 0;
-        if (spokeAngle < 0.007 && rTan > 0.05 && rTan < 0.75) {
-          spokeGlow = (1 - spokeAngle / 0.007) * (1 - (rTan - 0.05) / 0.72);
+        const spokeDelta = normAngle12 - Math.PI / 12;
+        const absSpoke = Math.abs(spokeDelta);
+        let spokeBevelHighlight = 0;
+        let spokeBevelShadow = 0;
+        let spokeCoreGlow = 0;
+        if (absSpoke < 0.0090 && rTan > 0.045 && rTan < 0.78) {
+          const falloff = 1 - (rTan - 0.045) / 0.76;
+          if (spokeDelta > 0.0018) {
+            spokeBevelHighlight = ((spokeDelta - 0.0018) / 0.0072) * falloff;
+          } else if (spokeDelta < -0.0018) {
+            spokeBevelShadow = ((-spokeDelta - 0.0018) / 0.0072) * falloff;
+          }
+          if (absSpoke < 0.0035) {
+            spokeCoreGlow = (1 - absSpoke / 0.0035) * falloff;
+          }
         }
 
-        // 5. Planetary Facility Craters & Conduits
-        let stationGlow = 0;
+        // 5. Planetary Facility Craters & Calderas (8 Moongazer stations with stepped terraces)
+        let stationHighlight = 0;
+        let stationShadow = 0;
+        let stationBeacon = 0;
         let conduitGlow = 0;
         for (let si = 0; si < DARK_STATIONS.length; si++) {
           const st = DARK_STATIONS[si];
           const d = Math.hypot(xTan - st.x, yTan - st.y);
-          if (d < st.r * 1.6) {
-            const rimD = Math.abs(d - st.r);
-            if (rimD < 0.007) {
-              const gVal = 1 - rimD / 0.007;
-              if (gVal > stationGlow) stationGlow = gVal;
+          if (d < st.r * 1.8) {
+            const rimDist = Math.abs(d - st.r);
+            if (rimDist < 0.008) {
+              const g = 1 - rimDist / 0.008;
+              if (xTan > st.x) stationHighlight = Math.max(stationHighlight, g);
+              else stationShadow = Math.max(stationShadow, g * 0.8);
             }
-            if (d < 0.015) stationGlow = Math.max(stationGlow, 1.2);
+            if (d < st.r * 0.75) {
+              stationShadow = Math.max(stationShadow, 0.45); // Recessed crater caldera
+            }
+            if (d < 0.016) {
+              stationBeacon = Math.max(stationBeacon, (1 - d / 0.016) * 1.5); // Central logic spire
+            }
           }
           const stDist = st.dist;
           const proj = (xTan * st.x + yTan * st.y) / (stDist * stDist);
-          if (proj > 0.08 && proj < 1.05) {
+          if (proj > 0.07 && proj < 1.05) {
             const px = proj * st.x;
             const py = proj * st.y;
             const lineDist = Math.hypot(xTan - px, yTan - py);
-            if (lineDist < 0.004) {
-              const cg = 1 - lineDist / 0.004;
+            if (lineDist < 0.0042) {
+              const cg = 1 - lineDist / 0.0042;
               if (cg > conduitGlow) conduitGlow = cg;
             }
           }
@@ -586,44 +640,63 @@ function getLunarEngine() {
         const dLon = Math.min(lonMod, 30 - lonMod);
         const dLat = Math.min(latMod, 30 - latMod);
         let busGlow = 0;
-        if ((dLon < 0.35 || dLat < 0.35) && rTan > 0.22 && rTan < 0.88) {
-          busGlow = 0.55;
+        if ((dLon < 0.35 || dLat < 0.35) && rTan > 0.20 && rTan < 0.88) {
+          busGlow = 0.50;
         }
-        if (dLon < 0.8 && dLat < 0.8 && rTan > 0.22 && rTan < 0.88) {
-          busGlow = 0.9;
+        if (dLon < 0.8 && dLat < 0.8 && rTan > 0.20 && rTan < 0.88) {
+          busGlow = 0.85;
         }
 
-        const totalLogic = Math.min(1.0, 
-          coreGlow * 1.6 + 
-          hexGlow * 1.1 + 
-          spokeGlow * 0.95 + 
-          conduitGlow * 0.9 + 
-          stationGlow * 1.1 + 
-          busGlow * 0.65
+        // 7. Central Logic Singularity Core
+        const coreGlow = Math.exp(-Math.pow(rTan / 0.052, 2));
+
+        // ── Synthesize 3D Layered Crust & Megastructure Colors ──
+        // Apply directional bevel shadows (deep grooves)
+        const totalShadow = Math.min(0.85, hexBevelShadow * 0.7 + spokeBevelShadow * 0.65 + stationShadow * 0.6);
+        crustR = Math.round(crustR * (1 - totalShadow));
+        crustG = Math.round(crustG * (1 - totalShadow));
+        crustB = Math.round(crustB * (1 - totalShadow));
+
+        // Apply directional bevel highlights (metallic/crystalline sunward rims)
+        const totalHighlight = Math.min(1.0, hexBevelHighlight * 0.85 + spokeBevelHighlight * 0.8 + stationHighlight * 0.75);
+        crustR = Math.round(crustR + totalHighlight * 75);
+        crustG = Math.round(crustG + totalHighlight * 125);
+        crustB = Math.round(crustB + totalHighlight * 185);
+
+        // Emissive Energy Channels (Superconductor cores, conduits, beacon towers, fissures)
+        const totalCyanEnergy = Math.min(1.0,
+          hexCoreGlow * 1.1 +
+          spokeCoreGlow * 0.95 +
+          conduitGlow * 0.90 +
+          busGlow * 0.60 +
+          fissureGlow * 0.85 +
+          stationBeacon * 0.90
         );
 
-        let finalDarkR = darkObsidianR;
-        let finalDarkG = darkObsidianG;
-        let finalDarkB = darkObsidianB;
+        let finalDarkR = crustR;
+        let finalDarkG = crustG;
+        let finalDarkB = crustB;
 
-        let finalLightR = lightObsidianR;
-        let finalLightG = lightObsidianG;
-        let finalLightB = lightObsidianB;
+        let finalLightR = Math.round(20 + crustR * 0.35);
+        let finalLightG = Math.round(35 + crustG * 0.45);
+        let finalLightB = Math.round(55 + crustB * 0.55);
 
-        if (totalLogic > 0) {
-          finalDarkR = Math.round(finalDarkR * (1 - totalLogic) + 16 * totalLogic);
-          finalDarkG = Math.round(finalDarkG * (1 - totalLogic) + 220 * totalLogic);
-          finalDarkB = Math.round(finalDarkB * (1 - totalLogic) + 255 * totalLogic);
+        if (totalCyanEnergy > 0) {
+          finalDarkR = Math.round(finalDarkR * (1 - totalCyanEnergy) + 14 * totalCyanEnergy);
+          finalDarkG = Math.round(finalDarkG * (1 - totalCyanEnergy) + 225 * totalCyanEnergy);
+          finalDarkB = Math.round(finalDarkB * (1 - totalCyanEnergy) + 255 * totalCyanEnergy);
 
-          finalLightR = Math.round(finalLightR * (1 - totalLogic) + 2 * totalLogic);
-          finalLightG = Math.round(finalLightG * (1 - totalLogic) + 132 * totalLogic);
-          finalLightB = Math.round(finalLightB * (1 - totalLogic) + 199 * totalLogic);
+          finalLightR = Math.round(finalLightR * (1 - totalCyanEnergy) + 2 * totalCyanEnergy);
+          finalLightG = Math.round(finalLightG * (1 - totalCyanEnergy) + 132 * totalCyanEnergy);
+          finalLightB = Math.round(finalLightB * (1 - totalCyanEnergy) + 199 * totalCyanEnergy);
         }
 
-        if (coreGlow > 0.18) {
-          const wf = (coreGlow - 0.18) / 0.82;
-          finalDarkR = Math.round(finalDarkR * (1 - wf) + 240 * wf);
-          finalDarkG = Math.round(finalDarkG * (1 - wf) + 250 * wf);
+        // White-hot energy core (fissure cores, singularity core, beacon spires)
+        const totalWhiteCore = Math.min(1.0, coreGlow * 1.8 + fissureCore * 1.2 + stationBeacon * 0.85);
+        if (totalWhiteCore > 0.12) {
+          const wf = (totalWhiteCore - 0.12) / 0.88;
+          finalDarkR = Math.round(finalDarkR * (1 - wf) + 245 * wf);
+          finalDarkG = Math.round(finalDarkG * (1 - wf) + 252 * wf);
           finalDarkB = Math.round(finalDarkB * (1 - wf) + 255 * wf);
 
           finalLightR = Math.round(finalLightR * (1 - wf) + 186 * wf);
@@ -631,6 +704,7 @@ function getLunarEngine() {
           finalLightB = Math.round(finalLightB * (1 - wf) + 253 * wf);
         }
 
+        // Smooth boundary blending between Light Side and Dark Side
         dr = Math.round(dr * (1 - darkBlend) + finalDarkR * darkBlend);
         dg = Math.round(dg * (1 - darkBlend) + finalDarkG * darkBlend);
         db = Math.round(db * (1 - darkBlend) + finalDarkB * darkBlend);
@@ -775,7 +849,11 @@ export function drawFrostmoon(
   ctx.fill();
 
   // ── 2. Multi-Layered Deep-Space Atmospheric Corona ──
-  const rotLon = frame * 0.0020 + rotation;
+  // The Moon is tidally locked: Light Side in viewer mode, Dark Side in admin mode, 180° rotation on transition
+  const libration = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0
+    : Math.sin(frame * 0.0006) * 0.025;
+  const rotLon = rotation + libration;
   const darkFacing = Math.max(0, -Math.cos(rotLon));
 
   const coronaR = R * 1.52;
@@ -1035,6 +1113,10 @@ function easeInOutQuad(t) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 const GLOW_RISE_SPEED = 0.025;
 const GLOW_FALL_SPEED = 0.008;
 const GLOW_INTERVAL_MIN = 35;
@@ -1238,44 +1320,91 @@ export default function StellarBackground({
         : targetX + currentParallaxX * 0.095;
       const arcElevation = prefersReducedMotion ? 0 : Math.sin(Math.abs(orbitFactor) * Math.PI) * 38;
       const moonDrawY = targetY - arcElevation;
-      const orbitLongitude = prefersReducedMotion ? 0 : orbitFactor * 1.45;
+      const orbitLongitude = prefersReducedMotion ? 0 : orbitFactor * 0.35; // Subtle section libration (Light Side only)
       const orbitScale = prefersReducedMotion ? 1 : 1 + Math.sin(Math.abs(orbitFactor) * Math.PI) * 0.06;
       const finalRadius = targetRadius * orbitScale;
 
-      // Admin background canopy coordinates (upper-right sky, clears center card)
-      const adminRadius = Math.max(80, Math.min(130, Math.min(w * 0.09, h * 0.15)));
-      const adminX = Math.max(w * 0.86, w - adminRadius - 32);
-      const adminY = Math.max(adminRadius + 24, h * 0.18);
+      // Admin background canopy coordinates (upper-right sky, clears center card on desktop and mobile)
+      const isMobile = w < 768;
+      const adminRadius = isMobile
+        ? Math.max(54, Math.min(70, w * 0.15))
+        : Math.max(80, Math.min(130, Math.min(w * 0.09, h * 0.15)));
+      const adminX = isMobile
+        ? w - adminRadius - 18
+        : Math.max(w * 0.86, w - adminRadius - 32);
+      const adminY = isMobile
+        ? adminRadius + 18
+        : Math.max(adminRadius + 24, h * 0.18);
+
+      // Colossal Close-Up Viewport Center Coordinates (moving directly in front of the Moon)
+      const flyCenterX = w * 0.50;
+      const flyCenterY = Math.max(160, Math.min(h * 0.44, h - 220));
+      const flyRadius = Math.max(finalRadius * 1.30, Math.min(w * 0.40, h * 0.44));
 
       if (isAccessing) {
-        // STATE TRANSITION: Accessing Mainframe — Moon lifts, smoothly shifts axis 180 deg to Dark Side, and glides to Admin
-        const t = easeInOutQuad(accessProgress);
-        moonX = moonDrawX + (adminX - moonDrawX) * t;
-        moonY = moonDrawY + (adminY - moonDrawY) * t;
-        moonRadius = finalRadius + (adminRadius - finalRadius) * t;
-        moonOrbitLongitude = orbitLongitude + t * Math.PI; // 180° rotation into Dark Side Logic Core
-        moonSectionDimming = 1.0 - t * 0.12;
+        // STATE TRANSITION: Accessing Mainframe — Dramatic 3-stage orbital approach right in front of Dark Side
+        // Stage 1 (0.00 -> 0.62): Fly directly in front of the colossal Moon as it rotates 180° into Dark Side
+        // Stage 2 (0.62 -> 0.80): Hover in front of the colossal Dark Side Logic Core while telemetry locks on
+        // Stage 3 (0.80 -> 1.00): Smoothly glide and dock into admin canopy position
+        if (accessProgress <= 0.62) {
+          const t1 = accessProgress / 0.62;
+          const u1 = easeInOutCubic(t1);
+          moonX = moonDrawX + (flyCenterX - moonDrawX) * u1;
+          moonY = moonDrawY + (flyCenterY - moonDrawY) * u1;
+          moonRadius = finalRadius + (flyRadius - finalRadius) * u1;
+          moonOrbitLongitude = orbitLongitude + u1 * Math.PI; // 180° spin right in front of camera!
+          moonSectionDimming = 1.0;
+        } else if (accessProgress <= 0.80) {
+          // Hover directly in front of the Dark Side logic core
+          moonX = flyCenterX;
+          moonY = flyCenterY;
+          moonRadius = flyRadius;
+          moonOrbitLongitude = orbitLongitude + Math.PI; // Locked onto Dark Side
+          moonSectionDimming = 1.0;
+        } else {
+          // Smooth docking into admin layout
+          const t3 = (accessProgress - 0.80) / 0.20;
+          const u3 = easeInOutQuad(t3);
+          moonX = flyCenterX + (adminX - flyCenterX) * u3;
+          moonY = flyCenterY + (adminY - flyCenterY) * u3;
+          moonRadius = flyRadius + (adminRadius - flyRadius) * u3;
+          moonOrbitLongitude = orbitLongitude + Math.PI; // Locked onto Dark Side
+          moonSectionDimming = 1.0 - u3 * 0.12;
+        }
       } else if (isRet) {
-        // STATE RETURN: Returning to Public Portfolio — Moon shifts axis from Dark Side back to Light Side and returns to Hero
-        const t = easeInOutQuad(retProg);
-        moonX = adminX + (targetX - adminX) * t;
-        moonY = adminY + (targetY - adminY) * t;
-        moonRadius = adminRadius + (targetRadius - adminRadius) * t;
-        moonOrbitLongitude = Math.PI - t * Math.PI; // Rotates 180° back from Dark Side to Light Side
-        moonSectionDimming = 0.88 + t * 0.12;
+        // STATE RETURN: Returning to Public Portfolio — Reverse orbital departure
+        // Stage 1 (0.00 -> 0.42): Undock from admin canopy back to center in front of Dark Side
+        // Stage 2 (0.42 -> 1.00): Rotate 180° back to Light Side and pull back to Hero orbit
+        if (retProg <= 0.42) {
+          const t1 = retProg / 0.42;
+          const u1 = easeInOutQuad(t1);
+          moonX = adminX + (flyCenterX - adminX) * u1;
+          moonY = adminY + (flyCenterY - adminY) * u1;
+          moonRadius = adminRadius + (flyRadius - adminRadius) * u1;
+          moonOrbitLongitude = Math.PI; // Still Dark Side during undocking
+          moonSectionDimming = 0.88 + u1 * 0.12;
+        } else {
+          const t2 = (retProg - 0.42) / 0.58;
+          const u2 = easeInOutCubic(t2);
+          moonX = flyCenterX + (targetX - flyCenterX) * u2;
+          moonY = flyCenterY + (targetY - flyCenterY) * u2;
+          moonRadius = flyRadius + (targetRadius - flyRadius) * u2;
+          moonOrbitLongitude = Math.PI - u2 * Math.PI; // Rotates 180° back from Dark Side to Light Side!
+          moonSectionDimming = 1.0;
+        }
       } else if (onAdmin) {
-        // STATE ADMIN: Moon stays permanently locked in upper-right sky with Dark Side Logic Core facing forward!
+        // STATE ADMIN: Permanently locked on Dark Side of the Frostmoon!
         moonX = adminX;
         moonY = adminY;
         moonRadius = adminRadius;
-        moonOrbitLongitude = Math.PI; // 180° -> pure Dark Side of the Frostmoon!
+        moonOrbitLongitude = Math.PI; // 180° -> Pure Dark Side of the Frostmoon!
         moonSectionDimming = 0.88;
       } else if (!loaderExitedRef.current && !isWarpingRef.current) {
         // STATE A: Initial loading screen — Moon is a distant beacon in deep space
         moonX = distantX;
         moonY = distantY;
         moonRadius = distantRadius;
-        moonOrbitLongitude = 0;
+        moonOrbitLongitude = 0; // Pure Light Side!
         moonSectionDimming = 1.0;
       } else if (isWarpingRef.current) {
         // STATE B: Hyperspace warp in flight — Moon smoothly approaches from distant beacon to Hero orbit
@@ -1287,14 +1416,14 @@ export default function StellarBackground({
         moonX = distantX + (targetX - distantX) * approachT;
         moonY = distantY + (targetY - distantY) * approachT;
         moonRadius = distantRadius + (targetRadius - distantRadius) * approachT;
-        moonOrbitLongitude = 0;
+        moonOrbitLongitude = 0; // Pure Light Side!
         moonSectionDimming = 1.0;
       } else {
         // STATE C: Fully arrived on portfolio page — Moon revolves with section parallax on Light Side
         moonX = moonDrawX;
         moonY = moonDrawY;
         moonRadius = finalRadius;
-        moonOrbitLongitude = orbitLongitude;
+        moonOrbitLongitude = orbitLongitude; // Strictly within [-0.15, +0.15] -> Pure Light Side!
         moonSectionDimming = activeSectionRef.current >= 2 ? 0.92 : 1.0;
       }
 
@@ -1394,7 +1523,10 @@ export default function StellarBackground({
 
         const warpDim = isWarpingRef.current ? 0.35 : 1.0;
         ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity * warpDim));
-        const particleStretch = p.tier === 2 && isMovingFast ? stretchFactor : 1;
+        const accessWarp = (isAccessing && accessProgress < 0.65)
+          ? 1.0 + Math.sin((accessProgress / 0.65) * Math.PI) * 2.2
+          : 1;
+        const particleStretch = (p.tier === 2 && isMovingFast ? stretchFactor : 1) * accessWarp;
 
         if (p.isStar) {
           ctx.fillStyle = isGlowing ? palette.glowCore : p.color;

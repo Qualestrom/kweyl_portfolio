@@ -5,10 +5,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 50%, rgba(4, 9, 23, 0.4) 0%, rgba(2, 6, 18, 0.75) 100%);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  justify-content: flex-end;
+  background: radial-gradient(circle at 50% 44%, rgba(4, 9, 23, 0.10) 0%, rgba(2, 6, 18, 0.60) 100%);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
   pointer-events: all;
   font-family: 'JetBrains Mono', 'Outfit', monospace;
   overflow: hidden;
@@ -58,6 +58,77 @@
   border-right: 2px solid;
 }
 
+/* Centered Holographic Targeting Reticle (frames the Moon during orbital approach) */
+.mainframe-hud-reticle {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.mainframe-hud-reticle-ring {
+  width: 320px;
+  height: 320px;
+  border: 1px dashed rgba(56, 189, 248, 0.45);
+  border-radius: 50%;
+  animation: hud-reticle-spin 24s linear infinite;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.12);
+}
+
+.mainframe-hud-reticle-ring--outer {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-top: 2px solid #00F0FF;
+  border-bottom: 2px solid #00F0FF;
+  border-radius: 50%;
+  animation: hud-reticle-spin-rev 16s linear infinite;
+}
+
+.mainframe-hud-reticle-crosshair-h {
+  position: absolute;
+  width: 440px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.45) 15%, transparent 42%, transparent 58%, rgba(56, 189, 248, 0.45) 85%, transparent);
+}
+
+.mainframe-hud-reticle-crosshair-v {
+  position: absolute;
+  height: 440px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(56, 189, 248, 0.45) 15%, transparent 42%, transparent 58%, rgba(56, 189, 248, 0.45) 85%, transparent);
+}
+
+.mainframe-hud-reticle-lock-text {
+  position: absolute;
+  top: -42px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: #38BDF8;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.7);
+  background: rgba(8, 15, 30, 0.7);
+  padding: 4px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+@keyframes hud-reticle-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes hud-reticle-spin-rev {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
 /* Top Telemetry Header */
 .mainframe-hud-header {
   position: absolute;
@@ -97,22 +168,25 @@
   50% { opacity: 1; transform: scale(1.15); }
 }
 
-/* Center Telemetry Card */
+/* Bottom Telemetry Card */
 .mainframe-hud-card {
   position: relative;
+  margin-bottom: 24px;
   z-index: 10;
-  width: 90%;
-  max-width: 540px;
-  padding: 24px 28px;
-  background: rgba(8, 15, 30, 0.75);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  width: 92%;
+  max-width: 580px;
+  padding: 16px 22px;
+  background: rgba(6, 12, 26, 0.86);
+  border: 1px solid rgba(56, 189, 248, 0.40);
   border-radius: 16px;
   box-shadow: 
-    0 0 40px rgba(0, 240, 255, 0.15),
-    inset 0 0 20px rgba(56, 189, 248, 0.08);
+    0 0 35px rgba(0, 240, 255, 0.18),
+    inset 0 0 16px rgba(56, 189, 248, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .mainframe-hud-title-row {

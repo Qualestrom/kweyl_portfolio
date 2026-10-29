@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const MainframeContext = createContext({
@@ -21,13 +21,13 @@ export function MainframeProvider({ children }) {
   const animFrameRef = useRef(null);
   const navigate = useNavigate();
 
-  // Trigger: Public Portfolio -> Admin (Moon rotates to Dark Side Logic Core)
+  // Trigger: Public Portfolio -> Admin (Moon flies to center, rotates to Dark Side Logic Core, then docks to Admin)
   const triggerMainframeAccess = useCallback(() => {
     if (isAccessingMainframe || isReturning) return;
     setIsAccessingMainframe(true);
     setMainframeProgress(0);
 
-    const DURATION = 1600; // ms
+    const DURATION = 2300; // ms: cinematic orbital flight directly in front of Dark Side
     const startTime = performance.now();
 
     const animate = (now) => {
@@ -43,20 +43,20 @@ export function MainframeProvider({ children }) {
         setTimeout(() => {
           setIsAccessingMainframe(false);
           setMainframeProgress(0);
-        }, 350);
+        }, 250);
       }
     };
 
     animFrameRef.current = requestAnimationFrame(animate);
   }, [isAccessingMainframe, isReturning, navigate]);
 
-  // Trigger: Admin -> Public Portfolio (Moon rotates back to Light Side)
+  // Trigger: Admin -> Public Portfolio (Moon rotates back to Light Side and returns to Hero)
   const triggerReturnToPortfolio = useCallback(() => {
     if (isAccessingMainframe || isReturning) return;
     setIsReturning(true);
     setReturnProgress(0);
 
-    const DURATION = 1200; // ms
+    const DURATION = 1600; // ms: reverse orbital departure back to Light Side
     const startTime = performance.now();
 
     const animate = (now) => {
@@ -78,6 +78,14 @@ export function MainframeProvider({ children }) {
 
     animFrameRef.current = requestAnimationFrame(animate);
   }, [isAccessingMainframe, isReturning, navigate]);
+
+  // Expose global test hooks if window exists
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__triggerMainframeAccess = triggerMainframeAccess;
+      window.__triggerReturnToPortfolio = triggerReturnToPortfolio;
+    }
+  }, [triggerMainframeAccess, triggerReturnToPortfolio]);
 
   return (
     <MainframeContext.Provider

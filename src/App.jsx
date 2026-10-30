@@ -6,10 +6,10 @@ import { DataLoaderProvider, useDataLoader } from './context/DataLoaderContext';
 import MainframeAccessHUD from './components/MainframeAccessHUD';
 import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
-import PortfolioSPA from './components/PortfolioSPA';
 import { ScaffoldPanel, ScaffoldBlock } from './components/common/LoadingScaffold';
 
-// Lazy-load AdminDashboard & ScaffoldsPreview to keep visitor bundles ultra-lean
+// Lazy-load PortfolioSPA, AdminDashboard & ScaffoldsPreview to keep initial opening bundle ultra-lean (<150KB)
+const PortfolioSPA = lazy(() => import('./components/PortfolioSPA'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
 const ScaffoldsPreview = lazy(() => import('./pages/ScaffoldsPreview.jsx'));
 
@@ -70,11 +70,13 @@ function AppContent() {
         <Route
           path="/"
           element={
-            <PortfolioSPA
-              loaderExited={loaderExited}
-              isWarping={isWarping}
-              onSectionChange={setActiveSection}
-            />
+            <Suspense fallback={null}>
+              <PortfolioSPA
+                loaderExited={loaderExited}
+                isWarping={isWarping}
+                onSectionChange={setActiveSection}
+              />
+            </Suspense>
           }
         />
         <Route 

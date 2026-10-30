@@ -659,6 +659,56 @@ During empirical headless browser inspection of the live application against [`s
 | **Console & Runtime Exceptions Audit** | 1440x900 & 390x844 | Fresh session boot | 0 errors (`Error count: 0`), zero React 19 static flag warnings | Verified in `verify_clean_sessions.cjs` | ✅ PASS |
 | **Vite Production Build** | N/A | `npm run build` | Built in 2.58s with 0 errors | Verified | ✅ PASS |
 
+---
+
+## 13. Instant Opening Screen Cold Boot Optimization & Main Thread Freeze Remediation
+
+> **Date**: 2026-10-30  
+> **Target**: `https://kweyl-portfolio.me/`  
+> **Objective**: Eliminate the cold-boot pause when opening the portfolio in a fresh tab, enabling instantaneous rendering (<700ms) of the Genshin Elemental Glyphs loading screen at 60 FPS.
+
+### Root Cause Diagnosis & Profiler Discovery
+Through automated Chrome DevTools Protocol CPU profiling (`scratch/profile_main_thread.cjs`), the exact bottleneck causing the 9.3s delay before the opening screen was pinpointed:
+1. **Procedural Lunar Texture Generation Freeze**:
+   - `getLunarEngine()` in `StellarBackground.jsx` was synchronously executing on page boot:
+     - 2 nested loops: `TEX_H = 880` × `TEX_W = 2048` = 1,802,240 pixel iterations.
+     - For each pixel: evaluated 17 Maria basins, 90 procedural craters (`Math.acos`, `Math.atan2`), and 5-octave 3D simplex/fractal noise (`fbm3D`).
+     - Resulted in **5,774ms to 25,550ms** of synchronous main-thread CPU blocking (`Dg`, `_g`, `Eg`, `vg`, `Og`).
+   - Because `StellarBackground` runs on initial load, this blocked React from painting the opening screen, causing the browser to freeze on a blank screen.
+2. **Monolithic Bundle Size**:
+   - `PortfolioSPA` was imported statically at the top level in `App.jsx`, pulling in Firebase, Supabase, PDF.js, Framer Motion, and Konva into a single 1.52 MB entry chunk (`index-4jV4LmJK.js`).
+
+### Engineering Architecture & Remediation
+1. **Hardware-Accelerated WebP Texture Streaming**:
+   - Pre-baked the exact 2048x880 lunar albedo textures (`lunar_dark.webp` at 255 KB and `lunar_light.webp` at 162 KB) into `public/assets/lunar/`.
+   - Replaced procedural generation in `StellarBackground.jsx` with asynchronous image loading via `loadLunarTexture()`.
+   - Single-pass direct typed-array LUT generation for the 880x880 spherical projection executes in under 30ms (a 99.5% reduction in CPU time).
+2. **Resource Preloading**:
+   - Added `<link rel="preload" href="/assets/lunar/lunar_dark.webp" as="image" type="image/webp">` to `index.html`.
+3. **Dynamic Import & Lazy Loading**:
+   - Lazy-loaded `PortfolioSPA` in `App.jsx` wrapped in `<Suspense fallback={null}>`, allowing `StellarCryoLoader` and `StellarBackground` to mount immediately on frame 1 while portfolio sections load in parallel.
+4. **Vite Code Splitting**:
+   - Configured Rollup `manualChunks` in `vite.config.js`:
+     - `vendor-firebase` (600 KB)
+     - `vendor-pdf` (428 kB)
+     - `vendor-supabase` (214 KB)
+     - `vendor-framer` (139 KB)
+     - `vendor-icons` (13 KB)
+     - Initial entry chunk dropped from 1,520 kB down to **86.27 kB gzipped** (`index-CdypEjnB.js`).
+5. **Firebase Analytics Guard**:
+   - Wrapped `getAnalytics` in `isSupported()` check in `src/firebase.js`.
+
+### Empirical Verification Matrix
+
+| Test Item | Target / Metric | Observed Result | Status |
+| :--- | :--- | :--- | :--- |
+| **New Tab Startup Delay** | Cold new tab to `.genshin-loader-overlay` | Loader mounted at **+678ms** (down from **9,951ms**) | ✅ PASS |
+| **Opening Screen Visuals** | 5 Elemental glyphs, distant moon, tips | Verified in [`39_instant_loader_cold_boot.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/39_instant_loader_cold_boot.png) | ✅ PASS |
+| **100% Ready Prompt** | "CLICK ANYWHERE TO ENTER" | Verified in [`40_ready_prompt_instant_flow.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/40_ready_prompt_instant_flow.png) | ✅ PASS |
+| **Hero Landing** | Smooth transition to pre-hydrated Hero | Verified in [`41_hero_landed_instant_flow.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/41_hero_landed_instant_flow.png) | ✅ PASS |
+| **Production Build** | `npm run build` | Built in 2.64s with 0 errors | ✅ PASS |
+
+
 
 
 

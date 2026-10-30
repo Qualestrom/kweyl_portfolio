@@ -2,6 +2,7 @@ import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { MainframeProvider, useMainframe } from './context/MainframeContext';
+import { DataLoaderProvider, useDataLoader } from './context/DataLoaderContext';
 import MainframeAccessHUD from './components/MainframeAccessHUD';
 import StellarCryoLoader from './components/StellarCryoLoader';
 import StellarBackground from './components/StellarBackground';
@@ -17,26 +18,13 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isScaffoldsRoute = location.pathname.startsWith('/scaffolds');
   const { isAccessingMainframe, mainframeProgress, isReturning, returnProgress } = useMainframe();
+  const { loadProgress, displayPercent, isDataReady } = useDataLoader();
 
   const hasEnteredSession = typeof window !== 'undefined' && sessionStorage.getItem('kweyl_stellar_entered') === 'true';
 
-  const [appReady, setAppReady] = useState(isAdminRoute || isScaffoldsRoute || hasEnteredSession);
   const [loaderExited, setLoaderExited] = useState(isAdminRoute || isScaffoldsRoute || hasEnteredSession);
   const [isWarping, setIsWarping] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
-
-  useEffect(() => {
-    if (isAdminRoute || isScaffoldsRoute || hasEnteredSession) return;
-    // On fresh session entrance, ensure critical fonts are ready with a snappy 400ms baseline
-    const minDelay = new Promise(resolve => setTimeout(resolve, 400));
-    const fontsTimeout = new Promise(resolve => setTimeout(resolve, 2000));
-    const fontsReady = Promise.race([document.fonts.ready, fontsTimeout]);
-
-    Promise.all([
-      fontsReady,
-      minDelay,
-    ]).then(() => setAppReady(true));
-  }, [isAdminRoute, isScaffoldsRoute, hasEnteredSession]);
 
   // Expose intro replay helper for convenience & testing
   useEffect(() => {
@@ -50,10 +38,12 @@ function AppContent() {
 
   return (
     <>
-      {/* Loading screen */}
+      {/* Loading screen with real data-driven icon loading bar */}
       {!loaderExited && !isAdminRoute && !isScaffoldsRoute && (
         <StellarCryoLoader
-          isLoading={!appReady}
+          loadProgress={loadProgress}
+          displayPercent={displayPercent}
+          isDataReady={isDataReady}
           onWarpStart={() => setIsWarping(true)}
           onExited={() => {
             try {
@@ -65,8 +55,9 @@ function AppContent() {
         />
       )}
 
-      {/* Persistent celestial background — 3D Full Frostmoon, starfield & procedural constellations */}
+      {/* Persistent celestial background — 3D Full Frostmoon, starfield & procedural constellations scaled with loadProgress */}
       <StellarBackground
+        loadProgress={loadProgress}
         isWarping={isWarping}
         loaderExited={loaderExited}
         activeSection={activeSection}
@@ -132,11 +123,13 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <MainframeProvider>
-          <AppContent />
-        </MainframeProvider>
-      </BrowserRouter>
+      <DataLoaderProvider>
+        <BrowserRouter>
+          <MainframeProvider>
+            <AppContent />
+          </MainframeProvider>
+        </BrowserRouter>
+      </DataLoaderProvider>
     </ThemeProvider>
   );
 }

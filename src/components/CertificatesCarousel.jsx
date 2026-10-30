@@ -32,6 +32,7 @@ import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 import useInputDevice from '../utils/useInputDevice';
 import { CertificatesScaffold } from './common/LoadingScaffold';
+import { useDataLoader } from '../context/DataLoaderContext';
 
 const FALLBACK_CERTIFICATES = [
   {
@@ -644,6 +645,7 @@ const LandscapeCarouselCard = ({
 
 export default function CertificatesCarousel({ isAdmin = false }) {
   const { isTouch, isMobile } = useInputDevice();
+  const { reportMilestone } = useDataLoader();
   const isTouchDevice = isTouch || isMobile;
 
   const [certificates, setCertificates] = useState(() => {
@@ -680,9 +682,12 @@ export default function CertificatesCarousel({ isAdmin = false }) {
 
     const finishLoading = () => {
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 600 - elapsed);
+      const remaining = Math.max(0, 400 - elapsed);
       setTimeout(() => {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          reportMilestone?.('certificates');
+        }
       }, remaining);
     };
 

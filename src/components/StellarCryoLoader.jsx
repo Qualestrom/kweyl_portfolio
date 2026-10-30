@@ -145,21 +145,20 @@ function drawFourPointStar(ctx, x, y, size, rotation) {
 }
 
 export default function StellarCryoLoader({
-  isLoading = true,
+  loadProgress = 0,
+  displayPercent = 0,
+  isDataReady = false,
   onExited,
   onWarpStart,
 }) {
   const canvasRef = useRef(null);
-  const [percent, setPercent] = useState(0);
+  const percent = displayPercent;
   const [tipIndex, setTipIndex] = useState(0);
   const [isReadyToEnter, setIsReadyToEnter] = useState(false);
   const [isWarping, setIsWarping] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [exited, setExited] = useState(false);
 
-  const percentRef = useRef(0);
-  const startTimeRef = useRef(Date.now());
-  const loadingDoneRef = useRef(false);
   const isWarpingRef = useRef(false);
   const warpProgressRef = useRef(0);
 
@@ -172,19 +171,12 @@ export default function StellarCryoLoader({
     return () => clearInterval(interval);
   }, [exited]);
 
-  // Track when external isLoading becomes false
+  // Transition to "Ready to Enter" when real data is 100% loaded
   useEffect(() => {
-    if (!isLoading) {
-      loadingDoneRef.current = true;
-    }
-  }, [isLoading]);
-
-  // Check if loading reached 100% and assets ready -> transition to "Ready to Enter"
-  useEffect(() => {
-    if (percent >= 100 && !isLoading && !isReadyToEnter && !isWarping) {
+    if (isDataReady && !isReadyToEnter && !isWarping) {
       setIsReadyToEnter(true);
     }
-  }, [percent, isLoading, isReadyToEnter, isWarping]);
+  }, [isDataReady, isReadyToEnter, isWarping]);
 
   // Derive dynamic status phrase based on percent
   const currentStatus = useMemo(() => {
@@ -269,25 +261,7 @@ export default function StellarCryoLoader({
       frame++;
       const theme = getTheme();
 
-      // ── 1. Percentage Step Interpolation (Smooth Genshin HUD progression) ──
-      const elapsed = Date.now() - startTimeRef.current;
-      let targetPercent;
-      if (loadingDoneRef.current) {
-        targetPercent = 100;
-      } else {
-        const tau = 2200;
-        targetPercent = Math.min(96, 96 * (1 - Math.exp(-elapsed / tau)));
-      }
-
-      const stepSpeed = loadingDoneRef.current ? 0.09 : 0.038;
-      percentRef.current += (targetPercent - percentRef.current) * stepSpeed;
-      const displayPercent = Math.min(100, Math.round(percentRef.current));
-
-      if (frame % 2 === 0) {
-        setPercent(displayPercent);
-      }
-
-      // ── 2. Render Hyperspace Warp Tunnel (ONLY when Warping) ──
+      // ── Render Hyperspace Warp Tunnel (ONLY when Warping) ──
       ctx.clearRect(0, 0, w, h);
 
       if (isWarpingRef.current) {
@@ -419,14 +393,32 @@ export default function StellarCryoLoader({
       {/* ─── Immersive Living Celestial Canvas ─── */}
       <canvas ref={canvasRef} className="genshin-loader-canvas" />
 
-      {/* Ambient background glow orb */}
-      <div className="genshin-loader-ambient-glow" />
+      {/* Ambient background glow orb — breathes and expands with data load progress */}
+      <div
+        className="genshin-loader-ambient-glow"
+        style={{
+          opacity: 0.35 + 0.65 * loadProgress,
+          transform: `translate(-50%, -50%) scale(${0.75 + 0.45 * loadProgress})`,
+        }}
+      />
 
       {/* ─── Bottom-Centered HUD (Strict 3-Row Spatial Hierarchy) ─── */}
       <div className={`genshin-bottom-hud ${isWarping ? 'hud-warp-exit' : ''}`}>
         
-        {/* Row 1: The Icons (Progressive Loading Indicator) */}
+        {/* Row 1: The Icons & Track (Progressive Data Loading Bar) */}
         <div className="genshin-elemental-row" id="hud-icons">
+          {/* Crystalline connecting track beam directly reflecting real data progress */}
+          <div className="genshin-elemental-track">
+            <div
+              className="genshin-elemental-track-fill"
+              style={{ width: `${percent}%` }}
+            />
+            <div
+              className="genshin-elemental-track-spark"
+              style={{ left: `${percent}%` }}
+            />
+          </div>
+
           {SECTION_GLYPHS.map((glyph, index) => {
             const startP = index * 20;
             const ratio = Math.min(1, Math.max(0, (percent - startP) / 20));
@@ -442,7 +434,10 @@ export default function StellarCryoLoader({
                 }}
                 title={glyph.label}
               >
-                <Icon size={24} className="genshin-element-svg" />
+                <div className="genshin-element-icon-wrap">
+                  <Icon size={24} className="genshin-element-svg" />
+                  {isLit && <span className="genshin-element-pulse-ring" />}
+                </div>
               </div>
             );
           })}

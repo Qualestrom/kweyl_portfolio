@@ -30,6 +30,7 @@ import EditableText from './EditableText';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 import useInputDevice from '../utils/useInputDevice';
 import { ProjectsScaffold } from './common/LoadingScaffold';
+import { useDataLoader } from '../context/DataLoaderContext';
 
 // Status badge configurations for projects (Deployed, In Progress, Confidential)
 const PROJECT_STATUS_CONFIG = {
@@ -463,6 +464,7 @@ const MARGIN_PX = 2;
 
 export default function ProjectsShowcase({ isAdmin = false }) {
   const { isTouch, isMobile } = useInputDevice();
+  const { reportMilestone } = useDataLoader();
   const isTouchDevice = isTouch || isMobile;
 
   const [projects, setProjects] = useState(() => {
@@ -510,9 +512,12 @@ export default function ProjectsShowcase({ isAdmin = false }) {
 
     const finishLoading = () => {
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 600 - elapsed);
+      const remaining = Math.max(0, 400 - elapsed);
       setTimeout(() => {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          reportMilestone?.('projects');
+        }
       }, remaining);
     };
 

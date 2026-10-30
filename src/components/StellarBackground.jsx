@@ -1124,6 +1124,7 @@ const GLOW_INTERVAL_MAX = 90;
 const MAX_SIMULTANEOUS_GLOWS = 6;
 
 export default function StellarBackground({
+  loadProgress = 0,
   isWarping = false,
   loaderExited = true,
   activeSection = 0,
@@ -1134,6 +1135,7 @@ export default function StellarBackground({
   returnProgress = 0,
 }) {
   const canvasRef = useRef(null);
+  const loadProgressRef = useRef(loadProgress);
   const isWarpingRef = useRef(isWarping);
   const loaderExitedRef = useRef(loaderExited);
   const activeSectionRef = useRef(activeSection);
@@ -1143,6 +1145,14 @@ export default function StellarBackground({
   const isReturningRef = useRef(isReturning);
   const returnProgressRef = useRef(returnProgress);
   const warpStartTimeRef = useRef(0);
+
+  const meteorMilestone40Ref = useRef(false);
+  const meteorMilestone65Ref = useRef(false);
+  const meteorMilestone90Ref = useRef(false);
+
+  useEffect(() => {
+    loadProgressRef.current = loadProgress;
+  }, [loadProgress]);
 
   useEffect(() => {
     isAdminRouteRef.current = isAdminRoute;
@@ -1405,12 +1415,13 @@ export default function StellarBackground({
         moonOrbitLongitude = Math.PI; // 180° -> Pure Dark Side of the Frostmoon!
         moonSectionDimming = 0.88;
       } else if (!loaderExitedRef.current && !isWarpingRef.current) {
-        // STATE A: Initial loading screen — Moon is a distant beacon in deep space
+        // STATE A: Initial loading screen — Moon is a distant beacon whose size and radiant aura charge with loaded data
+        const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
         moonX = distantX;
         moonY = distantY;
-        moonRadius = distantRadius;
+        moonRadius = distantRadius * (0.65 + 0.35 * prog);
         moonOrbitLongitude = 0; // Pure Light Side!
-        moonSectionDimming = 1.0;
+        moonSectionDimming = 0.28 + 0.72 * prog;
       } else if (isWarpingRef.current) {
         // STATE B: Hyperspace warp in flight — Moon smoothly approaches from distant beacon to Hero orbit
         const WARP_DURATION_MS = 1520;
@@ -1464,6 +1475,33 @@ export default function StellarBackground({
       if (frame >= nextMeteorFrame && !isWarpingRef.current) {
         spawnMeteor();
         nextMeteorFrame = frame + rand(350, 750);
+      }
+
+      // ── Dynamic Background Effects Linked Directly to Real Data Loading Progress ──
+      if (!loaderExitedRef.current && !isWarpingRef.current) {
+        const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
+
+        // High-altitude shooting stars streak as major data milestones arrive
+        if (prog >= 0.40 && !meteorMilestone40Ref.current) {
+          meteorMilestone40Ref.current = true;
+          spawnMeteor();
+        }
+        if (prog >= 0.65 && !meteorMilestone65Ref.current) {
+          meteorMilestone65Ref.current = true;
+          spawnMeteor();
+        }
+        if (prog >= 0.90 && !meteorMilestone90Ref.current) {
+          meteorMilestone90Ref.current = true;
+          spawnMeteor();
+        }
+
+        // Sacred astral constellations ignite as data nodes harmonize
+        if (prog >= 0.35 && constellations.length === 0) {
+          spawnConstellation();
+        }
+        if (prog >= 0.70 && constellations.length < 2) {
+          spawnConstellation();
+        }
       }
 
       // ── 2. Draw Deep-Space Stars, Prisms, & Cosmic Dust (BEHIND the Moon) ──
@@ -1527,7 +1565,23 @@ export default function StellarBackground({
         }
 
         const warpDim = isWarpingRef.current ? 0.35 : 1.0;
-        ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity * warpDim));
+        let loaderDim = 1.0;
+
+        // Progressive starfield ignition based on data loading percentage
+        if (!loaderExitedRef.current && !isWarpingRef.current) {
+          const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
+          // Tier 0 (deep cosmic dust): visible from start, deepening with progress
+          // Tier 1 (mid astral stars): ignites between 18% and 55%
+          // Tier 2 (near-field primogems & ice prisms): ignites between 45% and 85%
+          const activateThreshold = p.tier === 0 ? 0.05 : p.tier === 1 ? 0.18 : 0.45;
+          if (prog < activateThreshold) {
+            continue; // Not yet awakened
+          }
+          const awakenRatio = Math.min(1, (prog - activateThreshold) / 0.20);
+          loaderDim = 0.22 + 0.78 * awakenRatio;
+        }
+
+        ctx.globalAlpha = Math.max(0.02, Math.min(1, opacity * warpDim * loaderDim));
         const accessWarp = (isAccessing && accessProgress < 0.65)
           ? 1.0 + Math.sin((accessProgress / 0.65) * Math.PI) * 2.2
           : 1;

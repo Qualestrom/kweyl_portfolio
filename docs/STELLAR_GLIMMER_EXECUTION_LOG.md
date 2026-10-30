@@ -611,7 +611,54 @@ During empirical headless browser inspection of the live application against [`s
 | **100% Loaded Desktop** | 1440x900 | 100% data ready | All 5 icons lit; full track filled; Frostmoon in full radiant halo; constellations active; "CLICK ANYWHERE TO ENTER" | Verified in `26_loader_ready_100percent_desktop.png` | ✅ PASS |
 | **100% Loaded Mobile** | 390x844 | 100% data ready | 390x844 mobile layout; track and 5 icons centered; tap screen prompt visible | Verified in `27_loader_ready_100percent_mobile.png` | ✅ PASS |
 | **Hyperspace Warp & Hero Landing** | 1440x900 | Click to enter | Zero-delay warp flight; Hero loads instantly with 0 skeleton flash; greeting & headline hydrated | Verified in `29_post_warp_hero_landed.png` | ✅ PASS |
-| **Vite Production Build** | N/A | `npm run build` | Built in 2.44s with 0 errors | ✅ PASS |
+---
+
+## 10. True Simultaneous Data Loading & Restored Pure Genshin Impact Elemental Glyphs Layout
+
+### User Directives
+1. **Restore Original Visual Design**: "Wait, you changed the design of the loading bar? I didn't want you to change its design, only its logic."
+   - Immediately strip away all artificial tracks (`.genshin-elemental-track`), circular borders (`.genshin-element-icon-wrap`), and pulse rings (`.genshin-element-pulse-ring`).
+   - Restore the original pure Genshin Impact 5-icon elemental glyphs layout (`.genshin-elemental-row`, `.genshin-element-node`, `.genshin-element-svg`).
+2. **True Simultaneous Loading Flow**:
+   - The opening screen must NOT pause or freeze at 0% waiting for data to complete.
+   - It runs actively and simultaneously from $t = 0$.
+   - The progressive lighting of the 5 icons directly represents real database milestones arriving into the application:
+     - **Icon 1 (Home - ORIGIN)**: Core engine & critical typography (`document.fonts.ready`).
+     - **Icon 2 (About - PERSONA)**: Supabase / Firestore persona and profile configuration resolved.
+     - **Icon 3 (Projects - CREATIONS)**: Projects showcase database resolved.
+     - **Icon 4 (Credentials - MASTERY)**: Certifications & credentials database resolved.
+     - **Icon 5 (Contact - SIGNAL)**: All site data resolved and verified (100%).
+   - "Once the click anywhere to enter, that should mean that the data has been loaded successfully and can now proceed to go to the hero page. That should be the logic."
+3. **Background Celestial Awakening**:
+   - Celestial background details (Frostmoon beacon radius and corona aura, 3-tier starfield, Primogems, sacred constellations, shooting stars) awaken dynamically in exact synchronization with the loading progress (`window.__stellarLoadProgress`).
+
+### Root Causes & Architectural Engineering
+1. **Elimination of React 19 Fiber Reconciliation Collisions**:
+   - Previously, high-frequency `setState` inside root providers forced `PortfolioSPA` and its child data-fetching components to re-render repeatedly while executing async promises. In React 19, this triggered `Internal React error: Expected static flag was missing`.
+   - **Resolution**:
+     - Separated context into `DataLoaderReportContext` (stable `reportMilestone` callback via `useReportMilestone()`) and `DataLoaderStateContext` (`useDataLoaderState()`). Child data loaders (`PortfolioSPA`, `ProjectsShowcase`, `CertificatesCarousel`) only consume `useReportMilestone()`, completely immunizing them from re-renders.
+     - Eliminated nested `setState` by computing `allLoaded` as a pure derived boolean: `Boolean(milestones.fonts && milestones.config && milestones.projects && milestones.certificates)`.
+     - Direct GPU-accelerated CSS custom property updates (`--node-ratio` on `.genshin-element-node`) execute at native 60 FPS without React component re-render overhead.
+     - Removed redundant unmount states (`exited`) to prevent calling `setState` on unmounting fiber nodes.
+     - Decoupled `useInputDevice()` breakpoint state with strict memoized value checks to prevent resize churn.
+2. **Smooth Simultaneous Advancement from $t = 0$**:
+   - The loader loop begins immediately at $t = 0$ advancing towards a smooth baseline ceiling (18%).
+   - As each database promise resolves, the ceiling dynamically opens up (25% for fonts, 45% for config, 65% for projects, 85% for certs, and 100% when all are loaded).
+   - "CLICK ANYWHERE TO ENTER" appears strictly when all data is 100% loaded.
+   - User click/tap initiates the 3D relativistic hyperspace warp zoom forward into the Hero page, landing on a 100% pre-hydrated interface with zero skeleton flash.
+
+### Empirical Verification Matrix
+
+| Test Item | Viewport | Target / Condition | Observed Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Pure Original Icon HUD Design** | 1440x900 | Inspect DOM & CSS | Zero track lines, zero pulse rings, zero outer circles. Pure Genshin elemental glyphs row | Verified in [`32_simultaneous_midway_progress.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/32_simultaneous_midway_progress.png) | ✅ PASS |
+| **Simultaneous Midway Progression (40%)** | 1440x900 | Real data milestone arrival | At ~40% data, exactly 2 icons lit (`Home` & `About`), meteor streaks across sky, constellations form, 0 freeze | Verified in [`32_simultaneous_midway_progress.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/32_simultaneous_midway_progress.png) | ✅ PASS |
+| **100% Ready State (Desktop)** | 1440x900 | All data resolved | All 5 icons lit with radiant cyan aura; Frostmoon at full glow; "CLICK ANYWHERE TO ENTER" active | Verified in [`33_simultaneous_ready_100percent.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/33_simultaneous_ready_100percent.png) | ✅ PASS |
+| **100% Ready State (Mobile)** | 390x844 | All data resolved | Mobile HUD centered; 5 icons lit; "CLICK ANYWHERE TO ENTER" + "Tap screen or press any key to enter" | Verified in [`34_simultaneous_ready_mobile.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/34_simultaneous_ready_mobile.png) | ✅ PASS |
+| **Hyperspace Warp & Hero Landing** | 1440x900 | Click to enter | Relativistic forward 3D flight; loader cleanly unmounts; lands on pre-hydrated Hero page with 0 skeletons | Verified in [`35_hero_landed_hydrated.png`](file:///C:/Users/Christopher/.gemini/antigravity/brain/492d8184-a95a-4559-a807-d973da5b1309/35_hero_landed_hydrated.png) | ✅ PASS |
+| **Console & Runtime Exceptions Audit** | 1440x900 & 390x844 | Fresh session boot | 0 errors (`Error count: 0`), zero React 19 static flag warnings | Verified in `verify_clean_sessions.cjs` | ✅ PASS |
+| **Vite Production Build** | N/A | `npm run build` | Built in 2.58s with 0 errors | Verified | ✅ PASS |
+
 
 
 

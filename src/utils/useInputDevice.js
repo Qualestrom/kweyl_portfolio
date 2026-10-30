@@ -46,16 +46,34 @@ export default function useInputDevice() {
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       const hasHover = window.matchMedia ? window.matchMedia('(hover: hover)').matches : true;
       const isFinePointer = window.matchMedia ? window.matchMedia('(pointer: fine)').matches : true;
+      const isMobile = width < 768;
+      const isTablet = width >= 768 && width < 1024;
+      const isDesktop = width >= 1024;
 
-      setDeviceInfo({
-        isTouch,
-        hasHover,
-        isFinePointer,
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1024,
-        isDesktop: width >= 1024,
-        width,
-        height,
+      setDeviceInfo((prev) => {
+        if (
+          prev.isMobile === isMobile &&
+          prev.isTablet === isTablet &&
+          prev.isDesktop === isDesktop &&
+          prev.isTouch === isTouch &&
+          prev.hasHover === hasHover &&
+          prev.isFinePointer === isFinePointer &&
+          Math.abs(prev.width - width) < 4 &&
+          Math.abs(prev.height - height) < 4
+        ) {
+          return prev;
+        }
+
+        return {
+          isTouch,
+          hasHover,
+          isFinePointer,
+          isMobile,
+          isTablet,
+          isDesktop,
+          width,
+          height,
+        };
       });
     };
 

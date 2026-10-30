@@ -18,7 +18,6 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isScaffoldsRoute = location.pathname.startsWith('/scaffolds');
   const { isAccessingMainframe, mainframeProgress, isReturning, returnProgress } = useMainframe();
-  const { loadProgress, displayPercent, isDataReady } = useDataLoader();
 
   const hasEnteredSession = typeof window !== 'undefined' && sessionStorage.getItem('kweyl_stellar_entered') === 'true';
 
@@ -38,12 +37,9 @@ function AppContent() {
 
   return (
     <>
-      {/* Loading screen with real data-driven icon loading bar */}
+      {/* Loading screen with simultaneous data-driven icon loading progression */}
       {!loaderExited && !isAdminRoute && !isScaffoldsRoute && (
         <StellarCryoLoader
-          loadProgress={loadProgress}
-          displayPercent={displayPercent}
-          isDataReady={isDataReady}
           onWarpStart={() => setIsWarping(true)}
           onExited={() => {
             try {
@@ -57,7 +53,6 @@ function AppContent() {
 
       {/* Persistent celestial background — 3D Full Frostmoon, starfield & procedural constellations scaled with loadProgress */}
       <StellarBackground
-        loadProgress={loadProgress}
         isWarping={isWarping}
         loaderExited={loaderExited}
         activeSection={activeSection}

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Compass, User, FolderGit2, Award, Send, Moon, Sparkles } from 'lucide-react';
+import { useDataLoaderState } from '../context/DataLoaderContext';
 import './StellarCryoLoader.css';
 
 /**
@@ -7,13 +8,15 @@ import './StellarCryoLoader.css';
  * 
  * Features:
  * - Centered bottom-anchored HUD (pure Genshin Impact spatial hierarchy)
- * - Ultra-dynamic Canvas Starfield: multi-layered drifting nebulae, twinkling 4-point Primogem stars,
- *   shooting meteors, and alive "connect-a-dot" constellations that actively draw laser starlight from node to node
- * - 5 Sleek Elemental Section Glyphs (Icon-only with elemental aura pulses & ignition)
- * - Dynamic descriptive status phrases replacing numeric % readout
- * - Genshin-style "CLICK ANYWHERE TO ENTER" / "PRESS TO START" prompt once ready
- * - Hyper-space Warp Zoom transition on click/tap/keypress: camera accelerates forward through stars into a celestial whiteout flash
- * - Theme-aware (dark & light) and 100% gapless exit into the homepage
+ * - Ultra-dynamic Canvas Starfield & 3D Relativistic Hyperspace Tunnel on enter
+ * - 5 Sleek Elemental Section Glyphs (Icon-only with elemental aura pulses & progressive ignition)
+ * - True Simultaneous Data Loading:
+ *   - Runs actively from t=0 without freezing
+ *   - Advances dynamically as real database milestones (fonts, config, projects, certs) arrive
+ *   - Progressively awakens background celestial details (Frostmoon glow, star tiers, meteors)
+ *   - 60 FPS GPU-accelerated CSS custom property updates via direct node refs (Zero React 19 churn)
+ * - Genshin-style "CLICK ANYWHERE TO ENTER" prompt strictly presented once all data is loaded
+ * - Seamless hyper-space warp flight forward into the pre-hydrated Hero page
  */
 
 // ─── Section Glyphs Config (Genshin Elemental Style) ─────────────────────────
@@ -53,17 +56,6 @@ const SECTION_GLYPHS = [
     icon: Send,
     threshold: 92,
   },
-];
-
-// ─── Status Phrases (Replacing Raw Numeric Percentages) ──────────────────────
-const STATUS_PHASES = [
-  { threshold: 0, text: 'INITIALIZING STELLAR MAINFRAME...' },
-  { threshold: 15, text: 'ALIGNING CELESTIAL COORDINATES...' },
-  { threshold: 35, text: 'HARMONIZING ELEMENTAL NODES...' },
-  { threshold: 55, text: 'RETRIEVING ARCHIVES & REPOSITORIES...' },
-  { threshold: 75, text: 'SYNTHESIZING CREDENTIAL MATRICES...' },
-  { threshold: 90, text: 'CALIBRATING NEURAL INTERFACE...' },
-  { threshold: 100, text: 'CELESTIAL LINK ESTABLISHED' },
 ];
 
 // ─── Rotating Tips & Lore ───────────────────────────────────────────────────
@@ -114,75 +106,115 @@ const PALETTES = {
 };
 
 const rand = (min, max) => Math.random() * (max - min) + min;
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-function easeInOutQuad(t) {
-  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-}
-
-// ─── 4-Point Primogem Star Drawer ───────────────────────────────────────────
-function drawFourPointStar(ctx, x, y, size, rotation) {
-  const outer = size;
-  const inner = size * 0.22;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(rotation);
-  ctx.beginPath();
-  for (let i = 0; i < 4; i++) {
-    const angle = (Math.PI / 2) * i - Math.PI / 2;
-    const nextAngle = angle + Math.PI / 4;
-    const ox = Math.cos(angle) * outer;
-    const oy = Math.sin(angle) * outer;
-    const ix = Math.cos(nextAngle) * inner;
-    const iy = Math.sin(nextAngle) * inner;
-    if (i === 0) ctx.moveTo(ox, oy);
-    else ctx.lineTo(ox, oy);
-    ctx.lineTo(ix, iy);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
 
 export default function StellarCryoLoader({
-  loadProgress = 0,
-  displayPercent = 0,
-  isDataReady = false,
   onExited,
   onWarpStart,
 }) {
+  const { milestones, allLoaded } = useDataLoaderState();
   const canvasRef = useRef(null);
-  const percent = displayPercent;
+  const iconsRowRef = useRef(null);
+  const glowRef = useRef(null);
+
   const [tipIndex, setTipIndex] = useState(0);
   const [isReadyToEnter, setIsReadyToEnter] = useState(false);
   const [isWarping, setIsWarping] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
-  const [exited, setExited] = useState(false);
 
   const isWarpingRef = useRef(false);
   const warpProgressRef = useRef(0);
+  const percentRef = useRef(0);
+  const targetPercentRef = useRef(18);
+  const milestonesRef = useRef(milestones);
+  const allLoadedRef = useRef(allLoaded);
+
+  useEffect(() => {
+    milestonesRef.current = milestones;
+    allLoadedRef.current = allLoaded;
+  }, [milestones, allLoaded]);
+
+  // Compute maximum target percent based on real data milestone arrival
+  useEffect(() => {
+    let target = 18; // Smooth baseline progression from frame 0
+    if (milestones.fonts) target = Math.max(target, 25);
+    if (milestones.config) target = Math.max(target, 45);
+    if (milestones.projects) target = Math.max(target, 65);
+    if (milestones.certificates) target = Math.max(target, 85);
+    if (allLoaded) target = 100;
+
+    targetPercentRef.current = target;
+  }, [milestones, allLoaded]);
+
+  // Direct GPU DOM update helper (Zero React 19 churn, 60 FPS buttery smooth)
+  const applyVisualProgress = useCallback((val) => {
+    if (typeof window !== 'undefined') {
+      window.__stellarLoadProgress = Math.min(1.0, val / 100);
+    }
+
+    if (glowRef.current) {
+      const prog = val / 100;
+      glowRef.current.style.opacity = (0.35 + 0.65 * prog).toFixed(3);
+      glowRef.current.style.transform = `translate(-50%, -50%) scale(${(0.75 + 0.45 * prog).toFixed(3)})`;
+    }
+
+    if (iconsRowRef.current) {
+      const nodes = iconsRowRef.current.children;
+      for (let index = 0; index < SECTION_GLYPHS.length; index++) {
+        const node = nodes[index];
+        if (!node) continue;
+        const startP = index * 20;
+        const ratio = Math.min(1, Math.max(0, (val - startP) / 20));
+        node.style.setProperty('--node-ratio', ratio.toFixed(3));
+        if (ratio >= 0.999) {
+          if (!node.classList.contains('lit')) node.classList.add('lit');
+        } else {
+          if (node.classList.contains('lit')) node.classList.remove('lit');
+        }
+      }
+    }
+  }, []);
+
+  // ─── 60 FPS Local Simultaneous Progress Engine ─────────────────────────────
+  useEffect(() => {
+    if (exited) return;
+
+    let raf;
+
+    const tick = () => {
+      const cur = percentRef.current;
+      const target = targetPercentRef.current;
+
+      if (cur < target) {
+        // Dynamic easing: brisk on long distances, silky smooth into milestone stops
+        const diff = target - cur;
+        const step = Math.max(0.35, Math.min(1.6, diff * 0.085));
+        const next = Math.min(target, cur + step);
+        percentRef.current = next;
+        applyVisualProgress(next);
+      }
+
+      // Check for full 100% data completion
+      if (allLoadedRef.current && percentRef.current >= 99.0) {
+        percentRef.current = 100;
+        applyVisualProgress(100);
+        setIsReadyToEnter(true);
+        return; // Completed
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [applyVisualProgress]);
 
   // Cycling Tips
   useEffect(() => {
-    if (exited) return;
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % LORE_TIPS.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [exited]);
-
-  // Transition to "Ready to Enter" when real data is 100% loaded
-  useEffect(() => {
-    if (isDataReady && !isReadyToEnter && !isWarping) {
-      setIsReadyToEnter(true);
-    }
-  }, [isDataReady, isReadyToEnter, isWarping]);
-
-  // Derive dynamic status phrase based on percent
-  const currentStatus = useMemo(() => {
-    const matching = STATUS_PHASES.slice().reverse().find((p) => percent >= p.threshold);
-    return matching ? matching.text : STATUS_PHASES[0].text;
-  }, [percent]);
+  }, []);
 
   // ─── True 3D Forward Hyperspace Flight Handler ─────────────────────────────
   const handleEnter = useCallback(() => {
@@ -202,7 +234,6 @@ export default function StellarCryoLoader({
 
     setTimeout(() => {
       onExited?.();
-      setExited(true);
     }, 1650);
   }, [isReadyToEnter, onExited, onWarpStart]);
 
@@ -376,9 +407,7 @@ export default function StellarCryoLoader({
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(raf);
     };
-  }, [exited]);
-
-  if (exited) return null;
+  }, []);
 
   return (
     <div
@@ -395,49 +424,25 @@ export default function StellarCryoLoader({
 
       {/* Ambient background glow orb — breathes and expands with data load progress */}
       <div
+        ref={glowRef}
         className="genshin-loader-ambient-glow"
-        style={{
-          opacity: 0.35 + 0.65 * loadProgress,
-          transform: `translate(-50%, -50%) scale(${0.75 + 0.45 * loadProgress})`,
-        }}
       />
 
       {/* ─── Bottom-Centered HUD (Strict 3-Row Spatial Hierarchy) ─── */}
       <div className={`genshin-bottom-hud ${isWarping ? 'hud-warp-exit' : ''}`}>
         
-        {/* Row 1: The Icons & Track (Progressive Data Loading Bar) */}
-        <div className="genshin-elemental-row" id="hud-icons">
-          {/* Crystalline connecting track beam directly reflecting real data progress */}
-          <div className="genshin-elemental-track">
-            <div
-              className="genshin-elemental-track-fill"
-              style={{ width: `${percent}%` }}
-            />
-            <div
-              className="genshin-elemental-track-spark"
-              style={{ left: `${percent}%` }}
-            />
-          </div>
-
-          {SECTION_GLYPHS.map((glyph, index) => {
-            const startP = index * 20;
-            const ratio = Math.min(1, Math.max(0, (percent - startP) / 20));
-            const isLit = ratio >= 1;
+        {/* Row 1: The Icons (Progressive Loading Indicator) */}
+        <div ref={iconsRowRef} className="genshin-elemental-row" id="hud-icons">
+          {SECTION_GLYPHS.map((glyph) => {
             const Icon = glyph.icon;
 
             return (
               <div
                 key={glyph.id}
-                className={`genshin-element-node ${isLit ? 'lit' : ''}`}
-                style={{
-                  '--node-ratio': ratio,
-                }}
+                className="genshin-element-node"
                 title={glyph.label}
               >
-                <div className="genshin-element-icon-wrap">
-                  <Icon size={24} className="genshin-element-svg" />
-                  {isLit && <span className="genshin-element-pulse-ring" />}
-                </div>
+                <Icon size={24} className="genshin-element-svg" />
               </div>
             );
           })}

@@ -1416,7 +1416,10 @@ export default function StellarBackground({
         moonSectionDimming = 0.88;
       } else if (!loaderExitedRef.current && !isWarpingRef.current) {
         // STATE A: Initial loading screen — Moon is a distant beacon whose size and radiant aura charge with loaded data
-        const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
+        const currentProgVal = (typeof window !== 'undefined' && window.__stellarLoadProgress !== undefined)
+          ? window.__stellarLoadProgress
+          : (loadProgressRef.current || 0);
+        const prog = Math.max(0.05, Math.min(1.0, currentProgVal));
         moonX = distantX;
         moonY = distantY;
         moonRadius = distantRadius * (0.65 + 0.35 * prog);
@@ -1479,7 +1482,10 @@ export default function StellarBackground({
 
       // ── Dynamic Background Effects Linked Directly to Real Data Loading Progress ──
       if (!loaderExitedRef.current && !isWarpingRef.current) {
-        const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
+        const currentProgVal = (typeof window !== 'undefined' && window.__stellarLoadProgress !== undefined)
+          ? window.__stellarLoadProgress
+          : (loadProgressRef.current || 0);
+        const prog = Math.max(0.05, Math.min(1.0, currentProgVal));
 
         // High-altitude shooting stars streak as major data milestones arrive
         if (prog >= 0.40 && !meteorMilestone40Ref.current) {
@@ -1569,7 +1575,10 @@ export default function StellarBackground({
 
         // Progressive starfield ignition based on data loading percentage
         if (!loaderExitedRef.current && !isWarpingRef.current) {
-          const prog = Math.max(0.05, Math.min(1.0, loadProgressRef.current || 0));
+          const currentProgVal = (typeof window !== 'undefined' && window.__stellarLoadProgress !== undefined)
+            ? window.__stellarLoadProgress
+            : (loadProgressRef.current || 0);
+          const prog = Math.max(0.05, Math.min(1.0, currentProgVal));
           // Tier 0 (deep cosmic dust): visible from start, deepening with progress
           // Tier 1 (mid astral stars): ignites between 18% and 55%
           // Tier 2 (near-field primogems & ice prisms): ignites between 45% and 85%

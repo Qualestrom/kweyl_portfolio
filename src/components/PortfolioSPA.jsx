@@ -6,7 +6,7 @@ import { db } from '../firebase';
 import { supabase, isSupabaseConfigured } from '../supabase';
 import { Wrench, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import { useMainframe } from '../context/MainframeContext';
-import { useDataLoader } from '../context/DataLoaderContext';
+import { useReportMilestone } from '../context/DataLoaderContext';
 import SectionLabels from './SectionLabels';
 import MobileNav from './MobileNav';
 import KeyboardHints from './KeyboardHints';
@@ -71,7 +71,7 @@ export default function PortfolioSPA({ isAdmin = false, onLogout, loaderExited =
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   const { triggerMainframeAccess } = useMainframe();
-  const { reportMilestone } = useDataLoader();
+  const reportMilestone = useReportMilestone();
   const konamiIndexRef = useRef(0);
   const navigate = useNavigate();
 

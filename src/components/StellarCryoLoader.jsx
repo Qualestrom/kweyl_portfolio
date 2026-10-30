@@ -176,8 +176,6 @@ export default function StellarCryoLoader({
 
   // ─── 60 FPS Local Simultaneous Progress Engine ─────────────────────────────
   useEffect(() => {
-    if (exited) return;
-
     let raf;
 
     const tick = () => {
@@ -251,8 +249,6 @@ export default function StellarCryoLoader({
 
   // ─── 3D Relativistic Hyperspace Tunnel Engine ──────────────────────────────
   useEffect(() => {
-    if (exited) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
